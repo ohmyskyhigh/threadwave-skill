@@ -1,0 +1,4 @@
+interface:
+  display_name: "Twitter Reply / 推特回复"
+  short_description: "Review and send one exact Twitter/X reply / 审核并发送一条原样回复"
+  default_prompt: "Use $twitter-reply to preflight, validate, dry-run, show, and request approval for one exact target and reply I provide; never infer or rewrite either."

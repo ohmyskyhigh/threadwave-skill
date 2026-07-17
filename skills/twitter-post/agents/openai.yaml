@@ -1,0 +1,4 @@
+interface:
+  display_name: "Twitter Post / 发布推文"
+  short_description: "Review and send one exact Twitter/X post / 审核并发送一条原样推文"
+  default_prompt: "Use $twitter-post to preflight, dry-run, show, and request approval for one exact post I supply; never rewrite or send it without my explicit approval."

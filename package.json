@@ -1,0 +1,24 @@
+{
+  "name": "threadwave-skill",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "Bilingual Twitter/X automation skill suite powered by ThreadWave",
+  "files": [
+    ".codex-plugin/",
+    "skills/",
+    "references/",
+    "schemas/",
+    "scripts/",
+    "suite-manifest.json"
+  ],
+  "scripts": {
+    "validate": "node scripts/validate-suite.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "npm run validate && npm test",
+    "package": "mkdir -p dist && npm pack --pack-destination dist"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

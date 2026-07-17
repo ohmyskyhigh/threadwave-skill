@@ -1,0 +1,35 @@
+{
+  "name": "threadwave-skill",
+  "version": "0.3.0+codex.20260717162315",
+  "description": "A bilingual, review-gated Twitter/X automation skill suite powered by ThreadWave.",
+  "author": {
+    "name": "ThreadWave"
+  },
+  "keywords": [
+    "twitter",
+    "tweet",
+    "x",
+    "automation",
+    "agent",
+    "cli",
+    "chrome extension",
+    "setup",
+    "reply",
+    "\u4e2d\u6587",
+    "\u63a8\u7279"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "ThreadWave Twitter Automation Suite",
+    "shortDescription": "Four bilingual, review-gated Twitter/X skills.",
+    "longDescription": "Install once to use automation routing, daily growth, one-post, and one-reply workflows in English or Simplified Chinese. Missing skill-suite, CLI, or extension modules route to the web-hosted harness guide at /cli/setup/agent.md; setup is not installed as a fifth skill.",
+    "developerName": "ThreadWave",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": "Check my Twitter/X automation setup, then route my request to the correct review-gated workflow. \u7528\u4e2d\u6587\u6216\u82f1\u6587\u5747\u53ef\u3002",
+    "brandColor": "#7CFFB2"
+  }
+}

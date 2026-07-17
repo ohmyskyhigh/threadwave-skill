@@ -1,0 +1,4 @@
+interface:
+  display_name: "Twitter Agent / 推特代理"
+  short_description: "Run daily Twitter/X growth with reviews / 审核式每日推特增长"
+  default_prompt: "Use $twitter-agent to initialize or resume my bilingual, review-gated daily Twitter/X strategy, plan, draft, and scheduler workflow."

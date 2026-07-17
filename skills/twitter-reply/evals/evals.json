@@ -1,0 +1,45 @@
+{
+  "skill_name": "twitter-reply",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Reply to https://x.com/example/status/1234567890123456789 with exactly: Thanks for sharing — this is useful.",
+      "expected_output": "Preserves the exact target/text pair, runs full preflight and dry-run, displays both, and stops for explicit approval before one dispatch.",
+      "expectations": [
+        "Does not change the target or reply punctuation",
+        "Uses tw action reply with --dry-run before approval",
+        "Does not claim a reply was sent during dry-run"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "回复这条 https://x.com/example/status/1234567890123456789，原文：这个角度很有启发，谢谢分享。",
+      "expected_output": "Uses Simplified Chinese interface text, preserves target and reply exactly, and waits for explicit approval.",
+      "expectations": [
+        "Preserves the exact Chinese reply",
+        "Uses Simplified Chinese approval labels",
+        "Keeps commands and schema identifiers in English"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Reply 'nice work' to that tweet we looked at earlier.",
+      "expected_output": "Asks for the exact status URL/ID/ref and does not infer the target from history or browser state.",
+      "expectations": [
+        "Identifies the missing exact target",
+        "Does not run dry-run or mutation against an inferred target",
+        "Asks only for the missing target"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Approved, but use the other link and add an exclamation mark.",
+      "expected_output": "Invalidates prior approval, asks for an exact replacement target if absent, dry-runs the changed pair, and requests approval again.",
+      "expectations": [
+        "Does not reuse approval after target or text changes",
+        "Requires one exact target/text pair",
+        "Never retries an unknown reply result"
+      ]
+    }
+  ]
+}

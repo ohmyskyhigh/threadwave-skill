@@ -1,0 +1,87 @@
+{
+  "schema_version": "threadwave-skill-suite-v1",
+  "suite_name": "threadwave-skill",
+  "suite_version": "0.3.0",
+  "install_mode": "atomic_plugin",
+  "required_skills": [
+    {
+      "name": "twitter-automation",
+      "path": "skills/twitter-automation/SKILL.md",
+      "required_command_families": [
+        "capabilities",
+        "doctor",
+        "setup"
+      ]
+    },
+    {
+      "name": "twitter-agent",
+      "path": "skills/twitter-agent/SKILL.md",
+      "required_command_families": [
+        "context",
+        "strategy",
+        "plan",
+        "task",
+        "draft",
+        "scheduler"
+      ]
+    },
+    {
+      "name": "twitter-post",
+      "path": "skills/twitter-post/SKILL.md",
+      "required_command_families": [
+        "action"
+      ],
+      "required_commands": [
+        "tw action tweet --text <text> --json"
+      ]
+    },
+    {
+      "name": "twitter-reply",
+      "path": "skills/twitter-reply/SKILL.md",
+      "required_command_families": [
+        "action"
+      ],
+      "required_commands": [
+        "tw action reply <tweet_url_or_ref> --text <text> --json"
+      ]
+    }
+  ],
+  "supported_locales": [
+    "en",
+    "zh-CN"
+  ],
+  "contracts": {
+    "cli_schema": "tw-cli-v1",
+    "harness_cli_schema": "tw_cli_harness_v1",
+    "harness_schema": "tw-harness-v1",
+    "doctor_schema": "threadwave-doctor-v1",
+    "setup_contract": "threadwave-setup-v1",
+    "issue_report_schema": "threadwave-issue-report-v1"
+  },
+  "cli": {
+    "binary": "tw",
+    "minimum_version": "1.0.0",
+    "missing_cli_setup_url": "https://www.threadwave.xyz/cli/setup/agent.md",
+    "compatibility_authority": "tw capabilities --format json"
+  },
+  "setup_route": {
+    "owner": "web_setup_guide",
+    "url": "https://www.threadwave.xyz/cli/setup/agent.md",
+    "human_url": "https://www.threadwave.xyz/cli/setup",
+    "agent_guide_url": "https://www.threadwave.xyz/cli/setup/agent.md",
+    "installed_skill": false,
+    "handles_missing": [
+      "skill_suite",
+      "cli",
+      "extension"
+    ],
+    "requires_user_action": true,
+    "resume_check": "tw setup --dry-run --format json"
+  },
+  "update_policy": {
+    "suite_source": "host_plugin_manager",
+    "cli_source": "capabilities.required_upgrades",
+    "unknown_is_blocking": false,
+    "never_invent_release_endpoints": true
+  }
+}

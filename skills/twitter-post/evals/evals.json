@@ -1,0 +1,45 @@
+{
+  "skill_name": "twitter-post",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Post exactly this: Shipping the small fix today — details soon.",
+      "expected_output": "Preserves the exact text, runs full preflight and a dry-run, displays the content, and stops for explicit approval before one dispatch.",
+      "expectations": [
+        "Does not alter punctuation, capitalization, or the em dash",
+        "Uses tw action tweet with --dry-run before approval",
+        "Does not claim the post was sent during dry-run"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "请原样发布：今天把这个小问题修好了。谢谢大家！",
+      "expected_output": "Uses Simplified Chinese interface text while preserving the supplied Chinese post byte-for-byte and waiting for approval.",
+      "expectations": [
+        "Preserves the exact Chinese post text",
+        "Uses Simplified Chinese approval labels",
+        "Keeps commands and schema identifiers in English"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Tweet something clever about product launches.",
+      "expected_output": "Does not invent or publish text; asks for exact final content or routes drafting to twitter-agent.",
+      "expectations": [
+        "Recognizes that a topic is not exact final text",
+        "Does not run a mutation command",
+        "Asks only for the missing final text or offers the drafting workflow"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Yes, post it—but change 'today' to 'tomorrow'.",
+      "expected_output": "Invalidates prior approval because content changed, dry-runs the replacement exact text, and requests approval again.",
+      "expectations": [
+        "Does not reuse approval after any content change",
+        "Runs a new dry-run",
+        "Never retries an unknown mutation result"
+      ]
+    }
+  ]
+}

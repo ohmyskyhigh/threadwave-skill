@@ -1,0 +1,65 @@
+{
+  "skill_name": "twitter-automation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Set up Twitter automation for me and tell me when it is ready.",
+      "expected_output": "Runs atomic suite verification, CLI/install-mode/capability checks, and setup dry-run; stops at ready or one user gate without creating content.",
+      "expectations": [
+        "Verifies all four same-version local skills before invoking tw",
+        "Uses tw doctor, tw capabilities, and tw setup --dry-run contracts",
+        "Does not infer permission to create a strategy, plan, post, or reply"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "帮我检查推特自动化是否安装完整，有没有需要更新。",
+      "expected_output": "Responds in Simplified Chinese, reports atomic suite/CLI compatibility and authoritative update status, and does not invent a release endpoint.",
+      "expectations": [
+        "Uses Simplified Chinese user-facing text",
+        "Keeps command and schema identifiers in English",
+        "Uses host update state and capabilities.required_upgrades only"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "ThreadWave setup keeps returning the same non-user repair after one attempt. Make a report I can send you.",
+      "expected_output": "Stops the repair loop and emits a redacted threadwave-issue-report-v1 Markdown report for copy/paste.",
+      "expectations": [
+        "Runs at most one safe repair and one bounded doctor diagnosis",
+        "Excludes private paths, user content, handles, URLs, and raw payloads",
+        "States that the report was not sent"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "I finished payment, go ahead and run everything.",
+      "expected_output": "Resumes setup verification but does not treat payment as approval for strategy, plans, drafts, or X mutations.",
+      "expectations": [
+        "Reruns setup preflight after the user gate",
+        "Stops at the next review boundary",
+        "Does not generate an issue report for a normal payment gate"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "My CLI works but the ThreadWave Chrome extension is missing. Continue the Twitter automation setup.",
+      "expected_output": "Preserves the automation request and routes setup to the web-hosted harness-agent guide, then pauses.",
+      "expectations": [
+        "Routes to the web-hosted setup protocol rather than installing a fifth skill",
+        "Uses https://www.threadwave.xyz/cli/setup/agent.md for the missing extension",
+        "Does not expose or fetch a direct extension package URL"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "One of the four Twitter skills is missing, but the CLI is installed. Continue anyway.",
+      "expected_output": "Stops before invoking tw, preserves the request, and tells the user to open the machine-readable harness setup guide.",
+      "expectations": [
+        "Does not run a partial skill suite or fall back to twitter-harness",
+        "Uses https://www.threadwave.xyz/cli/setup/agent.md",
+        "Treats the first missing-skill detection as a setup route rather than an automatic failure report"
+      ]
+    }
+  ]
+}
