@@ -21,6 +21,7 @@ export function validateSuite(root = path.resolve(path.dirname(fileURLToPath(imp
   const pkg = readJson('package.json');
   const reportSchema = readJson('schemas/threadwave-issue-report-v2.schema.json');
   const roster = rosterNames(suite);
+  const manifests = new Map();
 
   if (suite.schema_version !== 'threadwave-skill-suite-v2') errors.push('suite manifest schema mismatch');
   if (!/^\d+\.\d+\.\d+$/.test(suite.bundle_version ?? '')) errors.push('bundle version is not strict semver');
@@ -54,6 +55,12 @@ export function validateSuite(root = path.resolve(path.dirname(fileURLToPath(imp
   for (const skillName of roster) {
     const skillRoot = path.join(root, 'skills', skillName);
     const skillPath = path.join(skillRoot, 'SKILL.md');
+    const declaration = (suite.required_skills ?? []).find((skill) => skill.name === skillName);
+    const manifest = declaration?.manifest_path ? readJson(declaration.manifest_path) : {};
+    manifests.set(skillName, manifest);
+    if (declaration?.path !== `skills/${skillName}/SKILL.md`) errors.push(`${skillName}: skill must be a flat peer folder`);
+    if (declaration?.manifest_path !== `skills/${skillName}/skill-manifest.json`) errors.push(`${skillName}: manifest must be a flat peer file`);
+    if (fs.existsSync(path.join(skillRoot, 'scripts'))) errors.push(`${skillName}: installed runtime scripts are forbidden`);
     if (!fs.existsSync(skillPath)) continue;
     const content = fs.readFileSync(skillPath, 'utf8');
     const frontmatter = parseSkillFrontmatter(content);
@@ -85,17 +92,42 @@ export function validateSuite(root = path.resolve(path.dirname(fileURLToPath(imp
     if (!content.includes(releaseIndex.roles.preflight)) errors.push(`${skillName}: must delegate to ${releaseIndex.roles.preflight}`);
   }
 
+  const operationNames = operationSkillNames(suite, releaseIndex);
+  const routerNames = operationNames.filter((name) => manifests.get(name)?.role === 'operation-router');
+  if (routerNames.length !== 1) errors.push('suite must contain exactly one operation-router peer');
+  const routerName = routerNames[0];
+  if (routerName) {
+    const routerManifest = manifests.get(routerName);
+    const forbiddenFamilies = new Set(['task', 'draft', 'plan', 'scheduler', 'action']);
+    for (const family of routerManifest?.cli?.required_command_families ?? []) {
+      if (forbiddenFamilies.has(family)) errors.push(`${routerName}: router must not require operation family:${family}`);
+    }
+    if ((routerManifest?.cli?.required_commands ?? []).length > 0) errors.push(`${routerName}: router must not require operation commands`);
+    if (fs.existsSync(path.join(root, 'skills', routerName, 'skills'))) errors.push(`${routerName}: nested skills are forbidden`);
+
+    const routerContent = fs.readFileSync(path.join(root, 'skills', routerName, 'SKILL.md'), 'utf8');
+    for (const peerName of operationNames.filter((name) => name !== routerName)) {
+      if (!routerContent.includes(peerName)) errors.push(`${routerName}: missing peer route:${peerName}`);
+      const dependencies = manifests.get(peerName)?.dependencies?.required_skills ?? [];
+      if (dependencies.some((dependency) => dependency?.name === routerName)) {
+        errors.push(`${peerName}: operation peers must not depend on ${routerName}`);
+      }
+    }
+  }
+
+  for (const surface of ['tweet', 'reply']) {
+    const owners = operationNames.filter((name) => fs
+      .readFileSync(path.join(root, 'skills', name, 'SKILL.md'), 'utf8')
+      .includes(`tw task create --surface ${surface}`));
+    if (owners.length !== 1) errors.push(`task surface ${surface} must have exactly one skill owner`);
+  }
+
   const preflightRoot = path.join(root, 'skills', releaseIndex.roles.preflight);
   for (const relative of ['references/preflight-contract.md', 'references/issue-report-contract.md']) {
     if (!fs.existsSync(path.join(preflightRoot, relative))) errors.push(`${releaseIndex.roles.preflight}: missing ${relative}`);
   }
   const updateRoot = path.join(root, 'skills', releaseIndex.roles.update);
   const updateSkill = fs.readFileSync(path.join(updateRoot, 'SKILL.md'), 'utf8');
-  for (const [skillName, skillRoot] of [[releaseIndex.roles.preflight, preflightRoot], [releaseIndex.roles.update, updateRoot]]) {
-    if (fs.existsSync(path.join(skillRoot, 'scripts'))) {
-      errors.push(`${skillName}: installed runtime scripts are forbidden`);
-    }
-  }
   if (!/Web, HTTP, browser, or URL-read capability/.test(updateSkill)) {
     errors.push(`${releaseIndex.roles.update}: agent-native remote read contract missing`);
   }

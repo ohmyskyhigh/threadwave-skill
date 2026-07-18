@@ -1,104 +1,66 @@
 ---
 name: twitter-automation
-description: "Route review-gated Twitter/X automation requests after dedicated ThreadWave preflight and update skills verify the flat peer skill suite, the CLI, and Chrome extension. Use for Twitter automation, X automation, tweet automation, Twitter bot/agent readiness, onboarding, or choosing the correct Twitter operation skill. 中文：用于在 ThreadWave 预检和更新技能确认平铺技能套件、CLI 与 Chrome 扩展后，路由推特自动化、Twitter/X 自动化、推文自动化、代理就绪、引导和技能选择请求。"
+description: "Route high-level Twitter/X automation setup, readiness, and ambiguous workflow requests to independent flat peer skills after ThreadWave checks. Use for set up Twitter automation, check Twitter agent readiness, repair automation, or choose between daily agent, post, and reply workflows. Do not use when the request already clearly asks to create/post tweets, create/send replies, or run the daily agent; activate twitter-post, twitter-reply, or twitter-agent directly. 中文：用于推特自动化安装、就绪检查、修复和模糊工作流路由；明确的发推、回复或日常代理请求应直接使用对应的平级技能。"
 ---
 
 # Twitter Automation
 
-Own high-level workflow routing after the dedicated infrastructure peers complete readiness. `threadwave-preflight` owns dependencies/setup and `threadwave-update` owns versions. Delegate missing skill, CLI, or extension setup to `https://www.threadwave.xyz/cli/setup/agent.md`. ThreadWave is the implementation provider; the public operation name remains generic.
+Act only as the optional high-level router for the flat ThreadWave Twitter skill suite. Never contain, copy, proxy, or execute the workflows owned by `twitter-post`, `twitter-reply`, or `twitter-agent`.
 
-## Scope
+## Flat Peer Contract
 
-Use this skill to:
+Treat these as independent installed siblings:
 
-- request the mandatory dedicated preflight and update checks;
-- hand any missing skill-suite, CLI, or extension module to the web-hosted harness setup guide without losing the original request;
-- report readiness or route an already-requested workflow to the matching skill.
+```text
+twitter-automation -> routes to twitter-post
+                   -> routes to twitter-reply
+                   -> routes to twitter-agent
+```
 
-Do not create strategies, plans, drafts, posts, or replies unless the user already asked for that separate workflow and its specialized skill is available.
+Every destination skill can activate directly. None depends on this skill. Route by skill name only; never use a relative path, nested skill folder, import, or copied procedure.
 
 ## Language
 
-Choose `en` or `zh-CN` through `threadwave-preflight`: explicit user preference, latest message, conversation language, then English.
+Respond in English or Simplified Chinese from explicit preference, latest message, conversation language, then English. Preserve the original request and exact user content without translation or normalization.
 
-Keep commands, JSON keys, refs, schema values, and error codes in English.
+## Routing Flow
 
-## Mandatory Preflight And Init Flow
+Classify only the workflow owner:
 
-Activate `threadwave-preflight` by skill name on every invocation, including setup-only, status, repair, and routed operation requests. Pass the unchanged original intent and originating skill. Do not invoke `tw` until preflight returns `ready` with every roster skill version confirmed latest.
+- setup, dependency, CLI, extension, readiness, or repair: remain here;
+- ad-hoc tweet creation, one-to-five tweet tasks, or one exact post: `twitter-post`;
+- ad-hoc reply creation, one-to-five reply tasks, target discovery, or one exact reply: `twitter-reply`;
+- daily growth, strategy, plan, scheduled daily work, reviews, or outcomes: `twitter-agent`.
 
-The selected capability gate requires `capabilities`, `doctor`, and `setup`. A partial or outdated suite installation blocks every operation.
+When the request already has a clear destination, activate that peer with the unchanged request and stop this router flow. Do not run router preflight first; the destination peer owns its mandatory preflight.
 
-If any required skill, `tw`, or the Chrome extension is missing, preserve the user's request and tell the user to open `https://www.threadwave.xyz/cli/setup/agent.md` to set up the harness agent. The setup protocol is web-hosted and is not downloaded as a local fifth skill. Resume only after all three module checks verify ready.
+If a destination peer is unavailable, preserve the request and direct the user to `https://www.threadwave.xyz/cli/setup/agent.md`. Never emulate the missing peer.
 
-## Setup Delegation
+## Setup And Readiness Flow
 
-After the shared dry-run, interpret `tw setup` only from its returned contract:
+For setup/readiness requests only, activate `threadwave-preflight` by skill name. Require every release-index roster skill, the supported CLI contract, and Chrome extension setup to be confirmed ready.
 
-- `data.state=ready`: report ready and stop for setup-only requests.
-- `data.state=waiting`: state the localized user action and pause.
-- `data.state=blocked`: report the stable code and do not bypass it.
-- `data.state=error`: perform only the bounded diagnosis in preflight, then report.
+If any module is missing, outdated, or unconfirmed, show one localized action and route to `https://www.threadwave.xyz/cli/setup/agent.md`. Setup completion grants no approval for strategy, content, posting, replying, or another X mutation.
 
-The web-hosted setup guide may direct contract-authorized safe local repair. The user owns:
+## Hard Boundaries
 
-- Chrome extension permission confirmation;
-- ThreadWave sign-up/sign-in;
-- subscription/payment confirmation;
-- X login.
-
-For every missing skill-suite, CLI, or extension state, route to the canonical agent guide; do not install a local setup skill or expose a direct extension package. After the page-guided flow verifies all modules ready, resume this skill or the originating specialized workflow. Do not infer any content approval from setup completion.
-
-## Dependency And Update Result
-
-Summarize these independently:
-
-1. Skills: every roster skill present, with each independent version confirmed latest.
-2. CLI: installed version and supported schemas.
-3. Install: `packaged` or safe `dev` worktree status.
-4. Setup: ready or one concrete user gate.
-5. Update: authoritative result from `threadwave-update`; CLI `required_upgrades` from capabilities.
-
-If GitHub update status is unconfirmed, stop before `tw`. Never claim “latest” without the authoritative release index result.
-
-## Router
-
-When preflight is ready, preserve the original intent and route:
-
-- daily growth, strategy, plan, reviews, drafts, or scheduler: `twitter-agent`;
-- one exact new post now: `twitter-post`;
-- one exact reply to one target now: `twitter-reply`;
-- skill-suite, CLI, or extension install/repair: web-hosted harness setup at `https://www.threadwave.xyz/cli/setup/agent.md`;
-- dependency/update/readiness check only: remain here and stop at readiness.
-
-Do not ask the user to repeat content already supplied. Routing does not grant approval.
-
-## Approval Boundaries
-
-Automatically perform read-only checks, compatibility validation, setup dry-runs, and setup-authorized safe repair.
-
-Pause before every user-owned browser/auth/payment/X login gate and before any strategy, plan, content, or X mutation decision. “Run Twitter automation” means initialize and show the next review; it does not authorize posting.
+- Never invoke `tw task`, `tw draft`, `tw plan`, `tw scheduler`, or `tw action`.
+- Never generate, review, approve, post, reply, or schedule content.
+- Never keep operating after a peer handoff.
+- Never ask the user to repeat content already supplied.
+- Never treat a broad automation request as X mutation approval.
 
 ## Issue Report
 
-For an explicit report request or report-worthy failure, activate `threadwave-preflight` in issue-report-only mode with sanitized diagnostic metadata.
-
-Generate a copy/paste report for incomplete suites, version mismatch, CLI contract drift, repeated unresolved setup, or a safe repair that failed once. Do not generate one for a normal Chrome/auth/payment/X-login/approval wait.
-
-Always state that the report was not sent.
+For a report-worthy setup/readiness failure or explicit report request, activate `threadwave-preflight` in issue-report-only mode with sanitized metadata. State that the copy/paste report was not sent.
 
 ## Return Format
 
-Use localized labels and only applicable lines:
-
 ```text
-State: <ready | waiting for you | blocked>
-Completed: <verified checks or safe repairs>
-Preflight: <suite / CLI / compatibility / setup / automation capability>
-Problem: <stable code and localized meaning>
-Waiting for you: <one user action>
-Next: <one next step or routed skill>
-Issue report: <generated for copy/paste; nothing sent>
+State: <routed | ready | waiting for you | blocked>
+Owner: <twitter-post | twitter-reply | twitter-agent | twitter-automation>
+Completed: <routing or readiness checks only>
+Waiting for you: <one setup action, if any>
+Next: <destination skill or setup guide>
+Issue report: <copy/paste only; nothing sent>
 ```
-
-Never expose local paths, raw doctor/setup output, tokens, handles, target URLs, or private refs.

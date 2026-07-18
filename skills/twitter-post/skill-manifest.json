@@ -1,7 +1,7 @@
 {
   "schema_version": "threadwave-skill-manifest-v1",
   "name": "twitter-post",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "role": "manual-operation",
   "dependencies": {
     "required_skills": [
@@ -16,11 +16,30 @@
     "setup_url": "https://www.threadwave.xyz/cli/setup/agent.md"
   },
   "cli": {
-    "minimum_version": "1.0.0",
+    "minimum_version": "1.0.1",
     "required_command_families": [
+      "task",
+      "draft",
+      "plan",
+      "scheduler",
       "action"
     ],
     "required_commands": [
+      "tw task create --surface <tweet|reply|quote> --direction <text> --count <1..5> --json",
+      "tw task review show <review_ref> --json",
+      "tw task review approve <review_ref> --json",
+      "tw task review reject <review_ref> --json",
+      "tw task review skip <review_ref> --json",
+      "tw task retask --task <task_blueprint_ref> --direction <text> --json",
+      "tw task retask --batch <batch_ref> --direction <text> --json",
+      "tw draft show <artifact_ref> --json",
+      "tw draft redraft <artifact_ref> --feedback <text> --json",
+      "tw plan review show <review_ref> --json",
+      "tw plan review approve <review_ref> --json",
+      "tw plan review reject <review_ref> --json",
+      "tw plan review skip <review_ref> --json",
+      "tw scheduler show <scheduled_task_ref> --json",
+      "tw scheduler evidence <scheduled_task_ref> --json",
       "tw action tweet --text <text> --json"
     ]
   },

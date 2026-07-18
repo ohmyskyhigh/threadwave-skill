@@ -1,116 +1,100 @@
 ---
 name: twitter-post
-description: "Publish one exact user-supplied Twitter/X post through a mandatory dry-run, exact-content review, explicit approval, one dispatch, and evidence check using ThreadWave. Use for post a tweet, send a tweet, publish on Twitter/X, tweet this exact text, or manual tweet tasks—not drafting, scheduling, or batch posting. 中文：用于发送一条用户提供准确原文的推文、发布 Twitter/X 帖子、手动发推；必须先 dry-run、原文审核、明确批准，再执行一次。不要用于写草稿、排期或批量发帖。"
+description: "Create and review one-to-five Twitter/X post tasks through ThreadWave, or publish one exact final user-supplied post through a strict dry-run and approval flow. Use for create tweets, write several posts, batch tweet tasks, post about a topic, manual tweet work, post this exact text, send a tweet, or publish on Twitter/X. Do not use for replies or the daily strategy/plan loop. 中文：用于创建并审核 1 到 5 条推文任务、批量发推任务，或在严格 dry-run 和批准后发布一条用户提供的准确原文；不用于回复或日常策略计划。"
 ---
 
 # Twitter Post
 
-Publish exactly one user-supplied post now through the direct manual action boundary. This skill does not draft, schedule, batch, or create plan lineage.
+Own ad-hoc tweet work as an independent flat peer. Never activate or depend on `twitter-automation`; that peer may route here, but this skill owns preflight and the complete post workflow.
 
-## Required Input
+## Select One Mode
 
-Require the exact final post text. If it is missing or the user provided only a topic, goal, outline, link, or “something like this,” ask only for the final exact text or route a drafting request to `twitter-agent`.
+Select **task mode** when the user supplies a topic, direction, desired result, drafting request, or a count from `1` through `5`. Any count above one selects task mode.
 
-Do not improve, translate, shorten, expand, normalize whitespace, fix spelling, add hashtags, add a link, or change punctuation unless the user explicitly supplies replacement final text.
+Select **exact-action mode** only when the user supplies one complete final post and explicitly wants that exact text published now.
 
-Treat any replacement as a new payload requiring a new dry-run and approval.
+- Default a missing task count to `1`.
+- Accept only an integer from `1` through `5`.
+- For a count above `5`, ask the user to split it explicitly; never create multiple proposals automatically.
+- For several exact final texts, ask whether the user wants one direction-based task or separate exact actions. Never silently turn exact payloads into generative directions.
+- If exactness versus direction is unclear, ask one concise question before invoking `tw`.
 
 ## Language
 
-Choose `en` or `zh-CN` through `threadwave-preflight`: explicit user preference, latest message, conversation language, then English.
+Respond in English or Simplified Chinese from explicit preference, latest message, conversation language, then English. Never translate or normalize exact post text. Preserve task direction without adding requirements.
 
-The interface language may differ from the post language. Never translate the post because the interface locale changed.
+## Mandatory Preflight
 
-## Mandatory Preflight And Init Flow
+Activate `threadwave-preflight` by skill name on every invocation and after every user gate. Pass this skill name, selected mode, unchanged request, and required capability families. Do not invoke `tw` until every roster skill, CLI contract, and Chrome setup check returns ready.
 
-Activate `threadwave-preflight` by skill name every time, including after approval or a recoverable pause. Pass the unchanged exact post in working memory and the `twitter-post` capability requirements. Do not invoke `tw` until preflight returns `ready` with every roster skill version confirmed latest.
+Require CLI `1.0.1` plus `task`, `draft`, `plan`, `scheduler`, and `action` command families. Missing skill, CLI, or extension state routes to `https://www.threadwave.xyz/cli/setup/agent.md` while preserving the request.
 
-The selected capability gate requires the `action` family, production X actions enabled, and `tw action tweet` with `--dry-run`. If `threadwave-preflight` is unavailable, or it reports a missing/outdated skill, CLI, or extension module, preserve the exact post and direct the user to `https://www.threadwave.xyz/cli/setup/agent.md`; resume only after preflight verifies ready.
+## Task Mode
 
-Preserve the original exact text across preflight in working memory. Never place it in an issue report, log, changelog, or diagnostic summary.
+### 1. Create One Bounded Proposal
 
-## Exact-Action Procedure
+Pass direction as one safe argument; never concatenate user content into shell syntax. Run the semantic equivalent of:
 
-### 1. Dry-Run
-
-Pass the text as one exact argument using the execution environment's safe argv/stdin mechanism; never concatenate user text into an executable shell expression.
-
-Run the semantic equivalent of:
-
-```bash
-tw action tweet --text <exact_text> --dry-run --json
+```text
+tw task create --surface tweet --direction <exact_user_direction> --count <1..5> --json
 ```
 
-Require `schema_version=tw_cli_harness_v1`. A dry-run must not append mutation/evidence records or claim that the post was sent, queued, or scheduled.
+Require `schema_version=tw_cli_harness_v1`, `ok=true`, and returned `manual_request_ref`, `task_blueprint_proposal_ref`, and `review_ref`. Task creation authorizes no X mutation and must not claim that drafts or scheduled posts already exist.
 
-If pacing or another gate defers the action, report the returned retry time/status and `queued=false`; do not promise automatic delivery.
+### 2. Review The Task Proposal
 
-### 2. Exact Review
+Inspect only the returned review ref with `tw task review show <review_ref> --json`. Present the surface, direction, count, acquisition route, and safe scope. Stop for explicit approval.
 
-Show:
+After approval, rerun preflight and invoke `tw task review approve <same_review_ref> --json` once. Reject or skip only after an explicit matching user decision. Never transfer approval to a changed direction, count, ref, or proposal hash.
 
-- operation: one new post;
-- the exact post text in full, preserving whitespace and characters;
-- the account binding only when already verified and safe to display;
-- the dry-run gate result;
-- the exact semantic command with text represented as `<approved exact text>`.
+### 3. Follow Returned Workflow Refs
 
-Then stop and ask for explicit approval. “Set up Twitter,” “run automation,” “looks good generally,” payment completion, or approval of a different draft/review does not count.
+Use only refs and next actions returned by the CLI:
 
-### 3. Approval Validity
+- inspect and decide any manual `task_proposal` or `source_selection` review through `tw task review`;
+- inspect generated artifacts through `tw draft show <artifact_ref> --json`;
+- inspect each content review through `tw plan review show <review_ref> --json`;
+- approve, reject, or skip each content review independently;
+- inspect each returned scheduled mutation through `tw scheduler show` and `tw scheduler evidence`.
 
-Approval is valid only for the immediately displayed operation and byte-for-byte-equivalent text. If the user changes even one character, clarifies a different account, or asks for another post, invalidate the approval and return to dry-run.
+Do not guess the next review, artifact, target, or scheduled task. Do not collapse multiple draft reviews into “approve all.” Each content approval can authorize only one exact scheduled X mutation.
 
-### 4. Dispatch Once
+### 4. Handle Changes And Shortfalls
 
-After explicit approval, rerun mandatory preflight. If ready and the payload is unchanged, run the same command once without `--dry-run`:
+- Direction/source/angle change: use one explicit `tw task retask --task` or `--batch` request after showing the exact scope.
+- Same-lineage wording change: use `tw draft redraft` with exact feedback, then require a new content review.
+- Fewer valid outputs than requested: report actual valid count; never invent or duplicate items.
+- Unknown scheduler or mutation evidence: stop without retry and request a sanitized issue report.
 
-```bash
-tw action tweet --text <same_exact_text> --json
-```
+## Exact-Action Mode
 
-Never retry an unknown account-impacting result. Never send a second post as “verification.”
+Require one exact final post. Do not improve, translate, shorten, expand, normalize whitespace, fix spelling, add hashtags, or change punctuation.
 
-### 5. Evidence
-
-Require `schema_version=tw_cli_harness_v1`, `ok=true`, an `action_ref`, and conclusive evidence for the mutation before reporting complete. Summarize the safe outcome; do not expose raw records or payloads.
-
-If evidence says blocked, failed, deferred, or unknown, use that exact state. Unknown or inconclusive mutation proof is report-worthy and must stop without retry.
+1. Run `tw action tweet --text <exact_text> --dry-run --json` through safe argv/stdin handling.
+2. Show the exact text in full, the dry-run result, and the semantic operation; ask for explicit approval.
+3. Treat any character change as a new payload requiring a new dry-run and approval.
+4. After approval, rerun preflight and dispatch `tw action tweet --text <same_exact_text> --json` once.
+5. Require `ok=true`, an `action_ref`, and conclusive evidence before reporting complete. Never retry an unknown result or send a second post as verification.
 
 ## Boundaries
 
-- One invocation controls one exact post.
-- The manual action remains outside strategy, plan, task, draft, and scheduler lineage.
-- Do not claim a `review_ref`, scheduled task, or writing-memory promotion was created.
-- Do not call `twitter-reply`, quote, like, save, follow, or any batch action from this skill.
-- Do not post from the browser UI directly; use only the installed `tw` command after preflight.
+- Task mode creates one proposal with `1..5` independent possible draft items; it does not grant batch mutation approval.
+- Exact-action mode controls one post only and remains outside task/plan lineage.
+- Do not reply, quote, like, save, follow, or operate the browser UI directly.
+- Do not expose user content, raw payloads, private refs, or local paths in diagnostics.
 
 ## Issue Report
 
-For an explicit report request or report-worthy failure, activate `threadwave-preflight` in issue-report-only mode with sanitized diagnostic metadata. Do not include the exact post in the handoff.
-
-Generate a redacted copy/paste report for suite/CLI drift, a repeated unresolved non-user setup failure, or unknown/inconclusive mutation evidence. Never include the post text, account handle, target URL/status ID, raw command with text, or raw action/evidence payload.
-
-Do not report normal approval, auth, payment, X-login, or pacing waits. Always state that nothing was sent.
+For explicit report requests, CLI drift, repeated unresolved setup, or unknown evidence, activate `threadwave-preflight` in issue-report-only mode with sanitized metadata. Exclude post text and task direction. State that nothing was sent.
 
 ## Return Format
 
-Before approval:
-
 ```text
-State: needs approval
-Preflight: <ready checks>
-Review: one post with the exact original text
-Waiting for you: approve or replace the exact text
-If you approve, I will run: tw action tweet --text <approved exact text> --json
-```
-
-After execution:
-
-```text
-State: <complete | blocked | unknown>
-Completed: <only what evidence proves>
-Problem: <stable code and localized meaning, if any>
-Next: <retry time, user gate, or stop>
-Issue report: <generated for copy/paste; nothing sent>
+State: <needs task approval | needs source approval | needs content approval | scheduled | complete | blocked | unknown>
+Mode: <task | exact action>
+Count: <requested / valid / approved / scheduled>
+Review: <one exact current review>
+Waiting for you: <one decision or setup action>
+Next: <one returned ref/action or stop>
+Issue report: <copy/paste only; nothing sent>
 ```

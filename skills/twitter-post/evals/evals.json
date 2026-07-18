@@ -3,42 +3,62 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Post exactly this: Shipping the small fix today — details soon.",
-      "expected_output": "Preserves the exact text, runs full preflight and a dry-run, displays the content, and stops for explicit approval before one dispatch.",
+      "prompt": "Create 5 tweets about mistakes teams make during product launches.",
+      "expected_output": "Selects task mode, runs preflight, creates one tweet task proposal with count 5, shows the exact proposal review, and stops before approval.",
       "expectations": [
-        "Does not alter punctuation, capitalization, or the em dash",
-        "Uses tw action tweet with --dry-run before approval",
-        "Does not claim the post was sent during dry-run"
+        "Uses tw task create with surface tweet and count 5",
+        "Does not invoke twitter-automation",
+        "Does not claim drafts or posts exist at proposal creation"
       ]
     },
     {
       "id": 2,
-      "prompt": "请原样发布：今天把这个小问题修好了。谢谢大家！",
-      "expected_output": "Uses Simplified Chinese interface text while preserving the supplied Chinese post byte-for-byte and waiting for approval.",
+      "prompt": "帮我创建 3 条关于 AI agent 产品设计的推文。",
+      "expected_output": "Uses Simplified Chinese interface text, preserves the direction, creates one count-3 tweet task proposal, and waits for task approval.",
       "expectations": [
-        "Preserves the exact Chinese post text",
-        "Uses Simplified Chinese approval labels",
-        "Keeps commands and schema identifiers in English"
+        "Uses task mode and count 3",
+        "Keeps commands and refs in English",
+        "Does not translate or expand the direction"
       ]
     },
     {
       "id": 3,
-      "prompt": "Tweet something clever about product launches.",
-      "expected_output": "Does not invent or publish text; asks for exact final content or routes drafting to twitter-agent.",
+      "prompt": "Post exactly this now: Shipping the small fix today — details soon.",
+      "expected_output": "Selects exact-action mode, preserves the text byte-for-byte, runs a dry-run, displays the exact payload, and waits for approval before one dispatch.",
       "expectations": [
-        "Recognizes that a topic is not exact final text",
-        "Does not run a mutation command",
-        "Asks only for the missing final text or offers the drafting workflow"
+        "Uses tw action tweet with --dry-run",
+        "Preserves punctuation and the em dash",
+        "Never treats task approval as exact-action approval"
       ]
     },
     {
       "id": 4,
-      "prompt": "Yes, post it—but change 'today' to 'tomorrow'.",
-      "expected_output": "Invalidates prior approval because content changed, dry-runs the replacement exact text, and requests approval again.",
+      "prompt": "Create 10 tweets about our launch.",
+      "expected_output": "Stops before invoking tw and asks the user to choose an explicit batch of at most five without silently creating two proposals.",
       "expectations": [
-        "Does not reuse approval after any content change",
-        "Runs a new dry-run",
-        "Never retries an unknown mutation result"
+        "Enforces the CLI count limit",
+        "Does not auto-chunk",
+        "Preserves the original direction"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Approve all five drafts.",
+      "expected_output": "Refuses broad batch mutation approval and presents only one exact pending content review at a time.",
+      "expectations": [
+        "Does not collapse independent review refs",
+        "Does not authorize more than one mutation per content approval",
+        "Follows only CLI-returned refs"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Post these three exact texts exactly as written.",
+      "expected_output": "Asks whether to create one direction-based task or run separate exact actions because task generation cannot guarantee several exact payloads.",
+      "expectations": [
+        "Does not silently treat exact payloads as task direction",
+        "Does not perform multiple exact actions from one approval",
+        "Asks one concise clarification"
       ]
     }
   ]

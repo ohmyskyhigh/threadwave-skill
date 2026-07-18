@@ -1,125 +1,104 @@
 ---
 name: twitter-reply
-description: "Send one exact user-supplied reply to one exact Twitter/X post through target validation, mandatory dry-run, exact-content review, explicit approval, one dispatch, and evidence check using ThreadWave. Use for reply to a tweet, respond on Twitter/X, manual Twitter reply, or reply with this exact text—not drafting, engagement campaigns, or batch replies. 中文：用于对一条准确指定的 Twitter/X 帖子发送一条用户提供原文的回复；必须验证目标、dry-run、原文审核、明确批准，再执行一次。不要用于写回复草稿、互动活动或批量回复。"
+description: "Create and review one-to-five Twitter/X reply tasks with target discovery through ThreadWave, or send one exact final reply to one exact target through a strict dry-run and approval flow. Use for create replies, reply to several posts, batch reply tasks, engage with posts about a topic, manual Twitter replies, or reply to this exact tweet with this exact text. Do not use for original posts or the daily strategy/plan loop. 中文：用于创建并审核 1 到 5 条带目标发现的推特回复任务、批量回复任务，或在严格 dry-run 和批准后向一个准确目标发送一条准确回复；不用于原创推文或日常策略计划。"
 ---
 
 # Twitter Reply
 
-Send exactly one user-supplied reply to exactly one user-supplied X/Twitter target now. This skill does not draft, schedule, discover targets, or run engagement batches.
+Own ad-hoc reply work as an independent flat peer. Never activate or depend on `twitter-automation`; that peer may route here, but this skill owns preflight and the complete reply workflow.
 
-## Required Input
+## Select One Mode
 
-Require both:
+Select **task mode** when the user supplies a direction, topic, literal search anchor, account/surface criteria, target-discovery request, or a count from `1` through `5`. Any count above one selects task mode.
 
-1. one exact X/Twitter status URL, status ID, or sanitized tweet ref accepted by `tw`;
-2. the exact final reply text.
+Select **exact-action mode** only when the user supplies one exact target, one complete final reply, and explicit immediate-send intent.
 
-If either is missing, ask only for the missing value. Never infer a target from recent conversation, browser state, a handle, a screenshot, or “that tweet.” A profile URL is not a reply target.
-
-Do not improve, translate, shorten, expand, normalize, spell-correct, or change the reply. Replacement target or text creates a new payload that requires a new dry-run and approval.
+- Default a missing task count to `1`.
+- Accept only an integer from `1` through `5`.
+- For a count above `5`, ask the user to split it explicitly; never create multiple proposals automatically.
+- Never infer an exact target from browser state, a screenshot, a profile URL, or “that tweet.”
+- For several exact target/text pairs, ask whether the user wants one direction-based discovery task or separate exact actions.
+- If exactness versus discovery/direction is unclear, ask one concise question before invoking `tw`.
 
 ## Language
 
-Choose `en` or `zh-CN` through `threadwave-preflight`: explicit user preference, latest message, conversation language, then English.
+Respond in English or Simplified Chinese from explicit preference, latest message, conversation language, then English. Never translate or normalize an exact target/reply pair. Preserve task direction without adding requirements.
 
-Interface locale never changes the exact reply or target.
+## Mandatory Preflight
 
-## Mandatory Preflight And Init Flow
+Activate `threadwave-preflight` by skill name on every invocation and after every user gate. Pass this skill name, selected mode, unchanged request, and required capability families. Do not invoke `tw` until every roster skill, CLI contract, and Chrome setup check returns ready.
 
-Activate `threadwave-preflight` by skill name on every invocation, including after approval or a user gate. Pass the unchanged exact target/reply in working memory and the `twitter-reply` capability requirements. Do not invoke `tw` until preflight returns `ready` with every roster skill version confirmed latest.
+Require CLI `1.0.1` plus `task`, `draft`, `plan`, `scheduler`, and `action` command families. Missing skill, CLI, or extension state routes to `https://www.threadwave.xyz/cli/setup/agent.md` while preserving the request.
 
-The selected capability gate requires the `action` family, production X actions enabled, and `tw action reply` with `--dry-run`. If `threadwave-preflight` is unavailable, or it reports a missing/outdated skill, CLI, or extension module, preserve the exact target and reply and direct the user to `https://www.threadwave.xyz/cli/setup/agent.md`; resume only after preflight verifies ready.
+## Task Mode
 
-Preserve target and text across preflight in working memory only. Exclude both from issue reports, changelogs, and diagnostic summaries.
+### 1. Create One Bounded Proposal
 
-## Exact-Reply Procedure
+Pass direction as one safe argument; never concatenate user content into shell syntax. Run the semantic equivalent of:
 
-### 1. Validate The Target Shape
-
-Accept only one target understood by the CLI contract: an `x.com`/`twitter.com` status URL, a status ID, or a sanitized tweet ref. Reject multiple targets, search queries, profile-only URLs, feeds, or inferred browser selections.
-
-Target-shape validation is not proof of content identity. The action dry-run owns browser/content availability checks.
-
-### 2. Dry-Run
-
-Pass target and text as separate exact arguments using safe argv/stdin handling; never concatenate user values into an executable shell expression.
-
-Run the semantic equivalent of:
-
-```bash
-tw action reply <exact_target> --text <exact_reply_text> --dry-run --json
+```text
+tw task create --surface reply --direction <exact_user_direction> --count <1..5> --json
 ```
 
-Require `schema_version=tw_cli_harness_v1`. Dry-run must not append mutation/evidence records or claim the reply was sent, queued, or scheduled.
+Require `schema_version=tw_cli_harness_v1`, `ok=true`, and returned `manual_request_ref`, `task_blueprint_proposal_ref`, and `review_ref`. Task creation authorizes no discovery, generation, or X mutation until its exact review gate passes.
 
-If pacing defers the action, report the returned retry time/status and `queued=false`. Do not promise automatic delivery.
+### 2. Review The Task Proposal
 
-### 3. Exact Review
+Inspect only the returned review ref with `tw task review show <review_ref> --json`. Present the reply surface, direction, requested count, acquisition route, and safe target-selection scope. Stop for explicit approval.
 
-Show:
+After approval, rerun preflight and invoke `tw task review approve <same_review_ref> --json` once. Never transfer approval to a changed direction, count, ref, proposal hash, or target policy.
 
-- operation: one reply;
-- the exact target supplied by the user;
-- the exact reply text in full, preserving whitespace and characters;
-- the dry-run gate/content-availability result;
-- the semantic command with `<approved exact target>` and `<approved exact reply>` placeholders.
+### 3. Review Every Discovered Source
 
-Stop for explicit approval. Approval of a plan, task, draft, another target, payment, setup, or broad engagement automation is not approval for this reply.
+Follow only CLI-returned source-selection refs. Inspect each with `tw task review show`, show its safe public source context, and require an independent approve/reject/skip decision.
 
-### 4. Approval Validity
+Source approval authorizes draft generation for that exact source only. It never authorizes a reply mutation. When fewer valid sources exist than requested, report the actual count and continue only with the valid reviewed sources.
 
-Approval is valid only for the immediately displayed target/text pair. Any character change, redirected/different target, account clarification, or additional reply invalidates it. Dry-run the new pair and ask again.
+### 4. Review Drafts And Scheduled Mutations
 
-### 5. Dispatch Once
+- Inspect generated artifacts through `tw draft show <artifact_ref> --json`.
+- Inspect each content review through `tw plan review show <review_ref> --json`.
+- Approve, reject, or skip each content review independently.
+- Inspect each returned scheduled mutation through `tw scheduler show` and `tw scheduler evidence`.
 
-After explicit approval, rerun mandatory preflight. If ready and the pair is unchanged, dispatch exactly once without `--dry-run`:
+Never guess a target or ref. Never collapse multiple replies into “approve all.” Each content approval authorizes one exact reply mutation only.
 
-```bash
-tw action reply <same_exact_target> --text <same_exact_reply_text> --json
-```
+### 5. Handle Changes And Failures
 
-Never retry an unknown account-impacting result. Never send a test reply or a second reply as verification.
+- Direction/source/angle change: use one explicit `tw task retask --task` or `--batch` request after showing exact scope.
+- Same-source wording change: use `tw draft redraft`, then require a new content review.
+- Rejected source: create no draft or mutation for that source.
+- Unknown scheduler or mutation evidence: stop without retry and request a sanitized issue report.
 
-### 6. Evidence
+## Exact-Action Mode
 
-Require `schema_version=tw_cli_harness_v1`, `ok=true`, an `action_ref`, and conclusive evidence tied to the exact reply operation before reporting complete.
+Require exactly one target accepted by the CLI contract and one exact final reply. A profile URL is not a reply target.
 
-Use returned blocked, failed, deferred, or unknown states exactly. Unknown/inconclusive evidence is report-worthy and must stop without retry.
+1. Run `tw action reply <exact_target> --text <exact_reply> --dry-run --json` through safe argv/stdin handling.
+2. Show the exact target and reply in full, the dry-run result, and the semantic operation; ask for explicit approval.
+3. Treat any target or character change as a new payload requiring a new dry-run and approval.
+4. After approval, rerun preflight and dispatch `tw action reply <same_target> --text <same_reply> --json` once.
+5. Require `ok=true`, an `action_ref`, and conclusive evidence before reporting complete. Never retry an unknown result or send a test reply.
 
 ## Boundaries
 
-- One invocation controls one target/text pair and one possible reply.
-- Manual reply remains outside strategy, plan, task, draft, scheduler, and writing-memory lineage.
-- Do not claim it created a content review or scheduled task.
-- Do not quote, like, save, follow, follow back, post, discover, or batch from this skill.
-- Do not reply through direct browser UI; use only installed `tw` after preflight.
+- Task mode creates one proposal with `1..5` independent possible reply items; it does not grant batch mutation approval.
+- Exact-action mode controls one target/text pair only and remains outside task/plan lineage.
+- Do not create original posts, quote, like, save, follow, or operate the browser UI directly.
+- Do not expose reply text, targets, raw payloads, private refs, or local paths in diagnostics.
 
 ## Issue Report
 
-For an explicit report request or report-worthy failure, activate `threadwave-preflight` in issue-report-only mode with sanitized diagnostic metadata. Do not include the exact target or reply in the handoff.
-
-Generate a redacted copy/paste report for suite/CLI drift, repeated unresolved non-user setup failure, or unknown/inconclusive reply evidence. Never include reply text, target URL/status ID/ref, handle, raw command containing user values, or raw browser/action/evidence payload.
-
-Do not report normal approval, auth, payment, X-login, unavailable target content, or pacing waits unless the returned contract itself is inconsistent. Always state that nothing was sent.
+For explicit report requests, CLI drift, repeated unresolved setup, or unknown evidence, activate `threadwave-preflight` in issue-report-only mode with sanitized metadata. Exclude target, reply text, and task direction. State that nothing was sent.
 
 ## Return Format
 
-Before approval:
-
 ```text
-State: needs approval
-Preflight: <ready checks>
-Review: one exact target plus the exact original reply
-Waiting for you: approve or replace the target/text pair
-If you approve, I will run: tw action reply <approved exact target> --text <approved exact reply> --json
-```
-
-After execution:
-
-```text
-State: <complete | blocked | unknown>
-Completed: <only what evidence proves>
-Problem: <stable code and localized meaning, if any>
-Next: <retry time, user gate, or stop>
-Issue report: <generated for copy/paste; nothing sent>
+State: <needs task approval | needs source approval | needs content approval | scheduled | complete | blocked | unknown>
+Mode: <task | exact action>
+Count: <requested / valid sources / approved / scheduled>
+Review: <one exact current review>
+Waiting for you: <one decision or setup action>
+Next: <one returned ref/action or stop>
+Issue report: <copy/paste only; nothing sent>
 ```

@@ -3,16 +3,20 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { evaluateCapabilities } from '../scripts/suite-policy.mjs';
+import { evaluateCapabilities, operationSkillNames } from '../scripts/suite-policy.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const suite = JSON.parse(fs.readFileSync(path.join(root, 'suite-manifest.json'), 'utf8'));
+const releaseIndex = JSON.parse(fs.readFileSync(path.join(root, 'release-index.json'), 'utf8'));
 const skillManifest = (name) => JSON.parse(fs.readFileSync(path.join(root, 'skills', name, 'skill-manifest.json'), 'utf8'));
+const operationSkills = operationSkillNames(suite, releaseIndex);
+const operationManifests = operationSkills.map(skillManifest);
 
 function capabilities() {
   return {
     schema_version: 'tw-cli-v1',
     data: {
-      cli_version: '1.0.0',
+      cli_version: '1.0.1',
       cli_schema_versions: ['tw-cli-v1'],
       harness_schema_versions: ['tw-harness-v1'],
       required_upgrades: [],
@@ -23,34 +27,74 @@ function capabilities() {
         { name: 'setup', status: 'available', commands: ['tw setup --json'] },
         { name: 'context', status: 'available', commands: ['tw context resume --format json'] },
         { name: 'strategy', status: 'available', commands: [] },
-        { name: 'plan', status: 'available', commands: [] },
-        { name: 'task', status: 'available', commands: [] },
-        { name: 'draft', status: 'available', commands: [] },
-        { name: 'scheduler', status: 'available', commands: [] },
-        { name: 'action', status: 'available', commands: ['tw action reply <tweet_url_or_ref> --text <text> --json'] }
+        { name: 'plan', status: 'available', commands: [
+          'tw plan review show <review_ref> --json',
+          'tw plan review approve <review_ref> --json',
+          'tw plan review reject <review_ref> --json',
+          'tw plan review skip <review_ref> --json'
+        ] },
+        { name: 'task', status: 'available', commands: [
+          'tw task create --surface <tweet|reply|quote> --direction <text> --count <1..5> --json',
+          'tw task review show <review_ref> --json',
+          'tw task review approve <review_ref> --json',
+          'tw task review reject <review_ref> --json',
+          'tw task review skip <review_ref> --json',
+          'tw task retask --task <task_blueprint_ref> --direction <text> --json',
+          'tw task retask --batch <batch_ref> --direction <text> --json'
+        ] },
+        { name: 'draft', status: 'available', commands: [
+          'tw draft show <artifact_ref> --json',
+          'tw draft redraft <artifact_ref> --feedback <text> --json'
+        ] },
+        { name: 'scheduler', status: 'available', commands: [
+          'tw scheduler show <scheduled_task_ref> --json',
+          'tw scheduler evidence <scheduled_task_ref> --json'
+        ] },
+        { name: 'action', status: 'available', commands: [
+          'tw action tweet --text <text> --json',
+          'tw action reply <tweet_url_or_ref> --text <text> --json'
+        ] }
       ]
     }
   };
 }
 
 test('each workflow accepts the supported CLI contract', () => {
-  assert.deepEqual(evaluateCapabilities(skillManifest('twitter-automation'), capabilities()), []);
-  assert.deepEqual(evaluateCapabilities(skillManifest('twitter-agent'), capabilities()), []);
-  assert.deepEqual(evaluateCapabilities(skillManifest('twitter-reply'), capabilities()), []);
-  assert.deepEqual(evaluateCapabilities(skillManifest('twitter-post'), capabilities(), {
-    confirmedCommands: ['tw action tweet --text <text> --json']
-  }), []);
+  for (const manifest of operationManifests) {
+    assert.deepEqual(evaluateCapabilities(manifest, capabilities()), []);
+  }
 });
 
-test('missing exact action command is detected before mutation', () => {
-  assert.ok(evaluateCapabilities(skillManifest('twitter-post'), capabilities()).some((failure) => failure.startsWith('required_command_missing:')));
+test('missing task review command is detected before workflow creation', () => {
+  const value = capabilities();
+  const task = value.data.command_families.find((family) => family.name === 'task');
+  task.commands = task.commands.filter((command) => !command.startsWith('tw task review approve'));
+  const taskOwners = operationManifests.filter((manifest) => manifest.cli.required_commands
+    .some((command) => command.startsWith('tw task create --surface')));
+  assert.ok(taskOwners.length > 0);
+  for (const manifest of taskOwners) {
+    assert.ok(evaluateCapabilities(manifest, value).some((failure) => failure.startsWith('required_command_missing:')));
+  }
+});
+
+test('task skills reject the pre-task CLI version while the router remains compatible', () => {
+  const value = capabilities();
+  value.data.cli_version = '1.0.0';
+  const taskOwners = operationManifests.filter((manifest) => manifest.cli.minimum_version === '1.0.1');
+  const routers = operationManifests.filter((manifest) => manifest.role === 'operation-router');
+  assert.ok(taskOwners.length > 0);
+  assert.equal(routers.length, 1);
+  for (const manifest of taskOwners) {
+    assert.ok(evaluateCapabilities(manifest, value).includes('cli_version_too_old'));
+  }
+  assert.deepEqual(evaluateCapabilities(routers[0], value), []);
 });
 
 test('schema drift and required upgrades are blocking compatibility failures', () => {
   const value = capabilities();
   value.schema_version = 'tw-cli-v2';
   value.data.required_upgrades = ['upgrade_cli'];
-  const failures = evaluateCapabilities(skillManifest('twitter-agent'), value);
+  const failures = evaluateCapabilities(operationManifests.find((manifest) => manifest.role === 'daily-operation'), value);
   assert.ok(failures.includes('unsupported_cli_schema'));
   assert.ok(failures.includes('required_upgrade'));
 });
