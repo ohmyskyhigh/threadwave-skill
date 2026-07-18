@@ -38,20 +38,50 @@ Product positioning, pricing, credits, and public copy defaults live in the know
 - Never retire the legacy `twitter-harness` skill from this repository.
 - Never hardcode the skill roster outside `suite-manifest.json` (repository/CI declaration) and `release-index.json` (public authority); scripts and tests must derive it.
 - Installed skill folders must not require Node.js, Python, `curl`, or shell-specific runtime scripts. Use host agent URL-read, skill/file-read, process execution, and text-generation capabilities. Root `scripts/**` are maintainer-only and must never be required after installation.
-- After any skill version bump, run `npm run artifacts` so `release-index.json` artifact URLs and SHA-256 checksums are regenerated with the tarballs, then publish `dist/skills/*.tgz` to the matching GitHub release.
+- Treat every bundle or skill version bump as subject to the Release Synchronization Gate below. A commit or push is not a completed version release.
 - Do not commit or push unless the user's immediately preceding message explicitly requests it.
+
+## Release Synchronization Gate
+
+A new version is complete only when the exact code on `origin/main`, the Git tag, the public GitHub release, and every published package describe the same release. Never leave `main` advertising an artifact URL that returns 404 or a checksum that does not match its public asset.
+
+### Required Invariants
+
+- `suite-manifest.json` `bundle_version`, `package.json` `version`, and `.codex-plugin/plugin.json` `version` are identical strict SemVer.
+- The release tag is exactly `suite-v<bundle_version>` and targets the exact commit that becomes `origin/main`.
+- Derive the skill roster from `suite-manifest.json`; never maintain a separate release list.
+- Every roster skill's `skill-manifest.json` version equals its own `latest_version` in `release-index.json`.
+- Every indexed artifact URL uses the current suite tag and the filename `<skill-name>-<latest_version>.tgz`.
+- Every indexed SHA-256 equals the bytes of both the locally generated archive and the public GitHub release asset.
+- The release contains one archive for every roster skill plus `threadwave-skill-<bundle_version>.tgz`. Do not omit unchanged skills: the release is an atomic installable suite.
+- The GitHub release is public, non-draft, non-prerelease, and marked Latest only after `origin/main` points at the tagged release commit.
+
+### Mandatory Release Order
+
+1. Update the intended bundle and individual skill versions without changing unrelated skills.
+2. Run `npm run artifacts`, then `npm run check`, then `npm run package`. If any release input changes afterward, discard the staged release and rerun all three commands.
+3. Confirm the release commit contains the regenerated `release-index.json` and all version invariants pass.
+4. Create a draft GitHub release named `suite-v<bundle_version>` targeting that exact commit. Upload every roster artifact from `dist/skills/` and the matching suite bundle from `dist/`.
+5. Download the draft assets into a fresh temporary directory. Verify the complete derived asset set, every indexed SHA-256, and the suite bundle against the local build. Do not publish a partial or mismatched draft.
+6. Publish the verified release without marking it Latest, then fast-forward or push that exact tagged commit to `main`, then mark the release Latest. Keep the interval between publication and the `main` update bounded to this release operation so the public index never points forward to missing assets.
+7. Perform a final unauthenticated download of every URL in `release-index.json`. Require HTTP success and matching SHA-256, and confirm the public suite bundle matches the local package.
+8. Confirm `origin/main`, the release tag target, and the release target commit are identical. Only then report the version release complete.
+
+If a version commit is already on `main` but its release or assets are missing, treat this as a release-blocking incident. Do not advance versions again or claim setup is healthy. Publish and verify the exact missing release when authorized; otherwise report the mismatch and the required release action.
+
+GitHub writes still require user authority. A request to edit or plan a version does not authorize commit, push, or release publication. If the user requests a version commit/push but has not authorized the matching public release, stop before updating `main` and ask for release authorization rather than creating an out-of-sync public index.
 
 ## Validation
 
 Node.js 22 or newer is required. Use npm.
 
 ```bash
+npm run artifacts
 npm run check
 npm run package
-npm run artifacts
 ```
 
-After edits, run syntax/structure validation and the relevant tests.
+After edits, run syntax/structure validation and the relevant tests. For a version release, these local commands are necessary but not sufficient; the Release Synchronization Gate must also pass.
 
 ## Session Hygiene
 
