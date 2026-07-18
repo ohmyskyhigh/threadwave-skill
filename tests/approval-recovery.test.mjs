@@ -3,9 +3,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { OPERATION_SKILLS } from '../scripts/suite-policy.mjs';
+import { operationSkillNames } from '../scripts/suite-policy.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const suite = JSON.parse(fs.readFileSync(path.join(root, 'suite-manifest.json'), 'utf8'));
+const releaseIndex = JSON.parse(fs.readFileSync(path.join(root, 'release-index.json'), 'utf8'));
 
 test('manual action skills require dry-run, exact approval, one dispatch, and no unknown retry', () => {
   for (const skill of ['twitter-post', 'twitter-reply']) {
@@ -26,7 +28,7 @@ test('daily agent checks existing work before creating a plan', () => {
 });
 
 test('every operation skill delegates preflight and issue reporting to the authority skill', () => {
-  for (const skill of OPERATION_SKILLS) {
+  for (const skill of operationSkillNames(suite, releaseIndex)) {
     const content = fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8');
     assert.match(content, /Mandatory Preflight And Init Flow/);
     assert.match(content, /threadwave-preflight/);

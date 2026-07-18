@@ -1,4 +1,4 @@
 interface:
   display_name: "Twitter Automation / 推特自动化"
   short_description: "Check and route Twitter/X automation / 检查并路由推特自动化"
-  default_prompt: "Use $twitter-automation after $threadwave-preflight confirms all six bilingual peer skills, their individual versions, the CLI, and Chrome extension; route missing modules to https://www.threadwave.xyz/cli/setup/agent.md without assuming approval."
+  default_prompt: "Use $twitter-automation after $threadwave-preflight confirms every bilingual roster skill, their individual versions, the CLI, and Chrome extension; route missing modules to https://www.threadwave.xyz/cli/setup/agent.md without assuming approval."

@@ -1,11 +1,11 @@
 ---
 name: threadwave-preflight
-description: "Run the mandatory readiness gate for every ThreadWave Twitter/X workflow: require the update skill, confirm all six individual skill versions through GitHub, verify the tw CLI and supported contracts, check the Chrome extension/setup relay, preserve the original request, and generate bilingual copy/paste issue reports. Use before twitter-automation, twitter-agent, twitter-post, or twitter-reply, and for ThreadWave setup, readiness, dependency, repair, or issue-report requests. 中文：用于所有 ThreadWave 推特工作流的强制预检，检查六个技能版本、tw CLI、Chrome 扩展、安装状态、依赖、修复和中英文问题报告。"
+description: "Run the mandatory readiness gate for every ThreadWave Twitter/X workflow: require the update skill, confirm every release-index roster skill's individual version through GitHub, verify the tw CLI and supported contracts, check the Chrome extension/setup relay, preserve the original request, and generate bilingual copy/paste issue reports. Use before twitter-automation, twitter-agent, twitter-post, or twitter-reply, and for ThreadWave setup, readiness, dependency, repair, or issue-report requests. 中文：用于所有 ThreadWave 推特工作流的强制预检，检查发布索引中各技能版本、tw CLI、Chrome 扩展、安装状态、依赖、修复和中英文问题报告。"
 ---
 
 # ThreadWave Preflight
 
-Own the single mandatory preflight, setup, recovery, and issue-report contract. All four Twitter operation skills call this peer by name before any `tw` command.
+Own the single mandatory preflight, setup, recovery, and issue-report contract. Every operation skill in the release-index roster calls this peer by name before any `tw` command.
 
 ## Mandatory Flow
 
@@ -33,7 +33,7 @@ Support English and Simplified Chinese requests. Choose explicit user preference
 
 ## Issue Report
 
-Read [references/issue-report-contract.md](references/issue-report-contract.md) for an explicit report request or a report-worthy failure. Generate the sanitized report with this skill's local renderer and present it for copy/paste. Always state that nothing was sent.
+Read [references/issue-report-contract.md](references/issue-report-contract.md) for an explicit report request or a report-worthy failure. Build the report directly from its allowlisted Markdown template using the current agent's text-generation capability. Do not require a local runtime or script. Always state that nothing was sent.
 
 Issue-report-only mode accepts already-sanitized diagnostic metadata from another skill, skips the update/preflight loop, renders the report, and stops.
 
@@ -42,7 +42,7 @@ Issue-report-only mode accepts already-sanitized diagnostic metadata from anothe
 ```text
 State: <ready | waiting for you | blocked>
 Completed: <verified checks or safe repairs>
-Versions: <six individually confirmed skill versions>
+Versions: <every roster skill's confirmed version>
 Preflight: <skills / updates / CLI / setup / selected capability>
 Problem: <stable code and localized meaning>
 Waiting for you: <one user-owned action>

@@ -3,9 +3,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { chooseLocale, parseSkillFrontmatter, REQUIRED_SKILLS } from '../scripts/suite-policy.mjs';
+import { chooseLocale, parseSkillFrontmatter, rosterNames } from '../scripts/suite-policy.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const suite = JSON.parse(fs.readFileSync(path.join(root, 'suite-manifest.json'), 'utf8'));
 
 test('explicit locale wins, then latest message, then conversation, then English', () => {
   assert.equal(chooseLocale({ explicit: 'en', latestMessage: '请用中文' }), 'en');
@@ -16,7 +17,7 @@ test('explicit locale wins, then latest message, then conversation, then English
 });
 
 test('every skill advertises English and Simplified Chinese request triggers', () => {
-  for (const skill of REQUIRED_SKILLS) {
+  for (const skill of rosterNames(suite)) {
     const content = fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8');
     const frontmatter = parseSkillFrontmatter(content);
     assert.match(frontmatter.description, /[A-Za-z]/);

@@ -1,13 +1,13 @@
 {
   "schema_version": "threadwave-skill-manifest-v1",
   "name": "threadwave-preflight",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "role": "preflight",
   "dependencies": {
     "required_skills": [
       {
         "name": "threadwave-update",
-        "minimum_version": "0.1.0"
+        "minimum_version": "0.3.0"
       }
     ]
   },

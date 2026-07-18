@@ -1,35 +1,30 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import { buildIssueReport, renderIssueReportMarkdown } from '../skills/threadwave-preflight/scripts/generate-issue-report.mjs';
+import { fileURLToPath } from 'node:url';
 import { shouldGenerateIssueReport } from '../scripts/suite-policy.mjs';
 
-test('issue report includes individual versions, stays redacted, and is never sent', () => {
-  const report = buildIssueReport({
-    locale: 'zh-CN',
-    skill: 'twitter-reply',
-    installed_skill_versions: { 'threadwave-preflight': '0.1.0', 'twitter-reply': '0.4.0' },
-    latest_skill_versions: { 'threadwave-preflight': '0.1.0', 'twitter-reply': '0.4.1' },
-    update_state: 'update_required',
-    cli_version: '1.0.0',
-    install_mode: 'dev',
-    platform: 'darwin',
-    category: 'mutation_proof_unknown',
-    stage: 'evidence',
-    summary: 'Bearer topsecret failed for @private at https://x.com/private/status/1234567890123456789 in /Users/alice/project; reply=do not leak this',
-    error_codes: ['provider_result_unknown'],
-    checks: [{ id: 'mutation_evidence', state: 'unknown', code: 'provider_result_unknown' }],
-    commands: [{ command: 'tw action reply https://x.com/private/status/1234567890123456789 --text "do not leak this" --json', status: 'unknown', exit_code: 1 }],
-    next_step: 'Check token=abc and /home/alice/private'
-  }, new Date('2026-07-17T12:00:00.000Z'));
-  const serialized = JSON.stringify(report);
-  for (const secret of ['topsecret', '@private', '1234567890123456789', '/Users/alice', '/home/alice', 'do not leak this', 'token=abc']) {
-    assert.ok(!serialized.includes(secret), `report leaked ${secret}`);
-  }
-  assert.equal(report.schema_version, 'threadwave-issue-report-v2');
-  assert.equal(report.installed_skill_versions['twitter-reply'], '0.4.0');
-  assert.equal(report.latest_skill_versions['twitter-reply'], '0.4.1');
-  assert.equal(report.submission.sent, false);
-  assert.match(renderIssueReportMarkdown(report), /尚未发送/);
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const releaseIndex = JSON.parse(fs.readFileSync(path.join(root, 'release-index.json'), 'utf8'));
+const preflightRoot = path.join(root, 'skills', releaseIndex.roles.preflight);
+
+test('the issue-report contract is a runtime-free, redacted copy/paste template', () => {
+  const contract = fs.readFileSync(path.join(preflightRoot, 'references', 'issue-report-contract.md'), 'utf8');
+  const schema = JSON.parse(fs.readFileSync(path.join(root, 'schemas', 'threadwave-issue-report-v2.schema.json'), 'utf8'));
+
+  assert.match(contract, /Build the report directly as Markdown/);
+  assert.match(contract, /Do not invoke Node\.js, Python, `curl`, Bash, PowerShell, CMD, or a bundled script/);
+  assert.match(contract, /post\/reply text, target URL, status ID, ref, or handle/);
+  assert.match(contract, /tokens, cookies, authorization, CSRF/);
+  assert.match(contract, /raw DOM, GraphQL, browser, daemon, backend/);
+  assert.match(contract, /This report has not been sent; it is for copy\/paste only/);
+  assert.equal(fs.existsSync(path.join(preflightRoot, 'scripts')), false);
+
+  assert.equal(schema.properties.submission.properties.mode.const, 'copy_paste');
+  assert.equal(schema.properties.submission.properties.sent.const, false);
+  assert.equal(schema.properties.submission.properties.user_consent_required.const, true);
+  assert.equal(schema.$defs.versionMap.additionalProperties.$ref, '#/$defs/version');
 });
 
 test('expected user gates do not generate failure reports', () => {

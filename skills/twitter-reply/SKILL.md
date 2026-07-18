@@ -26,7 +26,7 @@ Interface locale never changes the exact reply or target.
 
 ## Mandatory Preflight And Init Flow
 
-Activate `threadwave-preflight` by skill name on every invocation, including after approval or a user gate. Pass the unchanged exact target/reply in working memory and the `twitter-reply` capability requirements. Do not invoke `tw` until preflight returns `ready` with all six individual skill versions confirmed latest.
+Activate `threadwave-preflight` by skill name on every invocation, including after approval or a user gate. Pass the unchanged exact target/reply in working memory and the `twitter-reply` capability requirements. Do not invoke `tw` until preflight returns `ready` with every roster skill version confirmed latest.
 
 The selected capability gate requires the `action` family, production X actions enabled, and `tw action reply` with `--dry-run`. If `threadwave-preflight` is unavailable, or it reports a missing/outdated skill, CLI, or extension module, preserve the exact target and reply and direct the user to `https://www.threadwave.xyz/cli/setup/agent.md`; resume only after preflight verifies ready.
 

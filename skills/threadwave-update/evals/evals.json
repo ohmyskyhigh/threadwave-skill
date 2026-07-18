@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "Check whether all my ThreadWave Twitter skills are the latest versions.",
-      "expected_output": "Runs only the local update checker, validates six flat peer manifests against one GitHub release index, and reports local/latest versions without invoking tw or installing anything.",
+      "expected_output": "Uses the host's URL-read and skill/file-read capabilities to validate every release-index roster peer, then reports independent local/latest versions without invoking tw, a runtime script, or an installer.",
       "expectations": [
         "Uses one fixed GitHub release index",
         "Reports each skill version independently",
@@ -13,8 +13,8 @@
     },
     {
       "id": 2,
-      "prompt": "帮我检查 ThreadWave 的六个技能有没有需要更新。",
-      "expected_output": "Responds in Simplified Chinese and reports confirmed local/latest versions for all six skills.",
+      "prompt": "帮我检查 ThreadWave 的技能有没有需要更新。",
+      "expected_output": "Responds in Simplified Chinese and reports confirmed local/latest versions for every skill discovered from the release index.",
       "expectations": [
         "Uses Simplified Chinese labels",
         "Keeps skill names and versions in English",

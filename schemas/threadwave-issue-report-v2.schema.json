@@ -29,16 +29,7 @@
     "report_id": { "type": "string", "pattern": "^twir_[a-f0-9]{16}$" },
     "created_at": { "type": "string", "format": "date-time" },
     "locale": { "enum": ["en", "zh-CN"] },
-    "skill": {
-      "enum": [
-        "threadwave-preflight",
-        "threadwave-update",
-        "twitter-automation",
-        "twitter-agent",
-        "twitter-post",
-        "twitter-reply"
-      ]
-    },
+    "skill": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
     "installed_skill_versions": { "$ref": "#/$defs/versionMap" },
     "latest_skill_versions": { "$ref": "#/$defs/versionMap" },
     "update_state": { "enum": ["confirmed", "update_required", "unconfirmed"] },
@@ -130,15 +121,8 @@
   "$defs": {
     "versionMap": {
       "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "threadwave-preflight": { "$ref": "#/$defs/version" },
-        "threadwave-update": { "$ref": "#/$defs/version" },
-        "twitter-automation": { "$ref": "#/$defs/version" },
-        "twitter-agent": { "$ref": "#/$defs/version" },
-        "twitter-post": { "$ref": "#/$defs/version" },
-        "twitter-reply": { "$ref": "#/$defs/version" }
-      }
+      "propertyNames": { "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+      "additionalProperties": { "$ref": "#/$defs/version" }
     },
     "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" }
   }

@@ -1,6 +1,6 @@
 # Issue Report Contract
 
-`threadwave-preflight` is the single issue-report authority for all six skills. Every operation and update skill may hand sanitized diagnostic metadata to this skill in issue-report-only mode.
+`threadwave-preflight` is the single issue-report authority for every suite skill. Every operation and update skill may hand sanitized diagnostic metadata to this skill in issue-report-only mode.
 
 ## Generate A Report When
 
@@ -14,15 +14,46 @@
 
 Do not report a normal Chrome permission, authentication, subscription/payment, X login, content approval, pacing, or other documented user gate.
 
-## Render
+## Render Without A Runtime
 
-Pass allowlisted metadata only to this skill's local renderer:
+Build the report directly as Markdown. Do not invoke Node.js, Python, `curl`, Bash, PowerShell, CMD, or a bundled script. Include only fields from this allowlist:
 
-```bash
-node <threadwave-preflight-directory>/scripts/generate-issue-report.mjs
+- report schema: `threadwave-issue-report-v2`;
+- generated timestamp when the host supplies one safely;
+- locale and active skill name;
+- installed/latest skill version maps from the validated update result;
+- update state, short CLI version, install mode, and platform family;
+- stable category, stage, error codes, check states, and command templates without user values;
+- one sanitized summary and one recommended next step;
+- `submission.mode=copy_paste`, `submission.sent=false`, and `user_consent_required=true`.
+
+Use this output shape:
+
+```text
+# ThreadWave Issue Report | ThreadWave 问题报告
+
+- Schema: threadwave-issue-report-v2
+- Skill: <allowlisted skill name>
+- Update state: <confirmed | update_required | unconfirmed>
+
+## Skill versions
+<installed/latest versions only>
+
+## Summary
+<sanitized diagnostic summary>
+
+## Error codes
+<stable codes only>
+
+## Checks
+<allowlisted state and code only>
+
+## Recommended next step
+<one sanitized action>
+
+## Privacy and submission
+Sensitive and user-content fields were excluded. This report has not been sent; it is for copy/paste only.
 ```
-
-The stdin JSON may contain locale, current skill, installed/latest version maps, update state, short CLI/platform metadata, stable category/stage/codes, allowlisted check results, command templates, a sanitized summary, and one next step.
 
 Present the generated Markdown in a fenced block. State that it has not been sent. Never upload it, open a GitHub issue, or contact anyone automatically.
 

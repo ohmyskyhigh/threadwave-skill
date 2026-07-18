@@ -1,6 +1,6 @@
 ---
 name: twitter-automation
-description: "Route review-gated Twitter/X automation requests after dedicated ThreadWave preflight and update skills verify six flat peer skills, the CLI, and Chrome extension. Use for Twitter automation, X automation, tweet automation, Twitter bot/agent readiness, onboarding, or choosing the correct Twitter operation skill. 中文：用于在 ThreadWave 预检和更新技能确认六个平铺技能、CLI 与 Chrome 扩展后，路由推特自动化、Twitter/X 自动化、推文自动化、代理就绪、引导和技能选择请求。"
+description: "Route review-gated Twitter/X automation requests after dedicated ThreadWave preflight and update skills verify the flat peer skill suite, the CLI, and Chrome extension. Use for Twitter automation, X automation, tweet automation, Twitter bot/agent readiness, onboarding, or choosing the correct Twitter operation skill. 中文：用于在 ThreadWave 预检和更新技能确认平铺技能套件、CLI 与 Chrome 扩展后，路由推特自动化、Twitter/X 自动化、推文自动化、代理就绪、引导和技能选择请求。"
 ---
 
 # Twitter Automation
@@ -25,9 +25,9 @@ Keep commands, JSON keys, refs, schema values, and error codes in English.
 
 ## Mandatory Preflight And Init Flow
 
-Activate `threadwave-preflight` by skill name on every invocation, including setup-only, status, repair, and routed operation requests. Pass the unchanged original intent and originating skill. Do not invoke `tw` until preflight returns `ready` with all six individual skill versions confirmed latest.
+Activate `threadwave-preflight` by skill name on every invocation, including setup-only, status, repair, and routed operation requests. Pass the unchanged original intent and originating skill. Do not invoke `tw` until preflight returns `ready` with every roster skill version confirmed latest.
 
-The selected capability gate requires `capabilities`, `doctor`, and `setup`. A partial or outdated six-skill installation blocks every operation.
+The selected capability gate requires `capabilities`, `doctor`, and `setup`. A partial or outdated suite installation blocks every operation.
 
 If any required skill, `tw`, or the Chrome extension is missing, preserve the user's request and tell the user to open `https://www.threadwave.xyz/cli/setup/agent.md` to set up the harness agent. The setup protocol is web-hosted and is not downloaded as a local fifth skill. Resume only after all three module checks verify ready.
 
@@ -53,7 +53,7 @@ For every missing skill-suite, CLI, or extension state, route to the canonical a
 
 Summarize these independently:
 
-1. Skills: six flat peers present, with each independent version confirmed latest.
+1. Skills: every roster skill present, with each independent version confirmed latest.
 2. CLI: installed version and supported schemas.
 3. Install: `packaged` or safe `dev` worktree status.
 4. Setup: ready or one concrete user gate.

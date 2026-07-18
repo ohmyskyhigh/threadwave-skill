@@ -1,21 +1,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-export const REQUIRED_SKILLS = Object.freeze([
-  'threadwave-preflight',
-  'threadwave-update',
-  'twitter-automation',
-  'twitter-agent',
-  'twitter-post',
-  'twitter-reply'
-]);
+export function rosterNames(suite) {
+  return (suite?.required_skills ?? []).map((item) => item?.name).filter(Boolean);
+}
 
-export const OPERATION_SKILLS = Object.freeze([
-  'twitter-automation',
-  'twitter-agent',
-  'twitter-post',
-  'twitter-reply'
-]);
+export function indexRosterNames(releaseIndex) {
+  return (releaseIndex?.required_skills ?? []).map((item) => item?.name).filter(Boolean);
+}
+
+export function operationSkillNames(suite, releaseIndex) {
+  const infrastructure = new Set([releaseIndex?.roles?.preflight, releaseIndex?.roles?.update].filter(Boolean));
+  return rosterNames(suite).filter((name) => !infrastructure.has(name));
+}
 
 export const REPORTABLE_CATEGORIES = new Set([
   'skill_set_incomplete',
@@ -50,13 +47,10 @@ export function parseSkillFrontmatter(content) {
 
 export function verifySuiteFiles(root, suite, releaseIndex) {
   const problems = [];
-  const expected = [...REQUIRED_SKILLS].sort();
-  const declared = (suite.required_skills ?? []).map((item) => item.name).sort();
-  if (JSON.stringify(declared) !== JSON.stringify(expected)) problems.push('required_skill_set_mismatch');
-
-  const released = (releaseIndex.skills ?? []).map((item) => item.name).sort();
+  const expected = rosterNames(suite).sort();
+  const released = indexRosterNames(releaseIndex).sort();
   if (JSON.stringify(released) !== JSON.stringify(expected)) problems.push('release_index_skill_set_mismatch');
-  const releaseByName = new Map((releaseIndex.skills ?? []).map((item) => [item.name, item]));
+  const releaseByName = new Map((releaseIndex.required_skills ?? []).map((item) => [item.name, item]));
 
   for (const skill of suite.required_skills ?? []) {
     const skillPath = path.join(root, skill.path);

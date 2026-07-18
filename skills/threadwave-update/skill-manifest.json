@@ -1,7 +1,7 @@
 {
   "schema_version": "threadwave-skill-manifest-v1",
   "name": "threadwave-update",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "role": "update",
   "dependencies": {
     "required_skills": []
@@ -16,7 +16,7 @@
     "required_commands": []
   },
   "contracts": {
-    "release_index": "threadwave-skill-release-index-v1",
+    "release_index": "threadwave-skill-release-index-v2",
     "update_result": "threadwave-skill-update-v1"
   }
 }

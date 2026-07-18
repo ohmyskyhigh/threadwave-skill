@@ -1,13 +1,13 @@
 {
   "schema_version": "threadwave-skill-manifest-v1",
   "name": "twitter-automation",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "role": "operation-router",
   "dependencies": {
     "required_skills": [
       {
         "name": "threadwave-preflight",
-        "minimum_version": "0.1.0"
+        "minimum_version": "0.3.0"
       }
     ]
   },

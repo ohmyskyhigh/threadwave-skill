@@ -11,7 +11,7 @@ Record in working memory only:
 - exact post/reply text and target when present;
 - whether this is a resumed approval or user gate.
 
-The originating skill must be one of `twitter-automation`, `twitter-agent`, `twitter-post`, or `twitter-reply`, unless the user requested preflight directly. Never rewrite or translate exact user content.
+Unless the user requested preflight directly, require the originating skill to be a release-index roster member other than the skills named by `roles.preflight` and `roles.update`. Never rely on a remembered operation-skill list. Never rewrite or translate exact user content.
 
 Choose `en` or `zh-CN` from explicit preference, latest message, conversation language, then English.
 
@@ -25,30 +25,22 @@ Require the returned result to have:
 
 - `schema_version=threadwave-skill-update-v1`;
 - `latest_confirmed=true`;
-- all six peer skills listed;
+- every release-index roster skill listed;
 - `ok=true` and `state=ready`.
 
 On missing or outdated skills, preserve the originating request and route to the setup guide. On an unconfirmed GitHub release index, stop with `twitter_skill_update_unconfirmed`; do not claim latest and do not continue to `tw`.
 
 Do not invoke update in issue-report-only mode. That mode only renders already-sanitized diagnostic metadata.
 
-## 3. Locate The CLI
+## 3. Locate The CLI And Diagnose Install Mode
 
-Run:
+Use the host agent's process or command-execution capability to invoke the ThreadWave executable directly with these arguments:
 
-```bash
-command -v tw
-```
-
-If missing, preserve the request, direct the user to `https://www.threadwave.xyz/cli/setup/agent.md`, and pause. Do not substitute repository entrypoints, `npm`, `node`, `npx`, `tsx`, or another download origin.
-
-## 4. Diagnose Install Mode
-
-Run exactly once:
-
-```bash
+```text
 tw doctor --format json
 ```
+
+Do not use `command -v`, `which`, `where`, Bash, PowerShell, CMD, or another shell-specific discovery command. If the host reports that `tw` cannot be found or executed, preserve the request, direct the user to `https://www.threadwave.xyz/cli/setup/agent.md`, and pause. If the host cannot execute local processes at all, stop with `twitter_automation_cli_unconfirmed`; do not guess readiness.
 
 Require `schemaVersion=threadwave-doctor-v1` and read `install.mode`.
 
@@ -58,11 +50,11 @@ Require `schemaVersion=threadwave-doctor-v1` and read `install.mode`.
 
 Never expose doctor paths in output or reports.
 
-## 5. Check CLI Compatibility
+## 4. Check CLI Compatibility
 
-Run:
+Invoke the executable through the same host capability:
 
-```bash
+```text
 tw capabilities --format json
 ```
 
@@ -78,11 +70,11 @@ Read the originating skill's local `skill-manifest.json` as a sibling skill mani
 
 When CLI upgrades are required, stop and follow only returned upgrade guidance. Contract drift is `twitter_automation_cli_contract_drift` and is report-worthy.
 
-## 6. Probe Setup Without Mutation
+## 5. Probe Setup Without Mutation
 
-Run:
+Invoke:
 
-```bash
+```text
 tw setup --dry-run --format json
 ```
 
@@ -98,19 +90,14 @@ Require `schema_version=tw-cli-v1` and `data.contract_version=threadwave-setup-v
 
 After one safe repair or completed user gate, rerun the dry-run once. Do not loop. If the same non-user action repeats, run doctor once more, stop with `twitter_automation_setup_unresolved`, and generate a report.
 
-## 7. Apply The Originating Capability Gate
+## 6. Apply The Originating Capability Gate
 
-Use the command requirements from the originating skill manifest:
-
-- `twitter-automation`: `capabilities`, `doctor`, `setup`;
-- `twitter-agent`: `context`, `strategy`, `plan`, `task`, `draft`, `scheduler`;
-- `twitter-post`: `action`, production X actions, tweet command, and `--dry-run`;
-- `twitter-reply`: `action`, production X actions, reply command, and `--dry-run`.
+Use only `cli.required_command_families` and `cli.required_commands` from the originating skill's validated local manifest. Do not maintain a separate operation-skill or command mapping in this contract.
 
 Capability failure is `twitter_automation_capability_unavailable`. Generate a report only for skill/CLI drift, not a normal account or user gate.
 
-## 8. Return Without Expanding Authority
+## 7. Return Without Expanding Authority
 
-Return `ready` plus the six confirmed skill versions to the originating skill. Resume the original request without asking the user to repeat it.
+Return `ready` plus every confirmed roster skill version to the originating skill. Resume the original request without asking the user to repeat it.
 
 Never treat skill update, setup, login, payment, preflight success, or the broad request as approval for strategy, plans, drafts, posting, replying, or scheduler mutation.

@@ -6,7 +6,7 @@
       "prompt": "Preflight my ThreadWave setup before running the Twitter agent.",
       "expected_output": "Invokes threadwave-update first, then verifies CLI install mode, capabilities, setup, extension, and the twitter-agent capability gate before returning readiness.",
       "expectations": [
-        "Requires all six independently versioned peers",
+        "Requires every independently versioned release-index roster peer",
         "Uses the update skill as the only version authority",
         "Returns to twitter-agent without treating readiness as approval"
       ]

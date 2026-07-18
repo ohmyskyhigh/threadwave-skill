@@ -2,10 +2,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { REQUIRED_SKILLS } from './suite-policy.mjs';
+import { rosterNames } from './suite-policy.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const sections = REQUIRED_SKILLS.map((skill) => {
+const suite = JSON.parse(fs.readFileSync(path.join(root, 'suite-manifest.json'), 'utf8'));
+const sections = rosterNames(suite).map((skill) => {
   const data = JSON.parse(fs.readFileSync(path.join(root, 'skills', skill, 'evals', 'evals.json'), 'utf8'));
   const rows = data.evals.map((item) => `<tr><td>${item.id}</td><td>${escapeHtml(item.prompt)}</td><td>${escapeHtml(item.expected_output)}</td><td>${item.expectations.map(escapeHtml).join('<br>')}</td></tr>`).join('');
   return `<section><h2>${skill}</h2><table><thead><tr><th>ID</th><th>Prompt</th><th>Expected behavior</th><th>Assertions</th></tr></thead><tbody>${rows}</tbody></table></section>`;

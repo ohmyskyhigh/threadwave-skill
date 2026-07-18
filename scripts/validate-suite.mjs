@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { OPERATION_SKILLS, REQUIRED_SKILLS, parseSkillFrontmatter, verifySuiteFiles } from './suite-policy.mjs';
+import { operationSkillNames, parseSkillFrontmatter, rosterNames, verifySuiteFiles } from './suite-policy.mjs';
 
 export function validateSuite(root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')) {
   const errors = [];
@@ -20,28 +20,38 @@ export function validateSuite(root = path.resolve(path.dirname(fileURLToPath(imp
   const plugin = readJson('.codex-plugin/plugin.json');
   const pkg = readJson('package.json');
   const reportSchema = readJson('schemas/threadwave-issue-report-v2.schema.json');
+  const roster = rosterNames(suite);
 
   if (suite.schema_version !== 'threadwave-skill-suite-v2') errors.push('suite manifest schema mismatch');
   if (!/^\d+\.\d+\.\d+$/.test(suite.bundle_version ?? '')) errors.push('bundle version is not strict semver');
   if (plugin.version !== suite.bundle_version) errors.push('plugin and bundle versions differ');
   if (pkg.version !== suite.bundle_version) errors.push('package and bundle versions differ');
   if (plugin.skills !== './skills/') errors.push('plugin skills path must be ./skills/');
-  if (releaseIndex.schema_version !== 'threadwave-skill-release-index-v1') errors.push('release index schema mismatch');
+  if (releaseIndex.schema_version !== 'threadwave-skill-release-index-v2') errors.push('release index schema mismatch');
   if (releaseIndex.repository !== 'ohmyskyhigh/threadwave-skill') errors.push('release index repository mismatch');
   if (releaseIndex.setup_url !== 'https://www.threadwave.xyz/cli/setup/agent.md') errors.push('release index setup URL mismatch');
+  if (!roster.includes(releaseIndex.roles?.preflight)) errors.push('release index preflight role must name a roster skill');
+  if (!roster.includes(releaseIndex.roles?.update)) errors.push('release index update role must name a roster skill');
+  for (const entry of releaseIndex.required_skills ?? []) {
+    if (!/^https:\/\//.test(entry?.artifact_url ?? '')) errors.push(`release index artifact URL invalid:${entry?.name}`);
+    if (!/^[0-9a-f]{64}$/.test(entry?.sha256 ?? '')) errors.push(`release index artifact sha256 invalid:${entry?.name}`);
+  }
   if (reportSchema.title !== 'ThreadWave Issue Report v2') errors.push('issue report schema is missing or invalid');
-  if (JSON.stringify(reportSchema.properties?.skill?.enum) !== JSON.stringify(REQUIRED_SKILLS)) {
-    errors.push('issue report skill enum must match the required skills');
+  if (reportSchema.properties?.skill?.pattern !== '^[a-z0-9]+(?:-[a-z0-9]+)*$') {
+    errors.push('issue report skill name must use the flat-skill name pattern');
+  }
+  if (reportSchema.$defs?.versionMap?.additionalProperties?.$ref !== '#/$defs/version') {
+    errors.push('issue report version maps must support the runtime roster');
   }
   if (suite.setup_route?.url !== 'https://www.threadwave.xyz/cli/setup/agent.md') errors.push('setup route URL mismatch');
   if (suite.setup_route?.installed_skill !== false) errors.push('web setup guide must not be installed as a local skill');
-  if (suite.update_policy?.owner_skill !== 'threadwave-update') errors.push('threadwave-update must own update checks');
+  if (suite.update_policy?.owner_skill !== releaseIndex.roles?.update) errors.push('update owner skill must match the release index update role');
   if (suite.update_policy?.release_index_url !== 'https://raw.githubusercontent.com/ohmyskyhigh/threadwave-skill/main/release-index.json') {
     errors.push('release index URL mismatch');
   }
   errors.push(...verifySuiteFiles(root, suite, releaseIndex));
 
-  for (const skillName of REQUIRED_SKILLS) {
+  for (const skillName of roster) {
     const skillRoot = path.join(root, 'skills', skillName);
     const skillPath = path.join(skillRoot, 'SKILL.md');
     if (!fs.existsSync(skillPath)) continue;
@@ -70,20 +80,30 @@ export function validateSuite(root = path.resolve(path.dirname(fileURLToPath(imp
     if (!prompts.some((prompt) => /[\u3400-\u9fff]/u.test(prompt))) errors.push(`${skillName}: Simplified Chinese eval missing`);
   }
 
-  for (const skillName of OPERATION_SKILLS) {
+  for (const skillName of operationSkillNames(suite, releaseIndex)) {
     const content = fs.readFileSync(path.join(root, 'skills', skillName, 'SKILL.md'), 'utf8');
-    if (!content.includes('threadwave-preflight')) errors.push(`${skillName}: must delegate to threadwave-preflight`);
+    if (!content.includes(releaseIndex.roles.preflight)) errors.push(`${skillName}: must delegate to ${releaseIndex.roles.preflight}`);
   }
 
-  const preflightRoot = path.join(root, 'skills', 'threadwave-preflight');
-  for (const relative of ['references/preflight-contract.md', 'references/issue-report-contract.md', 'scripts/generate-issue-report.mjs']) {
-    if (!fs.existsSync(path.join(preflightRoot, relative))) errors.push(`threadwave-preflight: missing ${relative}`);
+  const preflightRoot = path.join(root, 'skills', releaseIndex.roles.preflight);
+  for (const relative of ['references/preflight-contract.md', 'references/issue-report-contract.md']) {
+    if (!fs.existsSync(path.join(preflightRoot, relative))) errors.push(`${releaseIndex.roles.preflight}: missing ${relative}`);
   }
-  const updateRoot = path.join(root, 'skills', 'threadwave-update');
+  const updateRoot = path.join(root, 'skills', releaseIndex.roles.update);
   const updateSkill = fs.readFileSync(path.join(updateRoot, 'SKILL.md'), 'utf8');
-  if (!fs.existsSync(path.join(updateRoot, 'scripts', 'check-updates.mjs'))) errors.push('threadwave-update: update checker missing');
+  for (const [skillName, skillRoot] of [[releaseIndex.roles.preflight, preflightRoot], [releaseIndex.roles.update, updateRoot]]) {
+    if (fs.existsSync(path.join(skillRoot, 'scripts'))) {
+      errors.push(`${skillName}: installed runtime scripts are forbidden`);
+    }
+  }
+  if (!/Web, HTTP, browser, or URL-read capability/.test(updateSkill)) {
+    errors.push(`${releaseIndex.roles.update}: agent-native remote read contract missing`);
+  }
+  if (!/skill catalog and file-read capability/.test(updateSkill)) {
+    errors.push(`${releaseIndex.roles.update}: agent-native local read contract missing`);
+  }
   if (/\btw\s+(?:doctor|capabilities|setup|action|strategy|plan|task|draft|scheduler)\b/.test(updateSkill)) {
-    errors.push('threadwave-update: must not invoke tw');
+    errors.push(`${releaseIndex.roles.update}: must not invoke tw`);
   }
   if (fs.existsSync(path.join(root, 'references', 'preflight-contract.md'))) errors.push('root preflight contract must not exist');
   if (fs.existsSync(path.join(root, 'references', 'issue-report-contract.md'))) errors.push('root issue-report contract must not exist');
@@ -97,6 +117,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
     process.stderr.write(`${errors.map((error) => `ERROR ${error}`).join('\n')}\n`);
     process.exitCode = 1;
   } else {
-    process.stdout.write(`Suite validation passed: ${REQUIRED_SKILLS.length} independently versioned bilingual flat peer skills with centralized preflight and updates.\n`);
+    const suite = JSON.parse(fs.readFileSync(path.join(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'), 'suite-manifest.json'), 'utf8'));
+    process.stdout.write(`Suite validation passed: ${rosterNames(suite).length} independently versioned bilingual flat peer skills with centralized preflight and updates.\n`);
   }
 }

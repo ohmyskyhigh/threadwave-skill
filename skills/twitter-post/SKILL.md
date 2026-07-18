@@ -23,7 +23,7 @@ The interface language may differ from the post language. Never translate the po
 
 ## Mandatory Preflight And Init Flow
 
-Activate `threadwave-preflight` by skill name every time, including after approval or a recoverable pause. Pass the unchanged exact post in working memory and the `twitter-post` capability requirements. Do not invoke `tw` until preflight returns `ready` with all six individual skill versions confirmed latest.
+Activate `threadwave-preflight` by skill name every time, including after approval or a recoverable pause. Pass the unchanged exact post in working memory and the `twitter-post` capability requirements. Do not invoke `tw` until preflight returns `ready` with every roster skill version confirmed latest.
 
 The selected capability gate requires the `action` family, production X actions enabled, and `tw action tweet` with `--dry-run`. If `threadwave-preflight` is unavailable, or it reports a missing/outdated skill, CLI, or extension module, preserve the exact post and direct the user to `https://www.threadwave.xyz/cli/setup/agent.md`; resume only after preflight verifies ready.
 

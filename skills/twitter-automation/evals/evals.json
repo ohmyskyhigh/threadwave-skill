@@ -4,9 +4,9 @@
     {
       "id": 1,
       "prompt": "Set up Twitter automation for me and tell me when it is ready.",
-      "expected_output": "Delegates six-skill version and readiness checks to threadwave-preflight/threadwave-update; stops at ready or one user gate without creating content.",
+      "expected_output": "Delegates release-index roster version and readiness checks to threadwave-preflight/threadwave-update; stops at ready or one user gate without creating content.",
       "expectations": [
-        "Requires all six flat peers and their independent latest versions before invoking tw",
+        "Requires every flat release-index peer and its independent latest version before invoking tw",
         "Uses tw doctor, tw capabilities, and tw setup --dry-run contracts",
         "Does not infer permission to create a strategy, plan, post, or reply"
       ]
@@ -53,7 +53,7 @@
     },
     {
       "id": 6,
-      "prompt": "One of the four Twitter skills is missing, but the CLI is installed. Continue anyway.",
+      "prompt": "One required Twitter skill is missing, but the CLI is installed. Continue anyway.",
       "expected_output": "Stops before invoking tw, preserves the request, and tells the user to open the machine-readable harness setup guide.",
       "expectations": [
         "Does not run a partial skill suite or fall back to twitter-harness",
