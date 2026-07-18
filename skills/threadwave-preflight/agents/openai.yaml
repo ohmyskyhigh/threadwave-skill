@@ -1,0 +1,4 @@
+interface:
+  display_name: "ThreadWave Preflight"
+  short_description: "Verify the complete ThreadWave Twitter stack."
+  default_prompt: "Check all ThreadWave skills, versions, CLI, and Chrome extension before continuing. 支持中文和英文。"

@@ -2,6 +2,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 export const REQUIRED_SKILLS = Object.freeze([
+  'threadwave-preflight',
+  'threadwave-update',
+  'twitter-automation',
+  'twitter-agent',
+  'twitter-post',
+  'twitter-reply'
+]);
+
+export const OPERATION_SKILLS = Object.freeze([
   'twitter-automation',
   'twitter-agent',
   'twitter-post',
@@ -9,8 +18,9 @@ export const REQUIRED_SKILLS = Object.freeze([
 ]);
 
 export const REPORTABLE_CATEGORIES = new Set([
-  'suite_incomplete',
-  'version_mismatch',
+  'skill_set_incomplete',
+  'skill_update_required',
+  'skill_update_unconfirmed',
   'cli_contract_drift',
   'setup_unresolved',
   'repair_failed',
@@ -35,57 +45,67 @@ export function parseSkillFrontmatter(content) {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!match) return null;
   const yaml = match[1];
-  return {
-    name: scalar(yaml, 'name'),
-    description: scalar(yaml, 'description'),
-    version: yaml.match(/^\s{2}version:\s*["']?([^"'\s]+)["']?\s*$/m)?.[1]
-  };
+  return { name: scalar(yaml, 'name'), description: scalar(yaml, 'description') };
 }
 
-export function verifySuiteFiles(root, manifest) {
+export function verifySuiteFiles(root, suite, releaseIndex) {
   const problems = [];
   const expected = [...REQUIRED_SKILLS].sort();
-  const declared = (manifest.required_skills ?? []).map((item) => item.name).sort();
-  if (JSON.stringify(declared) !== JSON.stringify(expected)) {
-    problems.push('required_skill_set_mismatch');
-  }
+  const declared = (suite.required_skills ?? []).map((item) => item.name).sort();
+  if (JSON.stringify(declared) !== JSON.stringify(expected)) problems.push('required_skill_set_mismatch');
 
-  for (const skill of manifest.required_skills ?? []) {
+  const released = (releaseIndex.skills ?? []).map((item) => item.name).sort();
+  if (JSON.stringify(released) !== JSON.stringify(expected)) problems.push('release_index_skill_set_mismatch');
+  const releaseByName = new Map((releaseIndex.skills ?? []).map((item) => [item.name, item]));
+
+  for (const skill of suite.required_skills ?? []) {
     const skillPath = path.join(root, skill.path);
+    const manifestPath = path.join(root, skill.manifest_path);
     if (!fs.existsSync(skillPath)) {
       problems.push(`missing_skill:${skill.name}`);
       continue;
     }
+    if (!fs.existsSync(manifestPath)) {
+      problems.push(`missing_skill_manifest:${skill.name}`);
+      continue;
+    }
     const frontmatter = parseSkillFrontmatter(fs.readFileSync(skillPath, 'utf8'));
+    const manifest = readJson(manifestPath);
+    const release = releaseByName.get(skill.name);
     if (!frontmatter) problems.push(`missing_frontmatter:${skill.name}`);
     if (frontmatter?.name !== skill.name) problems.push(`skill_name_mismatch:${skill.name}`);
-    if (frontmatter?.version !== manifest.suite_version) problems.push(`skill_version_mismatch:${skill.name}`);
+    if (manifest?.schema_version !== 'threadwave-skill-manifest-v1') problems.push(`skill_manifest_schema_mismatch:${skill.name}`);
+    if (manifest?.name !== skill.name) problems.push(`skill_manifest_name_mismatch:${skill.name}`);
+    if (!isSemver(manifest?.version)) problems.push(`skill_version_invalid:${skill.name}`);
+    if (release?.latest_version !== manifest?.version) problems.push(`release_skill_version_mismatch:${skill.name}`);
+    if (!isSemver(release?.minimum_supported_version)) problems.push(`release_minimum_version_invalid:${skill.name}`);
+    if (manifest?.update?.release_index_url !== 'https://raw.githubusercontent.com/ohmyskyhigh/threadwave-skill/main/release-index.json') {
+      problems.push(`release_index_url_mismatch:${skill.name}`);
+    }
   }
   return problems;
 }
 
-export function evaluateCapabilities(manifest, skillName, envelope, { confirmedCommands = [] } = {}) {
+export function evaluateCapabilities(skillManifest, envelope, { confirmedCommands = [] } = {}) {
   const failures = [];
-  if (envelope?.schema_version !== manifest.contracts.cli_schema) failures.push('unsupported_cli_schema');
+  if (envelope?.schema_version !== skillManifest.contracts?.cli_schema) failures.push('unsupported_cli_schema');
   const data = envelope?.data;
   if (!data || typeof data !== 'object') return [...failures, 'capabilities_data_missing'];
-  if (!Array.isArray(data.cli_schema_versions) || !data.cli_schema_versions.includes(manifest.contracts.cli_schema)) {
+  if (!Array.isArray(data.cli_schema_versions) || !data.cli_schema_versions.includes(skillManifest.contracts.cli_schema)) {
     failures.push('cli_schema_not_advertised');
   }
-  if (!Array.isArray(data.harness_schema_versions) || !data.harness_schema_versions.includes(manifest.contracts.harness_schema)) {
+  if (!Array.isArray(data.harness_schema_versions) || !data.harness_schema_versions.includes(skillManifest.contracts.harness_schema)) {
     failures.push('harness_schema_not_advertised');
   }
-  if (compareSemver(data.cli_version, manifest.cli.minimum_version) < 0) failures.push('cli_version_too_old');
+  if (compareSemver(data.cli_version, skillManifest.cli.minimum_version) < 0) failures.push('cli_version_too_old');
   if (Array.isArray(data.required_upgrades) && data.required_upgrades.length > 0) failures.push('required_upgrade');
 
-  const selected = manifest.required_skills.find((item) => item.name === skillName);
-  if (!selected) return [...failures, 'selected_skill_unknown'];
   const families = new Map((data.command_families ?? []).map((family) => [family.name, family]));
-  for (const required of selected.required_command_families ?? []) {
+  for (const required of skillManifest.cli.required_command_families ?? []) {
     if (families.get(required)?.status !== 'available') failures.push(`command_family_unavailable:${required}`);
   }
   const advertised = [...families.values()].flatMap((family) => family.commands ?? []);
-  for (const command of selected.required_commands ?? []) {
+  for (const command of skillManifest.cli.required_commands ?? []) {
     if (!advertised.includes(command) && !confirmedCommands.includes(command)) {
       failures.push(`required_command_missing:${command.split(' --')[0]}`);
     }
@@ -108,7 +128,7 @@ export function shouldGenerateIssueReport({ explicitRequest = false, category, g
 }
 
 export function compareSemver(left, right) {
-  if (!/^\d+\.\d+\.\d+$/.test(String(left)) || !/^\d+\.\d+\.\d+$/.test(String(right))) return -1;
+  if (!isSemver(left) || !isSemver(right)) return -1;
   const a = String(left).split('.').map(Number);
   const b = String(right).split('.').map(Number);
   for (let index = 0; index < 3; index += 1) {
@@ -117,8 +137,20 @@ export function compareSemver(left, right) {
   return 0;
 }
 
+function readJson(file) {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
 function scalar(yaml, key) {
   return yaml.match(new RegExp(`^${key}:\\s*["']?(.+?)["']?\\s*$`, 'm'))?.[1];
+}
+
+function isSemver(value) {
+  return /^\d+\.\d+\.\d+$/.test(String(value));
 }
 
 function containsCjk(value) {

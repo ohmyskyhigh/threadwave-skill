@@ -4,9 +4,9 @@
     {
       "id": 1,
       "prompt": "Set up Twitter automation for me and tell me when it is ready.",
-      "expected_output": "Runs atomic suite verification, CLI/install-mode/capability checks, and setup dry-run; stops at ready or one user gate without creating content.",
+      "expected_output": "Delegates six-skill version and readiness checks to threadwave-preflight/threadwave-update; stops at ready or one user gate without creating content.",
       "expectations": [
-        "Verifies all four same-version local skills before invoking tw",
+        "Requires all six flat peers and their independent latest versions before invoking tw",
         "Uses tw doctor, tw capabilities, and tw setup --dry-run contracts",
         "Does not infer permission to create a strategy, plan, post, or reply"
       ]
@@ -14,17 +14,17 @@
     {
       "id": 2,
       "prompt": "帮我检查推特自动化是否安装完整，有没有需要更新。",
-      "expected_output": "Responds in Simplified Chinese, reports atomic suite/CLI compatibility and authoritative update status, and does not invent a release endpoint.",
+      "expected_output": "Responds in Simplified Chinese, reports CLI compatibility plus the authoritative GitHub release-index result, and does not invent an endpoint.",
       "expectations": [
         "Uses Simplified Chinese user-facing text",
         "Keeps command and schema identifiers in English",
-        "Uses host update state and capabilities.required_upgrades only"
+        "Uses threadwave-update and capabilities.required_upgrades only"
       ]
     },
     {
       "id": 3,
       "prompt": "ThreadWave setup keeps returning the same non-user repair after one attempt. Make a report I can send you.",
-      "expected_output": "Stops the repair loop and emits a redacted threadwave-issue-report-v1 Markdown report for copy/paste.",
+      "expected_output": "Stops the repair loop and asks threadwave-preflight issue-report-only mode for a redacted threadwave-issue-report-v2 Markdown report.",
       "expectations": [
         "Runs at most one safe repair and one bounded doctor diagnosis",
         "Excludes private paths, user content, handles, URLs, and raw payloads",

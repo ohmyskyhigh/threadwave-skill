@@ -1,0 +1,35 @@
+{
+  "skill_name": "threadwave-update",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Check whether all my ThreadWave Twitter skills are the latest versions.",
+      "expected_output": "Runs only the local update checker, validates six flat peer manifests against one GitHub release index, and reports local/latest versions without invoking tw or installing anything.",
+      "expectations": [
+        "Uses one fixed GitHub release index",
+        "Reports each skill version independently",
+        "Does not invoke preflight, tw, or an installer"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "帮我检查 ThreadWave 的六个技能有没有需要更新。",
+      "expected_output": "Responds in Simplified Chinese and reports confirmed local/latest versions for all six skills.",
+      "expectations": [
+        "Uses Simplified Chinese labels",
+        "Keeps skill names and versions in English",
+        "Does not claim latest when GitHub is unavailable"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "twitter-reply is outdated. Download and replace it automatically.",
+      "expected_output": "Reports the version mismatch and routes installation to the setup guide without downloading or overwriting files.",
+      "expectations": [
+        "Does not mutate installed skills",
+        "Uses the canonical setup guide",
+        "Does not execute remote content"
+      ]
+    }
+  ]
+}

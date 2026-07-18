@@ -1,62 +1,27 @@
 {
-  "schema_version": "threadwave-skill-suite-v1",
+  "schema_version": "threadwave-skill-suite-v2",
   "suite_name": "threadwave-skill",
-  "suite_version": "0.3.0",
-  "install_mode": "atomic_plugin",
+  "bundle_version": "0.4.0",
+  "install_modes": ["flat_peer_skills", "host_plugin_bundle"],
   "required_skills": [
-    {
-      "name": "twitter-automation",
-      "path": "skills/twitter-automation/SKILL.md",
-      "required_command_families": [
-        "capabilities",
-        "doctor",
-        "setup"
-      ]
-    },
-    {
-      "name": "twitter-agent",
-      "path": "skills/twitter-agent/SKILL.md",
-      "required_command_families": [
-        "context",
-        "strategy",
-        "plan",
-        "task",
-        "draft",
-        "scheduler"
-      ]
-    },
-    {
-      "name": "twitter-post",
-      "path": "skills/twitter-post/SKILL.md",
-      "required_command_families": [
-        "action"
-      ],
-      "required_commands": [
-        "tw action tweet --text <text> --json"
-      ]
-    },
-    {
-      "name": "twitter-reply",
-      "path": "skills/twitter-reply/SKILL.md",
-      "required_command_families": [
-        "action"
-      ],
-      "required_commands": [
-        "tw action reply <tweet_url_or_ref> --text <text> --json"
-      ]
-    }
+    { "name": "threadwave-preflight", "path": "skills/threadwave-preflight/SKILL.md", "manifest_path": "skills/threadwave-preflight/skill-manifest.json" },
+    { "name": "threadwave-update", "path": "skills/threadwave-update/SKILL.md", "manifest_path": "skills/threadwave-update/skill-manifest.json" },
+    { "name": "twitter-automation", "path": "skills/twitter-automation/SKILL.md", "manifest_path": "skills/twitter-automation/skill-manifest.json" },
+    { "name": "twitter-agent", "path": "skills/twitter-agent/SKILL.md", "manifest_path": "skills/twitter-agent/skill-manifest.json" },
+    { "name": "twitter-post", "path": "skills/twitter-post/SKILL.md", "manifest_path": "skills/twitter-post/skill-manifest.json" },
+    { "name": "twitter-reply", "path": "skills/twitter-reply/SKILL.md", "manifest_path": "skills/twitter-reply/skill-manifest.json" }
   ],
-  "supported_locales": [
-    "en",
-    "zh-CN"
-  ],
+  "supported_locales": ["en", "zh-CN"],
   "contracts": {
+    "skill_manifest": "threadwave-skill-manifest-v1",
+    "release_index": "threadwave-skill-release-index-v1",
+    "update_result": "threadwave-skill-update-v1",
     "cli_schema": "tw-cli-v1",
     "harness_cli_schema": "tw_cli_harness_v1",
     "harness_schema": "tw-harness-v1",
     "doctor_schema": "threadwave-doctor-v1",
     "setup_contract": "threadwave-setup-v1",
-    "issue_report_schema": "threadwave-issue-report-v1"
+    "issue_report_schema": "threadwave-issue-report-v2"
   },
   "cli": {
     "binary": "tw",
@@ -70,18 +35,18 @@
     "human_url": "https://www.threadwave.xyz/cli/setup",
     "agent_guide_url": "https://www.threadwave.xyz/cli/setup/agent.md",
     "installed_skill": false,
-    "handles_missing": [
-      "skill_suite",
-      "cli",
-      "extension"
-    ],
+    "handles_missing": ["skill_suite", "cli", "extension"],
     "requires_user_action": true,
     "resume_check": "tw setup --dry-run --format json"
   },
   "update_policy": {
-    "suite_source": "host_plugin_manager",
-    "cli_source": "capabilities.required_upgrades",
-    "unknown_is_blocking": false,
-    "never_invent_release_endpoints": true
+    "owner_skill": "threadwave-update",
+    "provider": "github_raw",
+    "repository": "ohmyskyhigh/threadwave-skill",
+    "branch": "main",
+    "release_index_url": "https://raw.githubusercontent.com/ohmyskyhigh/threadwave-skill/main/release-index.json",
+    "latest_confirmation_required": true,
+    "update_route": "https://www.threadwave.xyz/cli/setup/agent.md",
+    "never_execute_remote_content": true
   }
 }

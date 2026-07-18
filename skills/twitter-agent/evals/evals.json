@@ -6,7 +6,7 @@
       "prompt": "Run my normal Twitter agent workflow for today.",
       "expected_output": "Runs preflight and context resume, resolves existing recovery/reviews first, then creates at most one reviewable strategy or daily plan and stops for approval.",
       "expectations": [
-        "Runs the complete atomic-suite preflight",
+        "Delegates the complete gate to threadwave-preflight",
         "Checks pending recovery and reviews before creating new work",
         "Does not approve or execute X work from the broad run request"
       ]

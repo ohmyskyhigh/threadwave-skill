@@ -1,0 +1,33 @@
+{
+  "schema_version": "threadwave-skill-manifest-v1",
+  "name": "threadwave-preflight",
+  "version": "0.1.0",
+  "role": "preflight",
+  "dependencies": {
+    "required_skills": [
+      {
+        "name": "threadwave-update",
+        "minimum_version": "0.1.0"
+      }
+    ]
+  },
+  "update": {
+    "release_index_url": "https://raw.githubusercontent.com/ohmyskyhigh/threadwave-skill/main/release-index.json",
+    "setup_url": "https://www.threadwave.xyz/cli/setup/agent.md"
+  },
+  "cli": {
+    "minimum_version": "1.0.0",
+    "required_command_families": [
+      "capabilities",
+      "doctor",
+      "setup"
+    ],
+    "required_commands": []
+  },
+  "contracts": {
+    "cli_schema": "tw-cli-v1",
+    "harness_schema": "tw-harness-v1",
+    "doctor_schema": "threadwave-doctor-v1",
+    "setup_contract": "threadwave-setup-v1"
+  }
+}

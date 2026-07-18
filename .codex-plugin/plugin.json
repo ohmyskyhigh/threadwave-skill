@@ -1,6 +1,6 @@
 {
   "name": "threadwave-skill",
-  "version": "0.3.0+codex.20260717162315",
+  "version": "0.4.0",
   "description": "A bilingual, review-gated Twitter/X automation skill suite powered by ThreadWave.",
   "author": {
     "name": "ThreadWave"
@@ -21,8 +21,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "ThreadWave Twitter Automation Suite",
-    "shortDescription": "Four bilingual, review-gated Twitter/X skills.",
-    "longDescription": "Install once to use automation routing, daily growth, one-post, and one-reply workflows in English or Simplified Chinese. Missing skill-suite, CLI, or extension modules route to the web-hosted harness guide at /cli/setup/agent.md; setup is not installed as a fifth skill.",
+    "shortDescription": "Six bilingual, versioned Twitter/X peer skills.",
+    "longDescription": "Install four review-gated Twitter/X operation skills plus dedicated ThreadWave preflight and update peers. All six work in a flat skills directory, have independent versions, and use one GitHub release index. Missing skill, CLI, or extension modules route to /cli/setup/agent.md.",
     "developerName": "ThreadWave",
     "category": "Productivity",
     "capabilities": [

@@ -1,0 +1,4 @@
+interface:
+  display_name: "ThreadWave Update"
+  short_description: "Check every ThreadWave skill version."
+  default_prompt: "Compare every installed ThreadWave skill with the latest GitHub release index. 支持中文和英文。"

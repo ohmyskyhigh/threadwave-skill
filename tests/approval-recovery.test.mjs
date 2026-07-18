@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { REQUIRED_SKILLS } from '../scripts/suite-policy.mjs';
+import { OPERATION_SKILLS } from '../scripts/suite-policy.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -25,10 +25,11 @@ test('daily agent checks existing work before creating a plan', () => {
   assert.match(procedure, /exact `scheduled_task_ref`/);
 });
 
-test('every skill independently references mandatory preflight and issue reporting', () => {
-  for (const skill of REQUIRED_SKILLS) {
+test('every operation skill delegates preflight and issue reporting to the authority skill', () => {
+  for (const skill of OPERATION_SKILLS) {
     const content = fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8');
     assert.match(content, /Mandatory Preflight And Init Flow/);
-    assert.match(content, /issue-report-contract\.md/);
+    assert.match(content, /threadwave-preflight/);
+    assert.match(content, /issue-report-only mode/);
   }
 });

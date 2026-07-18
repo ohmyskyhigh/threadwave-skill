@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://threadwave.xyz/schemas/threadwave-issue-report-v2.schema.json",
+  "title": "ThreadWave Issue Report v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "report_id",
+    "created_at",
+    "locale",
+    "skill",
+    "installed_skill_versions",
+    "latest_skill_versions",
+    "update_state",
+    "install_mode",
+    "category",
+    "stage",
+    "summary",
+    "error_codes",
+    "checks",
+    "commands",
+    "next_step",
+    "privacy",
+    "submission"
+  ],
+  "properties": {
+    "schema_version": { "const": "threadwave-issue-report-v2" },
+    "report_id": { "type": "string", "pattern": "^twir_[a-f0-9]{16}$" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "locale": { "enum": ["en", "zh-CN"] },
+    "skill": {
+      "enum": [
+        "threadwave-preflight",
+        "threadwave-update",
+        "twitter-automation",
+        "twitter-agent",
+        "twitter-post",
+        "twitter-reply"
+      ]
+    },
+    "installed_skill_versions": { "$ref": "#/$defs/versionMap" },
+    "latest_skill_versions": { "$ref": "#/$defs/versionMap" },
+    "update_state": { "enum": ["confirmed", "update_required", "unconfirmed"] },
+    "cli_version": { "type": "string", "maxLength": 32 },
+    "install_mode": { "enum": ["packaged", "dev", "unknown"] },
+    "platform": { "type": "string", "maxLength": 32 },
+    "category": {
+      "enum": [
+        "skill_set_incomplete",
+        "skill_update_required",
+        "skill_update_unconfirmed",
+        "cli_missing",
+        "cli_contract_drift",
+        "setup_unresolved",
+        "repair_failed",
+        "mutation_proof_unknown",
+        "unexpected_failure"
+      ]
+    },
+    "stage": {
+      "enum": [
+        "skill_integrity",
+        "github_update_check",
+        "doctor",
+        "worktree",
+        "capabilities",
+        "setup_dry_run",
+        "setup_repair",
+        "capability_gate",
+        "workflow",
+        "evidence"
+      ]
+    },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "error_codes": {
+      "type": "array",
+      "maxItems": 12,
+      "items": { "type": "string", "pattern": "^[a-z0-9_:-]{1,80}$" }
+    },
+    "checks": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "state"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_-]{1,80}$" },
+          "state": { "enum": ["passed", "failed", "blocked", "unknown", "not_run"] },
+          "code": { "type": "string", "pattern": "^[a-z0-9_:-]{1,80}$" }
+        }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["command", "status"],
+        "properties": {
+          "command": { "type": "string", "maxLength": 160 },
+          "status": { "enum": ["passed", "failed", "blocked", "unknown", "not_run"] },
+          "exit_code": { "type": "integer", "minimum": 0, "maximum": 255 }
+        }
+      }
+    },
+    "next_step": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["redacted", "excluded_fields"],
+      "properties": {
+        "redacted": { "const": true },
+        "excluded_fields": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "submission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "sent", "user_consent_required"],
+      "properties": {
+        "mode": { "const": "copy_paste" },
+        "sent": { "const": false },
+        "user_consent_required": { "const": true }
+      }
+    }
+  },
+  "$defs": {
+    "versionMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "threadwave-preflight": { "$ref": "#/$defs/version" },
+        "threadwave-update": { "$ref": "#/$defs/version" },
+        "twitter-automation": { "$ref": "#/$defs/version" },
+        "twitter-agent": { "$ref": "#/$defs/version" },
+        "twitter-post": { "$ref": "#/$defs/version" },
+        "twitter-reply": { "$ref": "#/$defs/version" }
+      }
+    },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" }
+  }
+}

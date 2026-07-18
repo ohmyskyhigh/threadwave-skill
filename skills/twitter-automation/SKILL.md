@@ -1,22 +1,17 @@
 ---
 name: twitter-automation
-description: "Check the four-skill suite, CLI, and Chrome extension; diagnose readiness and route a review-gated Twitter/X automation suite powered by ThreadWave. Use for Twitter automation, X automation, tweet automation, Twitter bot/agent readiness, dependency checks, preflight, updates, onboarding, or choosing the right Twitter skill. If any required module is missing, route to the web-hosted harness setup guide at /cli/setup/agent.md. 中文：用于检查四个技能、CLI 与 Chrome 扩展，执行推特自动化、Twitter/X 自动化、推文自动化、代理就绪检查、依赖检查、预检、更新、引导和技能路由；任何必要模块缺失时转到 /cli/setup/agent.md 设置 harness agent。"
-metadata:
-  version: "0.3.0"
-  suite: "threadwave-skill"
+description: "Route review-gated Twitter/X automation requests after dedicated ThreadWave preflight and update skills verify six flat peer skills, the CLI, and Chrome extension. Use for Twitter automation, X automation, tweet automation, Twitter bot/agent readiness, onboarding, or choosing the correct Twitter operation skill. 中文：用于在 ThreadWave 预检和更新技能确认六个平铺技能、CLI 与 Chrome 扩展后，路由推特自动化、Twitter/X 自动化、推文自动化、代理就绪、引导和技能选择请求。"
 ---
 
 # Twitter Automation
 
-Own high-level suite initialization, dependency validation, update checks, readiness diagnosis, and workflow routing. Delegate missing skill-suite, CLI, or extension setup to `https://www.threadwave.xyz/cli/setup/agent.md`. ThreadWave is the implementation provider; the public skill name remains generic.
+Own high-level workflow routing after the dedicated infrastructure peers complete readiness. `threadwave-preflight` owns dependencies/setup and `threadwave-update` owns versions. Delegate missing skill, CLI, or extension setup to `https://www.threadwave.xyz/cli/setup/agent.md`. ThreadWave is the implementation provider; the public operation name remains generic.
 
 ## Scope
 
 Use this skill to:
 
-- verify that all four local suite skills are installed together at one version;
-- diagnose packaged versus development installs;
-- check CLI compatibility and required upgrades;
+- request the mandatory dedicated preflight and update checks;
 - hand any missing skill-suite, CLI, or extension module to the web-hosted harness setup guide without losing the original request;
 - report readiness or route an already-requested workflow to the matching skill.
 
@@ -24,18 +19,15 @@ Do not create strategies, plans, drafts, posts, or replies unless the user alrea
 
 ## Language
 
-Choose `en` or `zh-CN` using the shared preflight rule. Read the matching file only when composing user-facing output:
-
-- English: [../../references/i18n/en.md](../../references/i18n/en.md)
-- 简体中文: [../../references/i18n/zh-CN.md](../../references/i18n/zh-CN.md)
+Choose `en` or `zh-CN` through `threadwave-preflight`: explicit user preference, latest message, conversation language, then English.
 
 Keep commands, JSON keys, refs, schema values, and error codes in English.
 
 ## Mandatory Preflight And Init Flow
 
-Read [../../references/preflight-contract.md](../../references/preflight-contract.md) completely and execute it from step 1 on every invocation, including setup-only, update-only, status, repair, and issue-report requests.
+Activate `threadwave-preflight` by skill name on every invocation, including setup-only, status, repair, and routed operation requests. Pass the unchanged original intent and originating skill. Do not invoke `tw` until preflight returns `ready` with all six individual skill versions confirmed latest.
 
-The selected capability gate for this skill requires `capabilities`, `doctor`, and `setup`. Suite integrity must pass before invoking `tw`; a partial installation blocks every skill.
+The selected capability gate requires `capabilities`, `doctor`, and `setup`. A partial or outdated six-skill installation blocks every operation.
 
 If any required skill, `tw`, or the Chrome extension is missing, preserve the user's request and tell the user to open `https://www.threadwave.xyz/cli/setup/agent.md` to set up the harness agent. The setup protocol is web-hosted and is not downloaded as a local fifth skill. Resume only after all three module checks verify ready.
 
@@ -61,13 +53,13 @@ For every missing skill-suite, CLI, or extension state, route to the canonical a
 
 Summarize these independently:
 
-1. Suite: four local skills present and same version.
+1. Skills: six flat peers present, with each independent version confirmed latest.
 2. CLI: installed version and supported schemas.
 3. Install: `packaged` or safe `dev` worktree status.
 4. Setup: ready or one concrete user gate.
-5. Update: host plugin update when the host exposes one; CLI `required_upgrades` from capabilities.
+5. Update: authoritative result from `threadwave-update`; CLI `required_upgrades` from capabilities.
 
-If suite update status is unavailable, say `unknown`; this is not a failure. Never claim “latest” without an authoritative result.
+If GitHub update status is unconfirmed, stop before `tw`. Never claim “latest” without the authoritative release index result.
 
 ## Router
 
@@ -89,7 +81,7 @@ Pause before every user-owned browser/auth/payment/X login gate and before any s
 
 ## Issue Report
 
-Read [../../references/issue-report-contract.md](../../references/issue-report-contract.md) when the user asks for a report or a report-worthy failure occurs.
+For an explicit report request or report-worthy failure, activate `threadwave-preflight` in issue-report-only mode with sanitized diagnostic metadata.
 
 Generate a copy/paste report for incomplete suites, version mismatch, CLI contract drift, repeated unresolved setup, or a safe repair that failed once. Do not generate one for a normal Chrome/auth/payment/X-login/approval wait.
 

@@ -1,0 +1,35 @@
+{
+  "skill_name": "threadwave-preflight",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Preflight my ThreadWave setup before running the Twitter agent.",
+      "expected_output": "Invokes threadwave-update first, then verifies CLI install mode, capabilities, setup, extension, and the twitter-agent capability gate before returning readiness.",
+      "expectations": [
+        "Requires all six independently versioned peers",
+        "Uses the update skill as the only version authority",
+        "Returns to twitter-agent without treating readiness as approval"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "先用中文检查技能、CLI 和 Chrome 扩展，然后再继续发推。",
+      "expected_output": "Uses Simplified Chinese, preserves the pending post intent, and stops at one setup or approval boundary.",
+      "expectations": [
+        "Uses Simplified Chinese labels",
+        "Preserves exact post content without placing it in diagnostics",
+        "Does not post during preflight"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The GitHub release index failed twice. Make a report I can copy to the maintainer.",
+      "expected_output": "Uses issue-report-only mode to render a redacted report without rerunning update or sending anything.",
+      "expectations": [
+        "Skips the update/preflight loop in report-only mode",
+        "Excludes private paths and user content",
+        "States that the report was not sent"
+      ]
+    }
+  ]
+}

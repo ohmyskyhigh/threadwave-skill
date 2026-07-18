@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildIssueReport, renderIssueReportMarkdown } from '../scripts/generate-issue-report.mjs';
+import { buildIssueReport, renderIssueReportMarkdown } from '../skills/threadwave-preflight/scripts/generate-issue-report.mjs';
 import { shouldGenerateIssueReport } from '../scripts/suite-policy.mjs';
 
-test('issue report is allowlisted, redacted, and never marked sent', () => {
+test('issue report includes individual versions, stays redacted, and is never sent', () => {
   const report = buildIssueReport({
     locale: 'zh-CN',
     skill: 'twitter-reply',
-    suite_version: '0.3.0',
+    installed_skill_versions: { 'threadwave-preflight': '0.1.0', 'twitter-reply': '0.4.0' },
+    latest_skill_versions: { 'threadwave-preflight': '0.1.0', 'twitter-reply': '0.4.1' },
+    update_state: 'update_required',
     cli_version: '1.0.0',
     install_mode: 'dev',
     platform: 'darwin',
@@ -23,14 +25,15 @@ test('issue report is allowlisted, redacted, and never marked sent', () => {
   for (const secret of ['topsecret', '@private', '1234567890123456789', '/Users/alice', '/home/alice', 'do not leak this', 'token=abc']) {
     assert.ok(!serialized.includes(secret), `report leaked ${secret}`);
   }
+  assert.equal(report.schema_version, 'threadwave-issue-report-v2');
+  assert.equal(report.installed_skill_versions['twitter-reply'], '0.4.0');
+  assert.equal(report.latest_skill_versions['twitter-reply'], '0.4.1');
   assert.equal(report.submission.sent, false);
-  assert.equal(report.submission.mode, 'copy_paste');
-  assert.match(report.report_id, /^twir_[a-f0-9]{16}$/);
   assert.match(renderIssueReportMarkdown(report), /尚未发送/);
 });
 
 test('expected user gates do not generate failure reports', () => {
-  assert.equal(shouldGenerateIssueReport({ category: 'suite_incomplete', gate: 'skill_suite' }), false);
+  assert.equal(shouldGenerateIssueReport({ category: 'skill_set_incomplete', gate: 'skill_suite' }), false);
   assert.equal(shouldGenerateIssueReport({ category: 'setup_unresolved', gate: 'payment' }), false);
   assert.equal(shouldGenerateIssueReport({ category: 'unexpected_failure', gate: 'approval' }), false);
   assert.equal(shouldGenerateIssueReport({ category: 'cli_contract_drift' }), true);

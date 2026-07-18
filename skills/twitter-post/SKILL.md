@@ -1,9 +1,6 @@
 ---
 name: twitter-post
 description: "Publish one exact user-supplied Twitter/X post through a mandatory dry-run, exact-content review, explicit approval, one dispatch, and evidence check using ThreadWave. Use for post a tweet, send a tweet, publish on Twitter/X, tweet this exact text, or manual tweet tasks—not drafting, scheduling, or batch posting. 中文：用于发送一条用户提供准确原文的推文、发布 Twitter/X 帖子、手动发推；必须先 dry-run、原文审核、明确批准，再执行一次。不要用于写草稿、排期或批量发帖。"
-metadata:
-  version: "0.3.0"
-  suite: "threadwave-skill"
 ---
 
 # Twitter Post
@@ -20,18 +17,15 @@ Treat any replacement as a new payload requiring a new dry-run and approval.
 
 ## Language
 
-Choose `en` or `zh-CN` through shared preflight. Read the matching phrases when composing output:
-
-- English: [../../references/i18n/en.md](../../references/i18n/en.md)
-- 简体中文: [../../references/i18n/zh-CN.md](../../references/i18n/zh-CN.md)
+Choose `en` or `zh-CN` through `threadwave-preflight`: explicit user preference, latest message, conversation language, then English.
 
 The interface language may differ from the post language. Never translate the post because the interface locale changed.
 
 ## Mandatory Preflight And Init Flow
 
-Read [../../references/preflight-contract.md](../../references/preflight-contract.md) completely and run it from step 1 every time, including after an approval message or a recoverable pause.
+Activate `threadwave-preflight` by skill name every time, including after approval or a recoverable pause. Pass the unchanged exact post in working memory and the `twitter-post` capability requirements. Do not invoke `tw` until preflight returns `ready` with all six individual skill versions confirmed latest.
 
-The selected capability gate requires the `action` family, production X actions enabled, and `tw action tweet` with `--dry-run`. All four local suite skills must exist at one version before any `tw` command. If any skill-suite, CLI, or extension module is missing, preserve the exact post and tell the user to open `https://www.threadwave.xyz/cli/setup/agent.md` to set up the harness agent; resume here only after all modules verify ready.
+The selected capability gate requires the `action` family, production X actions enabled, and `tw action tweet` with `--dry-run`. If `threadwave-preflight` is unavailable, or it reports a missing/outdated skill, CLI, or extension module, preserve the exact post and direct the user to `https://www.threadwave.xyz/cli/setup/agent.md`; resume only after preflight verifies ready.
 
 Preserve the original exact text across preflight in working memory. Never place it in an issue report, log, changelog, or diagnostic summary.
 
@@ -93,7 +87,7 @@ If evidence says blocked, failed, deferred, or unknown, use that exact state. Un
 
 ## Issue Report
 
-Read [../../references/issue-report-contract.md](../../references/issue-report-contract.md) for an explicit report request or a report-worthy failure.
+For an explicit report request or report-worthy failure, activate `threadwave-preflight` in issue-report-only mode with sanitized diagnostic metadata. Do not include the exact post in the handoff.
 
 Generate a redacted copy/paste report for suite/CLI drift, a repeated unresolved non-user setup failure, or unknown/inconclusive mutation evidence. Never include the post text, account handle, target URL/status ID, raw command with text, or raw action/evidence payload.
 

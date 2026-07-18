@@ -1,9 +1,6 @@
 ---
 name: twitter-agent
 description: "Run a review-gated Twitter/X agent for normal daily growth: initialize strategy, create daily plans, present strategy/plan/task/draft reviews, inspect scheduler state, and summarize outcomes through ThreadWave. Use for Twitter agent, X agent, daily Twitter automation, account growth, content planning, tweet scheduling, draft review, or normal daily run requests. 中文：用于推特代理、Twitter/X 智能体、每日推特自动化、账号增长、内容规划、推文排期、策略审核、计划审核、草稿审核和日常运行。"
-metadata:
-  version: "0.3.0"
-  suite: "threadwave-skill"
 ---
 
 # Twitter Agent
@@ -25,18 +22,15 @@ Do not use this workflow for one exact immediate post or reply; those belong to 
 
 ## Language
 
-Choose `en` or `zh-CN` using shared preflight. Read the matching output phrases only when needed:
-
-- English: [../../references/i18n/en.md](../../references/i18n/en.md)
-- 简体中文: [../../references/i18n/zh-CN.md](../../references/i18n/zh-CN.md)
+Choose `en` or `zh-CN` through `threadwave-preflight`: explicit user preference, latest message, conversation language, then English.
 
 Keep commands, JSON keys, refs, review states, and stable error codes in English. Present full review content in its original language; do not silently translate approved content.
 
 ## Mandatory Preflight And Init Flow
 
-Read [../../references/preflight-contract.md](../../references/preflight-contract.md) completely and run it from step 1 on every invocation, even when resuming a pending review or checking scheduler status.
+Activate `threadwave-preflight` by skill name on every invocation, even when resuming a pending review or checking scheduler status. Pass the originating skill name, the unchanged daily-agent intent, and the required capability families. Do not invoke any `tw` command until preflight returns `ready` with all six individual skill versions confirmed latest.
 
-The selected capability gate requires `context`, `strategy`, `plan`, `task`, `draft`, and `scheduler`. All four local suite skills must be installed at the same version before any `tw` command. If any skill-suite, CLI, or extension module is missing, preserve this request and tell the user to open `https://www.threadwave.xyz/cli/setup/agent.md` to set up the harness agent; resume here after all modules verify ready.
+The selected capability gate requires `context`, `strategy`, `plan`, `task`, `draft`, and `scheduler`. If `threadwave-preflight` is unavailable, or it reports a missing/outdated skill, CLI, or extension module, preserve this request and direct the user to `https://www.threadwave.xyz/cli/setup/agent.md`; resume here after preflight verifies ready.
 
 After setup is ready, resume the original daily-agent intent; setup readiness is not content approval.
 
@@ -115,7 +109,7 @@ Use `tw scheduler list --json`, `show`, and `status` to report actual scheduler 
 
 ## Issue Report
 
-Read [../../references/issue-report-contract.md](../../references/issue-report-contract.md) when explicitly requested or on a report-worthy failure.
+For an explicit report request or report-worthy failure, activate `threadwave-preflight` in issue-report-only mode with sanitized diagnostic metadata. Do not rerun the workflow or update check during that handoff.
 
 Generate a report for suite/CLI drift, repeated non-user setup failure, unexpected workflow contract failure, or unknown/inconclusive mutation evidence. Do not generate one for pending review, pacing, Chrome/auth/payment/X-login, or another expected user gate.
 

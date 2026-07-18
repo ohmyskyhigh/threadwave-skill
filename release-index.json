@@ -1,0 +1,14 @@
+{
+  "schema_version": "threadwave-skill-release-index-v1",
+  "repository": "ohmyskyhigh/threadwave-skill",
+  "branch": "main",
+  "setup_url": "https://www.threadwave.xyz/cli/setup/agent.md",
+  "skills": [
+    { "name": "threadwave-preflight", "latest_version": "0.1.0", "minimum_supported_version": "0.1.0" },
+    { "name": "threadwave-update", "latest_version": "0.1.0", "minimum_supported_version": "0.1.0" },
+    { "name": "twitter-automation", "latest_version": "0.4.0", "minimum_supported_version": "0.4.0" },
+    { "name": "twitter-agent", "latest_version": "0.4.0", "minimum_supported_version": "0.4.0" },
+    { "name": "twitter-post", "latest_version": "0.4.0", "minimum_supported_version": "0.4.0" },
+    { "name": "twitter-reply", "latest_version": "0.4.0", "minimum_supported_version": "0.4.0" }
+  ]
+}

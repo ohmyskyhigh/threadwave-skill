@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { evaluateCapabilities } from '../scripts/suite-policy.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const manifest = JSON.parse(fs.readFileSync(path.join(root, 'suite-manifest.json'), 'utf8'));
+const skillManifest = (name) => JSON.parse(fs.readFileSync(path.join(root, 'skills', name, 'skill-manifest.json'), 'utf8'));
 
 function capabilities() {
   return {
@@ -34,23 +34,23 @@ function capabilities() {
 }
 
 test('each workflow accepts the supported CLI contract', () => {
-  assert.deepEqual(evaluateCapabilities(manifest, 'twitter-automation', capabilities()), []);
-  assert.deepEqual(evaluateCapabilities(manifest, 'twitter-agent', capabilities()), []);
-  assert.deepEqual(evaluateCapabilities(manifest, 'twitter-reply', capabilities()), []);
-  assert.deepEqual(evaluateCapabilities(manifest, 'twitter-post', capabilities(), {
+  assert.deepEqual(evaluateCapabilities(skillManifest('twitter-automation'), capabilities()), []);
+  assert.deepEqual(evaluateCapabilities(skillManifest('twitter-agent'), capabilities()), []);
+  assert.deepEqual(evaluateCapabilities(skillManifest('twitter-reply'), capabilities()), []);
+  assert.deepEqual(evaluateCapabilities(skillManifest('twitter-post'), capabilities(), {
     confirmedCommands: ['tw action tweet --text <text> --json']
   }), []);
 });
 
 test('missing exact action command is detected before mutation', () => {
-  assert.ok(evaluateCapabilities(manifest, 'twitter-post', capabilities()).some((failure) => failure.startsWith('required_command_missing:')));
+  assert.ok(evaluateCapabilities(skillManifest('twitter-post'), capabilities()).some((failure) => failure.startsWith('required_command_missing:')));
 });
 
 test('schema drift and required upgrades are blocking compatibility failures', () => {
   const value = capabilities();
   value.schema_version = 'tw-cli-v2';
   value.data.required_upgrades = ['upgrade_cli'];
-  const failures = evaluateCapabilities(manifest, 'twitter-agent', value);
+  const failures = evaluateCapabilities(skillManifest('twitter-agent'), value);
   assert.ok(failures.includes('unsupported_cli_schema'));
   assert.ok(failures.includes('required_upgrade'));
 });

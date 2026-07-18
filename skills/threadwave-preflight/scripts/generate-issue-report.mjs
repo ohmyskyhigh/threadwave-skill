@@ -1,12 +1,22 @@
 #!/usr/bin/env node
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const SKILLS = new Set(['twitter-automation', 'twitter-agent', 'twitter-post', 'twitter-reply']);
+const SKILLS = Object.freeze([
+  'threadwave-preflight',
+  'threadwave-update',
+  'twitter-automation',
+  'twitter-agent',
+  'twitter-post',
+  'twitter-reply'
+]);
+const SKILL_SET = new Set(SKILLS);
 const CATEGORIES = new Set([
-  'suite_incomplete',
-  'version_mismatch',
+  'skill_set_incomplete',
+  'skill_update_required',
+  'skill_update_unconfirmed',
   'cli_missing',
   'cli_contract_drift',
   'setup_unresolved',
@@ -15,7 +25,8 @@ const CATEGORIES = new Set([
   'unexpected_failure'
 ]);
 const STAGES = new Set([
-  'suite_integrity',
+  'skill_integrity',
+  'github_update_check',
   'doctor',
   'worktree',
   'capabilities',
@@ -26,6 +37,7 @@ const STAGES = new Set([
   'evidence'
 ]);
 const STATES = new Set(['passed', 'failed', 'blocked', 'unknown', 'not_run']);
+const UPDATE_STATES = new Set(['confirmed', 'update_required', 'unconfirmed']);
 const EXCLUDED_FIELDS = Object.freeze([
   'tweet_or_reply_text',
   'target_url_status_id_or_handle',
@@ -40,11 +52,13 @@ const EXCLUDED_FIELDS = Object.freeze([
 export function buildIssueReport(input = {}, now = new Date()) {
   const locale = input.locale === 'zh-CN' ? 'zh-CN' : 'en';
   const safe = {
-    schema_version: 'threadwave-issue-report-v1',
+    schema_version: 'threadwave-issue-report-v2',
     created_at: validDate(input.created_at) ?? now.toISOString(),
     locale,
-    skill: SKILLS.has(input.skill) ? input.skill : 'twitter-automation',
-    suite_version: semver(input.suite_version) ?? '0.0.0',
+    skill: SKILL_SET.has(input.skill) ? input.skill : 'threadwave-preflight',
+    installed_skill_versions: safeVersions(input.installed_skill_versions),
+    latest_skill_versions: safeVersions(input.latest_skill_versions),
+    update_state: UPDATE_STATES.has(input.update_state) ? input.update_state : 'unconfirmed',
     ...(shortVersion(input.cli_version) ? { cli_version: shortVersion(input.cli_version) } : {}),
     install_mode: ['packaged', 'dev'].includes(input.install_mode) ? input.install_mode : 'unknown',
     ...(safePlatform(input.platform) ? { platform: safePlatform(input.platform) } : {}),
@@ -55,15 +69,8 @@ export function buildIssueReport(input = {}, now = new Date()) {
     checks: safeChecks(input.checks),
     commands: safeCommands(input.commands),
     next_step: sanitizeText(input.next_step || localized(locale, 'Maintainer review is required.', '需要维护者检查。'), 500),
-    privacy: {
-      redacted: true,
-      excluded_fields: [...EXCLUDED_FIELDS]
-    },
-    submission: {
-      mode: 'copy_paste',
-      sent: false,
-      user_consent_required: true
-    }
+    privacy: { redacted: true, excluded_fields: [...EXCLUDED_FIELDS] },
+    submission: { mode: 'copy_paste', sent: false, user_consent_required: true }
   };
   safe.report_id = `twir_${crypto.createHash('sha256').update(JSON.stringify(safe)).digest('hex').slice(0, 16)}`;
   return orderReport(safe);
@@ -72,19 +79,29 @@ export function buildIssueReport(input = {}, now = new Date()) {
 export function renderIssueReportMarkdown(report) {
   const zh = report.locale === 'zh-CN';
   const label = (en, cn) => zh ? cn : en;
-  const lines = [
+  const versionLines = SKILLS.flatMap((name) => {
+    const local = report.installed_skill_versions[name];
+    const latest = report.latest_skill_versions[name];
+    if (!local && !latest) return [];
+    return [`- \`${name}\`: ${local ?? 'missing'} / ${latest ?? 'unconfirmed'}`];
+  });
+  return [
     `# ${label('ThreadWave Issue Report', 'ThreadWave 问题报告')}`,
     '',
     `- ${label('Report ID', '报告 ID')}: \`${report.report_id}\``,
     `- ${label('Schema', '结构版本')}: \`${report.schema_version}\``,
     `- ${label('Created', '生成时间')}: \`${report.created_at}\``,
     `- ${label('Skill', '技能')}: \`${report.skill}\``,
-    `- ${label('Suite version', '套件版本')}: \`${report.suite_version}\``,
+    `- ${label('Update state', '更新状态')}: \`${report.update_state}\``,
     ...(report.cli_version ? [`- CLI ${label('version', '版本')}: \`${report.cli_version}\``] : []),
     `- ${label('Install mode', '安装模式')}: \`${report.install_mode}\``,
     ...(report.platform ? [`- ${label('Platform', '平台')}: \`${report.platform}\``] : []),
     `- ${label('Category', '问题分类')}: \`${report.category}\``,
     `- ${label('Stage', '阶段')}: \`${report.stage}\``,
+    '',
+    `## ${label('Skill versions (installed / latest)', '技能版本（已安装 / 最新）')}`,
+    '',
+    ...(versionLines.length ? versionLines : [`- ${label('None confirmed', '未确认')}`]),
     '',
     `## ${label('Summary', '摘要')}`,
     '',
@@ -112,8 +129,16 @@ export function renderIssueReportMarkdown(report) {
       'Sensitive and user-content fields were excluded. This report has not been sent; it is for copy/paste only.',
       '敏感信息和用户内容已排除。此报告尚未发送，仅供复制粘贴。'
     )
-  ];
-  return lines.join('\n');
+  ].join('\n');
+}
+
+function safeVersions(value) {
+  const result = {};
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return result;
+  for (const name of SKILLS) {
+    if (/^\d+\.\d+\.\d+$/.test(String(value[name] ?? ''))) result[name] = String(value[name]);
+  }
+  return result;
 }
 
 function safeChecks(value) {
@@ -146,7 +171,8 @@ function safeCode(value, fallback) {
 
 function sanitizeCommand(value) {
   let command = String(value ?? '').trim().replace(/[\r\n\0]/g, ' ');
-  if (!/^(?:tw(?:\s|$)|command -v tw$)/.test(command)) return '[REDACTED_COMMAND]';
+  const safeUpdate = command === 'node <threadwave-update-directory>/scripts/check-updates.mjs';
+  if (!safeUpdate && !/^(?:tw(?:\s|$)|command -v tw$)/.test(command)) return '[REDACTED_COMMAND]';
   command = command.replace(/--text(?:=|\s+)(?:"[^"]*"|'[^']*'|\S+)/gi, '--text <redacted>');
   command = command.replace(/https?:\/\/\S+/gi, '<redacted_url>');
   command = command.replace(/(@[A-Za-z0-9_]{1,15}|\b\d{12,}\b)/g, '<redacted_target>');
@@ -169,10 +195,6 @@ function sanitizeText(value, maxLength) {
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, maxLength) || '[REDACTED]';
-}
-
-function semver(value) {
-  return /^\d+\.\d+\.\d+$/.test(String(value)) ? String(value) : null;
 }
 
 function shortVersion(value) {
@@ -204,7 +226,7 @@ async function main() {
   process.stdout.write(process.argv.includes('--json') ? `${JSON.stringify(report, null, 2)}\n` : `${renderIssueReportMarkdown(report)}\n`);
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   main().catch((error) => {
     process.stderr.write(`issue_report_generation_failed: ${error instanceof Error ? error.message : String(error)}\n`);
     process.exitCode = 1;
