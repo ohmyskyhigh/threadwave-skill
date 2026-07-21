@@ -1,7 +1,7 @@
 {
   "schema_version": "threadwave-skill-suite-v2",
   "suite_name": "threadwave-skill",
-  "bundle_version": "0.6.0",
+  "bundle_version": "0.6.1",
   "install_modes": ["flat_peer_skills", "host_plugin_bundle"],
   "required_skills": [
     { "name": "threadwave-preflight", "path": "skills/threadwave-preflight/SKILL.md", "manifest_path": "skills/threadwave-preflight/skill-manifest.json" },
@@ -20,12 +20,13 @@
     "harness_cli_schema": "tw_cli_harness_v1",
     "harness_schema": "tw-harness-v1",
     "doctor_schema": "threadwave-doctor-v1",
+    "preflight_contract": "threadwave-preflight-v1",
     "setup_contract": "threadwave-setup-v1",
     "issue_report_schema": "threadwave-issue-report-v2"
   },
   "cli": {
     "binary": "tw",
-    "minimum_version": "1.0.1",
+    "minimum_version": "1.0.4",
     "missing_cli_setup_url": "https://www.threadwave.xyz/cli/setup/agent.md",
     "compatibility_authority": "tw capabilities --format json"
   },
@@ -37,7 +38,7 @@
     "installed_skill": false,
     "handles_missing": ["skill_suite", "cli", "extension"],
     "requires_user_action": true,
-    "resume_check": "tw setup --dry-run --format json"
+    "resume_check": "tw preflight --format json"
   },
   "update_policy": {
     "owner_skill": "threadwave-update",

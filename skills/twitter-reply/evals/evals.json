@@ -44,8 +44,9 @@
     {
       "id": 5,
       "prompt": "Approve all five replies.",
-      "expected_output": "Refuses broad batch mutation approval and presents only one exact pending source or content review at a time.",
+      "expected_output": "Refuses broad batch mutation approval, presents all current source or content reviews together as a numbered set, and requests one explicit decision per exact review ref.",
       "expectations": [
+        "Displays all current reviews instead of forcing one-at-a-time reveal",
         "Keeps source and content approvals separate",
         "Does not collapse independent review refs",
         "Authorizes no more than one mutation per content approval"
@@ -59,6 +60,41 @@
         "Does not run exact-action mode without one exact target",
         "Does not infer browser state",
         "Asks one concise clarification"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "The CLI found five source-selection reviews. Show me all five so I can decide on each one.",
+      "expected_output": "Inspects every returned source review and presents all five together with numbered exact review refs and safe public context, accepting either per-item decisions or approve all for that exact displayed target set.",
+      "expectations": [
+        "Displays all five pending source reviews in one numbered set",
+        "Includes the exact review ref for every source",
+        "Accepts a per-item decision map and leaves omitted items pending",
+        "Accepts approve all only after displaying the complete unchanged source-target set",
+        "Does not transfer approve all to generated replies or X mutations"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "These five candidates are wrong. Redo it and search for the exact phrase let's connect instead.",
+      "expected_output": "Treats the request as a candidate-stage restart: skips each pending source review from the old manual task, reruns preflight, creates one fresh five-reply task with the new exact direction, and waits for new task approval.",
+      "expectations": [
+        "Does not use task retask or draft redraft for the candidate-stage restart",
+        "Skips every still-pending source review from the exact old discovery batch and verifies status skipped",
+        "Removes skipped refs from the active review presentation without deleting durable history",
+        "Creates one fresh task with the latest direction and the original count",
+        "Does not transfer old approval or authorize draft generation or X mutation"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Approve all five targets you just showed me.",
+      "expected_output": "Reruns preflight once and approves each exact pending source-review ref from the unchanged displayed target list, while granting no approval to generated reply content or X mutations.",
+      "expectations": [
+        "Scopes approve all to the immediately displayed complete source-target list",
+        "Invokes source approval once per exact displayed review ref",
+        "Stops before approving generated replies or scheduling X mutations",
+        "Requires redisplay and reconfirmation when the target set changed or became stale"
       ]
     }
   ]
