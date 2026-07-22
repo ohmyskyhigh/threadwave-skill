@@ -1,6 +1,12 @@
 {
   "schema_version": "threadwave-skill-release-index-v2",
   "repository": "ohmyskyhigh/threadwave-skill",
+  "bundle_version": "0.6.1",
+  "agent_skills_installer": {
+    "package": "skills",
+    "version": "1.5.18",
+    "registry": "https://registry.npmjs.org"
+  },
   "setup_url": "https://www.threadwave.xyz/cli/setup/agent.md",
   "roles": {
     "preflight": "threadwave-preflight",

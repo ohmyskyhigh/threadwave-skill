@@ -30,6 +30,13 @@ export function validateSuite(root = path.resolve(path.dirname(fileURLToPath(imp
   if (plugin.skills !== './skills/') errors.push('plugin skills path must be ./skills/');
   if (releaseIndex.schema_version !== 'threadwave-skill-release-index-v2') errors.push('release index schema mismatch');
   if (releaseIndex.repository !== 'ohmyskyhigh/threadwave-skill') errors.push('release index repository mismatch');
+  if (releaseIndex.bundle_version !== suite.bundle_version) errors.push('release index and bundle versions differ');
+  if (suite.agent_skills_installer?.package !== 'skills') errors.push('Agent Skills installer package mismatch');
+  if (!/^\d+\.\d+\.\d+$/.test(suite.agent_skills_installer?.version ?? '')) errors.push('Agent Skills installer version is not strict semver');
+  if (suite.agent_skills_installer?.registry !== 'https://registry.npmjs.org') errors.push('Agent Skills installer registry mismatch');
+  if (JSON.stringify(releaseIndex.agent_skills_installer) !== JSON.stringify(suite.agent_skills_installer)) {
+    errors.push('release index Agent Skills installer differs from suite manifest');
+  }
   if (releaseIndex.setup_url !== 'https://www.threadwave.xyz/cli/setup/agent.md') errors.push('release index setup URL mismatch');
   if (!roster.includes(releaseIndex.roles?.preflight)) errors.push('release index preflight role must name a roster skill');
   if (!roster.includes(releaseIndex.roles?.update)) errors.push('release index update role must name a roster skill');

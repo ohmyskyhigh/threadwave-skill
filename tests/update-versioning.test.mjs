@@ -17,6 +17,11 @@ function readJson(relative) {
 
 test('the v2 release index is the complete runtime roster and independent version authority', () => {
   assert.equal(releaseIndex.schema_version, 'threadwave-skill-release-index-v2');
+  assert.equal(releaseIndex.bundle_version, suite.bundle_version);
+  assert.deepEqual(releaseIndex.agent_skills_installer, suite.agent_skills_installer);
+  assert.equal(releaseIndex.agent_skills_installer.package, 'skills');
+  assert.match(releaseIndex.agent_skills_installer.version, /^\d+\.\d+\.\d+$/);
+  assert.equal(releaseIndex.agent_skills_installer.registry, 'https://registry.npmjs.org');
   assert.deepEqual(roster, suite.required_skills.map((entry) => entry.name));
   assert.ok(roster.includes(releaseIndex.roles.preflight));
   assert.ok(roster.includes(releaseIndex.roles.update));

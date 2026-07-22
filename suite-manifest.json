@@ -12,6 +12,11 @@
     { "name": "twitter-reply", "path": "skills/twitter-reply/SKILL.md", "manifest_path": "skills/twitter-reply/skill-manifest.json" }
   ],
   "supported_locales": ["en", "zh-CN"],
+  "agent_skills_installer": {
+    "package": "skills",
+    "version": "1.5.18",
+    "registry": "https://registry.npmjs.org"
+  },
   "contracts": {
     "skill_manifest": "threadwave-skill-manifest-v1",
     "release_index": "threadwave-skill-release-index-v2",

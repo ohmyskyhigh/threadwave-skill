@@ -70,6 +70,8 @@ export function buildReleaseArtifacts(root = path.resolve(path.dirname(fileURLTo
   const index = {
     schema_version: INDEX_SCHEMA,
     repository: REPOSITORY,
+    bundle_version: suite.bundle_version,
+    agent_skills_installer: suite.agent_skills_installer,
     setup_url: SETUP_URL,
     roles: { preflight: roles.preflight, update: roles.update },
     required_skills: requiredSkills
