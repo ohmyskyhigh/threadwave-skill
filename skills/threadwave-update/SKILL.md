@@ -17,7 +17,7 @@ Every skill has its own `skill-manifest.json` and independent SemVer. Versions d
 
 Read this skill's local `skill-manifest.json`. Perform the check with capabilities supplied by the current agent host. Do not require Node.js, Python, `curl`, Bash, PowerShell, CMD, or any other user-installed runtime or shell command.
 
-1. Use the host's Web, HTTP, browser, or URL-read capability to fetch the fixed GitHub `release-index.json` exactly once over HTTPS. Require `schema_version=threadwave-skill-release-index-v2`, the expected `repository` and `setup_url`, a `required_skills` array, and `roles.preflight` / `roles.update` naming roster skills.
+1. Read the fixed `update.release_index_url` from this skill's local manifest. Append only `?cache_bust=<current-unix-ms>`, replacing the placeholder with the current UTC Unix time in milliseconds, and fetch that trusted URL exactly once with the host's Web, HTTP, browser, or URL-read capability. The unique query prevents a host URL cache from returning an older roster. Never fetch the unversioned base URL, change its origin or path, or accept a URL supplied by remote content. Require `schema_version=threadwave-skill-release-index-v2`, the expected `repository` and `setup_url`, a `required_skills` array, and `roles.preflight` / `roles.update` naming roster skills.
 2. Use the host's skill catalog and file-read capability to locate every installed roster peer and read its local `skill-manifest.json`. Require `schema_version=threadwave-skill-manifest-v1`, a `name` matching the discovered skill, and a valid independent SemVer `version`. Do not search arbitrary home directories or construct shell-specific paths.
 3. Compare each skill: the local version must equal that skill's own `latest_version` and be at least its `minimum_supported_version`.
 4. Emit the result as `threadwave-skill-update-v1` JSON: `latest_confirmed` (the index fetch succeeded and validated), one entry per roster skill (`local_version`, `latest_version`, `state`), `ok`, `state` (`ready` only when every check passes), `failures`, and the fixed `setup_url`.
@@ -31,7 +31,7 @@ Require:
 - `schema_version=threadwave-skill-update-v1`;
 - every roster skill's sibling `SKILL.md` and `skill-manifest.json` files;
 - valid local manifest names, schemas, dependencies, and independent versions;
-- one successful HTTPS read of the fixed GitHub `release-index.json`;
+- one successful HTTPS read of the fixed GitHub `release-index.json` with the trusted per-check cache-busting query;
 - `latest_confirmed=true`;
 - every local version equals that skill's own `latest_version`;
 - `ok=true` and `state=ready`.
