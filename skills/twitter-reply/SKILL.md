@@ -50,7 +50,11 @@ After approval, rerun preflight and invoke `tw task review approve <same_review_
 
 ### 3. Review Every Discovered Source
 
-Follow only CLI-returned source-selection refs. Inspect each with `tw task review show`, show its safe public source context, and require an independent approve/reject/skip decision.
+Follow only CLI-returned source-selection refs. Inspect every ref with `tw task review show`, then present the complete pending target list from the current discovery batch together as one numbered set. Include each exact `review_ref` and its safe public source context so the user can compare every candidate without asking to reveal them one at a time.
+
+Accept a numbered decision map such as `1 approve, 2 reject, 3 skip`. After the complete target list has been displayed, also accept an explicit “approve all” as approval for every still-pending source review in that exact unchanged displayed set. Rerun preflight once, then invoke `tw task review approve <review_ref> --json` once per displayed ref and require every result to succeed. If the set is stale, changed, incomplete, or was not displayed in the immediately preceding review gate, display the current complete list and ask again. Leave every omitted item pending for per-item decision maps.
+
+Target-list “approve all” authorizes draft generation from those exact sources only. Never apply it to a task proposal, generated reply/content review, scheduled mutation, undisplayed target, or changed ref.
 
 Source approval authorizes draft generation for that exact source only. It never authorizes a reply mutation. When fewer valid sources exist than requested, report the actual count and continue only with the valid reviewed sources.
 
@@ -61,11 +65,16 @@ Source approval authorizes draft generation for that exact source only. It never
 - Approve, reject, or skip each content review independently.
 - Inspect each returned scheduled mutation through `tw scheduler show` and `tw scheduler evidence`.
 
-Never guess a target or ref. Never collapse multiple replies into “approve all.” Each content approval authorizes one exact reply mutation only.
+When multiple content reviews are pending, present them together as one numbered set with each exact target, reply text, and `review_ref`. Require an explicit per-item decision map. Never collapse multiple replies into “approve all” or treat a bare decision as batch mutation authority. Each content approval authorizes one exact reply mutation only.
+
+Never guess a target or ref.
 
 ### 5. Handle Changes And Failures
 
-- Direction/source/angle change: use one explicit `tw task retask --task` or `--batch` request after showing exact scope.
+- Before any source approval, treat “redo,” “redraft,” “start over,” “these candidates are wrong,” or a direction/source/angle change as a restart of the current manual reply task. Do not use `tw task retask` or `tw draft redraft` for this candidate-stage restart.
+- Follow only the current task's CLI-returned pending source-review refs. The user's explicit restart instruction authorizes closing that exact discovery batch: invoke `tw task review skip <review_ref> --json` once per still-pending source review and require every result to succeed. Inspect each skipped ref with `tw task review show <review_ref> --json`, require `status=skipped`, then remove it from the skill's active review set so it never appears again under `Reviews`, `Waiting for you`, or `Next`. Keep the durable historical record; removal means it is no longer active or pending, not deletion from append-only history. This is cancellation of pending review authority, not batch content or mutation approval.
+- Rerun preflight, then create one fresh task with `tw task create --surface reply --direction <latest_exact_user_direction> --count <same_count_unless_user_changed_it> --json`. Present the new proposal and stop for its new approval; no old approval, source, draft, or review authority transfers.
+- If any source is already approved or any reply mutation is scheduled, do not claim the old task was cancelled through review skips. Show the exact later-stage scope and use the supported retask/recovery path.
 - Same-source wording change: use `tw draft redraft`, then require a new content review.
 - Rejected source: create no draft or mutation for that source.
 - Unknown scheduler or mutation evidence: stop without retry and request a sanitized issue report.
@@ -97,8 +106,8 @@ For explicit report requests, CLI drift, repeated unresolved setup, or unknown e
 State: <needs task approval | needs source approval | needs content approval | scheduled | complete | blocked | unknown>
 Mode: <task | exact action>
 Count: <requested / valid sources / approved / scheduled>
-Review: <one exact current review>
-Waiting for you: <one decision or setup action>
+Reviews: <all current source or content reviews, numbered with exact review_ref>
+Waiting for you: <per-item decisions, or approve all for the exact displayed source-target list only; omitted per-item reviews remain pending>
 Next: <one returned ref/action or stop>
 Issue report: <copy/paste only; nothing sent>
 ```

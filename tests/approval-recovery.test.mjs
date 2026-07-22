@@ -32,6 +32,30 @@ test('post and reply peers support bounded tasks plus exact single-action safety
   }
 });
 
+test('reply peer shows complete target batches and accepts scoped source approval', () => {
+  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+  assert.match(content, /present the complete pending target list .* together as one numbered set/i);
+  assert.match(content, /numbered decision map/i);
+  assert.match(content, /accept an explicit “approve all” as approval for every still-pending source review in that exact unchanged displayed set/i);
+  assert.match(content, /tw task review approve <review_ref> --json/);
+  assert.match(content, /Never apply it to a task proposal, generated reply\/content review, scheduled mutation, undisplayed target, or changed ref/i);
+  assert.match(content, /leave every omitted item pending/i);
+  assert.match(content, /Reviews: <all current source or content reviews/i);
+  assert.doesNotMatch(content, /Review: <one exact current review>/i);
+});
+
+test('reply peer restarts wrong candidate batches without plan-backed retask', () => {
+  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+  assert.match(content, /treat .*candidates are wrong.* as a restart of the current manual reply task/i);
+  assert.match(content, /Do not use `tw task retask` or `tw draft redraft` for this candidate-stage restart/i);
+  assert.match(content, /tw task review skip <review_ref> --json/);
+  assert.match(content, /require `status=skipped`/);
+  assert.match(content, /remove it from the skill's active review set/i);
+  assert.match(content, /removal means it is no longer active or pending, not deletion from append-only history/i);
+  assert.match(content, /tw task create --surface reply --direction <latest_exact_user_direction> --count <same_count_unless_user_changed_it> --json/);
+  assert.match(content, /no old approval, source, draft, or review authority transfers/i);
+});
+
 test('automation is a pure router to independent peers', () => {
   const operationSkills = operationSkillNames(suite, releaseIndex);
   const routerName = operationSkills.find((skill) => manifests.get(skill)?.role === 'operation-router');

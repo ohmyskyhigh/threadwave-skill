@@ -32,23 +32,33 @@ On missing or outdated skills, preserve the originating request and route to the
 
 Do not invoke update in issue-report-only mode. That mode only renders already-sanitized diagnostic metadata.
 
-## 3. Locate The CLI And Diagnose Install Mode
+## 3. Run The Recurring CLI Preflight
 
 Use the host agent's process or command-execution capability to invoke the ThreadWave executable directly with these arguments:
 
 ```text
-tw doctor --format json
+tw preflight --format json
 ```
 
 Do not use `command -v`, `which`, `where`, Bash, PowerShell, CMD, or another shell-specific discovery command. If the host reports that `tw` cannot be found or executed, preserve the request, direct the user to `https://www.threadwave.xyz/cli/setup/agent.md`, and pause. If the host cannot execute local processes at all, stop with `twitter_automation_cli_unconfirmed`; do not guess readiness.
 
-Require `schemaVersion=threadwave-doctor-v1` and read `install.mode`.
+Require top-level `schema_version=tw-cli-v1`, `data.contract_version=threadwave-preflight-v1`, `data.cli_version>=1.0.4`, and exactly one `data.action`. Read `data.install_mode`.
 
 - `packaged`: do not run a worktree command.
 - `dev`: run `tw worktree tag --format json`; add `--expected <tag>` only when trusted workspace instructions provide it. Stop on `worktree_tag_missing` or `worktree_tag_mismatch`.
 - Other or missing: stop with `twitter_automation_install_mode_unknown` and generate a report.
 
-Never expose doctor paths in output or reports.
+Follow only the one returned action:
+
+- `continue`: proceed to compatibility checks.
+- `reinstall`: preserve the request and route to the returned official setup URL.
+- `update`: run the returned safe update command, then rerun preflight once.
+- `login`: run the returned `tw login` command in a persistent process call. Wait until it opens ThreadWave sign-in, keep it running, and only then pause for the user's sign-in. Rerun preflight after the command completes.
+- `complete_subscription`: run the returned `tw subscribe` command in a persistent process call. Wait until its browser journey opens Stripe checkout, keep it running, and only then pause for the user's payment. Rerun preflight after the command completes. Never combine sign-in and checkout into one pause or create a second checkout.
+- `setup`: run `tw setup --format json` once and follow only its returned action. Automatically run only a returned command with `safe_to_run=true`; pause for every user-confirmation or wait action. Then rerun preflight once.
+- `retry_later`: network/backend verification is unavailable. Never report this as authentication failure; retry once later, then stop.
+
+After one action, rerun preflight once. If the same unresolved state repeats, run `tw doctor --format json` once, require `schemaVersion=threadwave-doctor-v1`, stop with `twitter_automation_setup_unresolved`, and generate a report. Never expose doctor paths in output or reports.
 
 ## 4. Check CLI Compatibility
 
@@ -70,25 +80,11 @@ Read the originating skill's local `skill-manifest.json` as a sibling skill mani
 
 When CLI upgrades are required, stop and follow only returned upgrade guidance. Contract drift is `twitter_automation_cli_contract_drift` and is report-worthy.
 
-## 5. Probe Setup Without Mutation
+## 5. Confirm Recurring Readiness
 
-Invoke:
+Step 3 must finish with `data.state=ready` and `data.action.id=continue`. That result is the recurring access/setup gate for first install, return use, and dormant sessions. At every browser gate, the agent launches the returned safe command or URL first and pauses only after the corresponding page is open. Treat Chrome permission, ThreadWave sign-in, subscription/payment, and X sign-in as normal user gates; never automate the user's interaction or bypass installer, signature, notarization, publisher, or Web Store trust failures.
 
-```text
-tw setup --dry-run --format json
-```
-
-Require `schema_version=tw-cli-v1` and `data.contract_version=threadwave-setup-v1`.
-
-- `data.state=ready`: continue.
-- Otherwise run `tw setup --format json` once and follow only `data.action`.
-- Automatically run a returned command only when `action.type=run_command` and `safe_to_run=true`.
-- Pause for `open_url` with `user_confirmation=true` and every `wait_for_user` action.
-- Route missing CLI or extension state to `https://www.threadwave.xyz/cli/setup/agent.md`.
-- Treat Chrome permission, ThreadWave authentication, subscription/payment, and X login as normal user gates.
-- Never bypass installer, signature, notarization, publisher, or Web Store trust failures.
-
-After one safe repair or completed user gate, rerun the dry-run once. Do not loop. If the same non-user action repeats, run doctor once more, stop with `twitter_automation_setup_unresolved`, and generate a report.
+Run this same preflight on every invocation of this skill, including after install, after access, after setup, at the start of each later ThreadWave task/session, and when resuming an approval or user gate.
 
 ## 6. Apply The Originating Capability Gate
 
