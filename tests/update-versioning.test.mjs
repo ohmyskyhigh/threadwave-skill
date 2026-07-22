@@ -41,6 +41,9 @@ test('the installed update skill is agent-native and has no bundled runtime chec
   const skill = fs.readFileSync(path.join(updateRoot, 'SKILL.md'), 'utf8');
   assert.match(skill, /Web, HTTP, browser, or URL-read capability/);
   assert.match(skill, /skill catalog and file-read capability/);
+  assert.match(skill, /\?cache_bust=<current-unix-ms>/);
+  assert.match(skill, /current UTC Unix time in milliseconds/);
+  assert.match(skill, /Never fetch the unversioned base URL/);
   assert.match(skill, /Do not require Node\.js, Python, `curl`, Bash, PowerShell, CMD/);
   assert.match(skill, /twitter_skill_update_unconfirmed/);
   assert.equal(fs.existsSync(path.join(updateRoot, 'scripts')), false);
