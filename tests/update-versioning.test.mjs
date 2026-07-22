@@ -39,20 +39,22 @@ test('the v2 release index is the complete runtime roster and independent versio
 test('the installed update skill is agent-native and has no bundled runtime checker', () => {
   const updateRoot = path.join(root, 'skills', releaseIndex.roles.update);
   const skill = fs.readFileSync(path.join(updateRoot, 'SKILL.md'), 'utf8');
-  assert.match(skill, /Web, HTTP, browser, or URL-read capability/);
+  assert.match(skill, /curl -fsSL --max-time 30/);
+  assert.match(skill, /Invoke-WebRequest -UseBasicParsing/);
   assert.match(skill, /skill catalog and file-read capability/);
-  assert.match(skill, /\?cache_bust=<current-unix-ms>/);
-  assert.match(skill, /current UTC Unix time in milliseconds/);
+  assert.match(skill, /cache_bust=\$\(date -u \+%s\)000/);
+  assert.match(skill, /\[DateTimeOffset\]'1970-01-01T00:00:00Z'/);
+  assert.doesNotMatch(skill, /ToUnixTimeMilliseconds/);
+  assert.match(skill, /Web search, browser search, URL-read, Firecrawl, crawl, scrape/);
   assert.match(skill, /Never fetch the unversioned base URL/);
-  assert.match(skill, /Do not require Node\.js, Python, `curl`, Bash, PowerShell, CMD/);
   assert.match(skill, /twitter_skill_update_unconfirmed/);
   assert.equal(fs.existsSync(path.join(updateRoot, 'scripts')), false);
 });
 
 test('the update contract refuses to guess when remote or local reads are unavailable', () => {
   const skill = fs.readFileSync(path.join(root, 'skills', releaseIndex.roles.update, 'SKILL.md'), 'utf8');
-  assert.match(skill, /If the host lacks either URL-read or local skill\/file-read capability/);
-  assert.match(skill, /Never substitute a guessed command, runtime, path, or cached memory of the roster/);
+  assert.match(skill, /If process execution, `curl` on macOS\/Linux, `Invoke-WebRequest` on Windows, or local skill\/file-read capability is unavailable/);
+  assert.match(skill, /Never substitute a guessed command, runtime, path, web tool, or cached memory of the roster/);
   assert.match(skill, /Release index unavailable or invalid: return `twitter_skill_update_unconfirmed`/);
 });
 

@@ -1,13 +1,13 @@
 {
   "schema_version": "threadwave-skill-manifest-v1",
   "name": "twitter-reply",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "role": "manual-operation",
   "dependencies": {
     "required_skills": [
       {
         "name": "threadwave-preflight",
-        "minimum_version": "0.3.0"
+        "minimum_version": "0.3.2"
       }
     ]
   },

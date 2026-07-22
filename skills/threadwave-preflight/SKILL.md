@@ -9,7 +9,7 @@ Own the single mandatory preflight, setup, recovery, and issue-report contract. 
 
 ## Mandatory Flow
 
-Read [references/preflight-contract.md](references/preflight-contract.md) completely and follow it from step 1 on every invocation, including a resumed approval or user gate.
+Read [references/preflight-contract.md](references/preflight-contract.md) completely. Run its full flow at the start of each new ThreadWave task or agent session and after any readiness invalidation. Reuse its successful result for an unchanged review or workflow continuation in the same session; a review decision alone is not a new preflight boundary.
 
 The one-way dependency is:
 

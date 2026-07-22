@@ -40,6 +40,16 @@
         "Uses a dry-run before an explicitly requested execution",
         "Does not bypass review, pacing, or evidence gates"
       ]
+    },
+    {
+      "id": 5,
+      "prompt": "The daily-agent preflight passed earlier in this session. Approve the exact unchanged strategy review you just showed me.",
+      "expected_output": "Reuses the successful same-task preflight, approves only the exact displayed strategy review, and activates it only after matching approval proof.",
+      "expectations": [
+        "Does not rerun preflight for the approval response alone",
+        "Keeps approval scoped to the exact review ref and content hash",
+        "Reruns full preflight if readiness was invalidated or this is a new task"
+      ]
     }
   ]
 }

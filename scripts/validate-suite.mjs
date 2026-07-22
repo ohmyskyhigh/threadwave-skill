@@ -135,8 +135,11 @@ export function validateSuite(root = path.resolve(path.dirname(fileURLToPath(imp
   }
   const updateRoot = path.join(root, 'skills', releaseIndex.roles.update);
   const updateSkill = fs.readFileSync(path.join(updateRoot, 'SKILL.md'), 'utf8');
-  if (!/Web, HTTP, browser, or URL-read capability/.test(updateSkill)) {
-    errors.push(`${releaseIndex.roles.update}: agent-native remote read contract missing`);
+  if (!/curl -fsSL --max-time 30/.test(updateSkill) || !/Invoke-WebRequest -UseBasicParsing/.test(updateSkill)) {
+    errors.push(`${releaseIndex.roles.update}: direct cross-platform release-index commands missing`);
+  }
+  if (!/Web search, browser search, URL-read, Firecrawl, crawl, scrape/.test(updateSkill)) {
+    errors.push(`${releaseIndex.roles.update}: web/search tool prohibition missing`);
   }
   if (!/skill catalog and file-read capability/.test(updateSkill)) {
     errors.push(`${releaseIndex.roles.update}: agent-native local read contract missing`);

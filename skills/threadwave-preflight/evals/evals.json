@@ -31,6 +31,17 @@
         "Excludes private paths and user content",
         "States that the report was not sent"
       ]
+    },
+    {
+      "id": 4,
+      "prompt": "Preflight already returned ready in this agent session, and you just showed me strategy review review_abc for this same task. I approve that exact unchanged review.",
+      "expected_output": "Reuses the same-task ready result from conversation working memory and returns to the exact pending approval without rerunning threadwave-update, tw preflight, or tw capabilities.",
+      "expectations": [
+        "Treats the exact unchanged approval as a review gate rather than a readiness gate",
+        "Does not rerun the skill update or CLI preflight",
+        "Does not persist a readiness receipt or reuse it in another agent session",
+        "Invalidates reuse if the task, capability scope, or readiness state changed"
+      ]
     }
   ]
 }

@@ -1,6 +1,6 @@
 # Mandatory Preflight Contract
 
-Run this flow before any operation skill invokes `tw`. Complete steps in order. The originating operation skill and request must survive the handoff unchanged.
+Run this full flow before the first `tw` command of each new ThreadWave task or agent session and after any readiness invalidation. The originating operation skill and request must survive the handoff unchanged. A successful result may be reused only for the same unchanged task in the same agent session under the rules below.
 
 ## 1. Preserve Intent And Select The Operation
 
@@ -9,13 +9,37 @@ Record in working memory only:
 - originating skill name;
 - exact user intent;
 - exact post/reply text and target when present;
-- whether this is a resumed approval or user gate.
+- whether this is a new task, an unchanged review continuation, or a readiness gate.
 
 Unless the user requested preflight directly, require the originating skill to be a release-index roster member other than the skills named by `roles.preflight` and `roles.update`. Never rely on a remembered operation-skill list. Never rewrite or translate exact user content.
 
 Choose `en` or `zh-CN` from explicit preference, latest message, conversation language, then English.
 
-## 2. Invoke The Update Authority
+## 2. Reuse Same-Task Readiness Or Run A Full Check
+
+Keep a successful preflight result in conversation working memory only. Do not write a cache file, persist a receipt, or reuse it in another agent session.
+
+Reuse that result and skip sections 3 through 7 only when all of these remain true:
+
+- this is the same agent session, originating skill, selected mode, and user-initiated task;
+- the originating skill's required command families and exact commands are unchanged;
+- the current message is an approval, rejection, skip, edit, redisplay, or continuation of the same active workflow and its exact refs/scopes;
+- no readiness invalidation listed below occurred after the successful result.
+
+An ordinary strategy, plan, task, source, draft, or exact-action review decision is a review gate, not a readiness gate. Do not rerun `threadwave-update`, `tw preflight`, or `tw capabilities` for that decision alone.
+
+Discard the reusable result and run the full check when any of these occurs:
+
+- a new ThreadWave task or agent session starts;
+- the originating skill, selected mode, user-initiated task, or required capability scope changes;
+- a skill or CLI install/update occurs;
+- setup, login, subscription/payment, Chrome extension/relay, X sign-in/session, or another readiness action occurs;
+- any `tw` command reports readiness, compatibility, install, auth, subscription, relay, or X-session failure;
+- the agent cannot confirm that the pending refs/scopes belong to the same unchanged task.
+
+If reuse is allowed, return the prior `ready` result to the originating skill and continue the exact pending workflow without invoking another preflight command.
+
+## 3. Invoke The Update Authority
 
 Activate `threadwave-update` by skill name and pass only this request: verify all required ThreadWave skills and return its structured result. Do not locate another skill through a relative file path.
 
@@ -32,7 +56,7 @@ On missing or outdated skills, preserve the originating request and route to the
 
 Do not invoke update in issue-report-only mode. That mode only renders already-sanitized diagnostic metadata.
 
-## 3. Run The Recurring CLI Preflight
+## 4. Run The Recurring CLI Preflight
 
 Use the host agent's process or command-execution capability to invoke the ThreadWave executable directly with these arguments:
 
@@ -60,7 +84,7 @@ Follow only the one returned action:
 
 After one action, rerun preflight once. If the same unresolved state repeats, run `tw doctor --format json` once, require `schemaVersion=threadwave-doctor-v1`, stop with `twitter_automation_setup_unresolved`, and generate a report. Never expose doctor paths in output or reports.
 
-## 4. Check CLI Compatibility
+## 5. Check CLI Compatibility
 
 Invoke the executable through the same host capability:
 
@@ -80,19 +104,19 @@ Read the originating skill's local `skill-manifest.json` as a sibling skill mani
 
 When CLI upgrades are required, stop and follow only returned upgrade guidance. Contract drift is `twitter_automation_cli_contract_drift` and is report-worthy.
 
-## 5. Confirm Recurring Readiness
+## 6. Confirm Recurring Readiness
 
-Step 3 must finish with `data.state=ready` and `data.action.id=continue`. That result is the recurring access/setup gate for first install, return use, and dormant sessions. At every browser gate, the agent launches the returned safe command or URL first and pauses only after the corresponding page is open. Treat Chrome permission, ThreadWave sign-in, subscription/payment, and X sign-in as normal user gates; never automate the user's interaction or bypass installer, signature, notarization, publisher, or Web Store trust failures.
+Step 4 must finish with `data.state=ready` and `data.action.id=continue`. That result is the recurring access/setup gate for first install, return use, and dormant sessions. At every browser gate, the agent launches the returned safe command or URL first and pauses only after the corresponding page is open. Treat Chrome permission, ThreadWave sign-in, subscription/payment, and X sign-in as normal user gates; never automate the user's interaction or bypass installer, signature, notarization, publisher, or Web Store trust failures.
 
-Run this same preflight on every invocation of this skill, including after install, after access, after setup, at the start of each later ThreadWave task/session, and when resuming an approval or user gate.
+Run the full preflight after install, after access, after setup, and at the start of each later ThreadWave task or agent session. Within the same unchanged task, reuse the successful result across review decisions and workflow continuation until a readiness invalidation in section 2 occurs.
 
-## 6. Apply The Originating Capability Gate
+## 7. Apply The Originating Capability Gate
 
 Use only `cli.required_command_families` and `cli.required_commands` from the originating skill's validated local manifest. Do not maintain a separate operation-skill or command mapping in this contract.
 
 Capability failure is `twitter_automation_capability_unavailable`. Generate a report only for skill/CLI drift, not a normal account or user gate.
 
-## 7. Return Without Expanding Authority
+## 8. Return Without Expanding Authority
 
 Return `ready` plus every confirmed roster skill version to the originating skill. Resume the original request without asking the user to repeat it.
 

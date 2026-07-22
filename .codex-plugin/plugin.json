@@ -1,6 +1,6 @@
 {
   "name": "threadwave-skill",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "A bilingual, review-gated Twitter/X automation skill suite powered by ThreadWave.",
   "author": {
     "name": "ThreadWave"

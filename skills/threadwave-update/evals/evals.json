@@ -4,10 +4,11 @@
     {
       "id": 1,
       "prompt": "Check whether all my ThreadWave Twitter skills are the latest versions.",
-      "expected_output": "Uses the host's URL-read and skill/file-read capabilities to validate every release-index roster peer, then reports independent local/latest versions without invoking tw, a runtime script, or an installer.",
+      "expected_output": "Uses curl on macOS/Linux or Invoke-WebRequest on Windows to fetch the release index directly, forbids web/search tools, validates every roster peer with local skill/file reads, and reports independent local/latest versions without invoking tw or an installer.",
       "expectations": [
-        "Uses one fixed GitHub release index",
+        "Uses one fixed GitHub release index through the platform-specific direct command",
         "Appends a trusted per-check cache-busting query before the one remote read",
+        "Does not use Web search, URL-read, Firecrawl, crawl, or scrape tools",
         "Reports each skill version independently",
         "Does not invoke preflight, tw, or an installer"
       ]

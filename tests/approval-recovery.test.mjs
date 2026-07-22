@@ -86,3 +86,21 @@ test('every operation peer uses the preflight and issue-report authority', () =>
     assert.match(content, /issue-report-only mode/);
   }
 });
+
+test('same-task review continuations reuse one successful preflight until readiness invalidation', () => {
+  const preflight = fs.readFileSync(path.join(root, 'skills', 'threadwave-preflight', 'SKILL.md'), 'utf8');
+  const contract = fs.readFileSync(path.join(root, 'skills', 'threadwave-preflight', 'references', 'preflight-contract.md'), 'utf8');
+  assert.match(preflight, /start of each new ThreadWave task or agent session/i);
+  assert.match(preflight, /review decision alone is not a new preflight boundary/i);
+  assert.match(contract, /conversation working memory only/i);
+  assert.match(contract, /Do not write a cache file, persist a receipt, or reuse it in another agent session/i);
+  assert.match(contract, /Do not rerun `threadwave-update`, `tw preflight`, or `tw capabilities` for that decision alone/i);
+  assert.match(contract, /setup, login, subscription\/payment, Chrome extension\/relay, X sign-in\/session/i);
+
+  for (const skill of ['twitter-agent', 'twitter-post', 'twitter-reply']) {
+    const content = fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8');
+    assert.match(content, /start of each new .* task or agent session/i);
+    assert.match(content, /do not rerun preflight for a review decision alone/i);
+    assert.doesNotMatch(content, /After approval, rerun preflight/i);
+  }
+});

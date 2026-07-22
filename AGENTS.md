@@ -37,7 +37,7 @@ Product positioning, pricing, credits, and public copy defaults live in the know
 - Never add automatic issue submission without explicit user consent and a separately approved API contract.
 - Never retire the legacy `twitter-harness` skill from this repository.
 - Never hardcode the skill roster outside `suite-manifest.json` (repository/CI declaration) and `release-index.json` (public authority); scripts and tests must derive it.
-- Installed skill folders must not require Node.js, Python, `curl`, or shell-specific runtime scripts. Use host agent URL-read, skill/file-read, process execution, and text-generation capabilities. Root `scripts/**` are maintainer-only and must never be required after installation.
+- Release-index checks must use process execution with `curl` on macOS/Linux or `Invoke-WebRequest` on Windows. Never use Web search, browser search, URL-read, Firecrawl, crawl, or scrape tools for the release index. Installed skill folders still must not bundle runtime scripts; root `scripts/**` are maintainer-only.
 - Treat every bundle or skill version bump as subject to the Release Synchronization Gate below. A commit or push is not a completed version release.
 - Do not commit or push unless the user's immediately preceding message explicitly requests it.
 

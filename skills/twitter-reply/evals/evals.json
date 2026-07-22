@@ -77,7 +77,7 @@
     {
       "id": 8,
       "prompt": "These five candidates are wrong. Redo it and search for the exact phrase let's connect instead.",
-      "expected_output": "Treats the request as a candidate-stage restart: skips each pending source review from the old manual task, reruns preflight, creates one fresh five-reply task with the new exact direction, and waits for new task approval.",
+      "expected_output": "Treats the request as a candidate-stage restart in the same user-initiated workflow: skips each pending source review, reuses the same-task preflight, creates one fresh five-reply task with the new exact direction, and waits for new approval.",
       "expectations": [
         "Does not use task retask or draft redraft for the candidate-stage restart",
         "Skips every still-pending source review from the exact old discovery batch and verifies status skipped",
@@ -89,12 +89,23 @@
     {
       "id": 9,
       "prompt": "Approve all five targets you just showed me.",
-      "expected_output": "Reruns preflight once and approves each exact pending source-review ref from the unchanged displayed target list, while granting no approval to generated reply content or X mutations.",
+      "expected_output": "Reuses the successful same-task preflight and approves each exact pending source-review ref from the unchanged displayed target list, while granting no approval to generated reply content or X mutations.",
       "expectations": [
         "Scopes approve all to the immediately displayed complete source-target list",
+        "Does not rerun preflight for this unchanged source-review decision",
         "Invokes source approval once per exact displayed review ref",
         "Stops before approving generated replies or scheduling X mutations",
         "Requires redisplay and reconfirmation when the target set changed or became stale"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "The exact-reply dry-run passed earlier in this session. I approve the unchanged target and reply you just displayed.",
+      "expected_output": "Reuses the same-task preflight result and dispatches the exact unchanged target/reply pair once without another update or preflight fetch.",
+      "expectations": [
+        "Does not rerun preflight for the exact unchanged approval",
+        "Requires the same target, text, and dry-run scope",
+        "Dispatches once and stops on unknown evidence"
       ]
     }
   ]

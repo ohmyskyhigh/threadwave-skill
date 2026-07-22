@@ -60,6 +60,16 @@
         "Does not perform multiple exact actions from one approval",
         "Asks one concise clarification"
       ]
+    },
+    {
+      "id": 7,
+      "prompt": "The exact-post dry-run passed earlier in this session. I approve the unchanged text you just displayed.",
+      "expected_output": "Reuses the same-task preflight result and dispatches the exact unchanged post once without another update or preflight fetch.",
+      "expectations": [
+        "Does not rerun preflight for the exact unchanged approval",
+        "Requires the same text and dry-run scope",
+        "Dispatches once and stops on unknown evidence"
+      ]
     }
   ]
 }

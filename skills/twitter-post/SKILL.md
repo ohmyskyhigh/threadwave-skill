@@ -25,7 +25,7 @@ Respond in English or Simplified Chinese from explicit preference, latest messag
 
 ## Mandatory Preflight
 
-Activate `threadwave-preflight` by skill name on every invocation and after every user gate. Pass this skill name, selected mode, unchanged request, and required capability families. Do not invoke `tw` until every roster skill, CLI contract, and Chrome setup check returns ready.
+Activate `threadwave-preflight` by skill name at the start of each new post task or agent session and after any readiness invalidation defined by its contract. Pass this skill name, selected mode, unchanged request, and required capability families. Reuse that successful result for unchanged review decisions and workflow continuation in the same session; do not rerun preflight for a review decision alone. Do not invoke `tw` without a current or reusable ready result.
 
 Require CLI `1.0.1` plus `task`, `draft`, `plan`, `scheduler`, and `action` command families. Missing skill, CLI, or extension state routes to `https://www.threadwave.xyz/cli/setup/agent.md` while preserving the request.
 
@@ -45,7 +45,7 @@ Require `schema_version=tw_cli_harness_v1`, `ok=true`, and returned `manual_requ
 
 Inspect only the returned review ref with `tw task review show <review_ref> --json`. Present the surface, direction, count, acquisition route, and safe scope. Stop for explicit approval.
 
-After approval, rerun preflight and invoke `tw task review approve <same_review_ref> --json` once. Reject or skip only after an explicit matching user decision. Never transfer approval to a changed direction, count, ref, or proposal hash.
+After approval, invoke `tw task review approve <same_review_ref> --json` once under the reusable same-task preflight result. Reject or skip only after an explicit matching user decision. Never transfer approval to a changed direction, count, ref, or proposal hash.
 
 ### 3. Follow Returned Workflow Refs
 
@@ -73,7 +73,7 @@ Require one exact final post. Do not improve, translate, shorten, expand, normal
 1. Run `tw action tweet --text <exact_text> --dry-run --json` through safe argv/stdin handling.
 2. Show the exact text in full, the dry-run result, and the semantic operation; ask for explicit approval.
 3. Treat any character change as a new payload requiring a new dry-run and approval.
-4. After approval, rerun preflight and dispatch `tw action tweet --text <same_exact_text> --json` once.
+4. After approval, reuse the same-task preflight result and dispatch `tw action tweet --text <same_exact_text> --json` once.
 5. Require `ok=true`, an `action_ref`, and conclusive evidence before reporting complete. Never retry an unknown result or send a second post as verification.
 
 ## Boundaries

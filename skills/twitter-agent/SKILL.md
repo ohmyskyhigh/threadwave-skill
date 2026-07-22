@@ -28,7 +28,7 @@ Keep commands, JSON keys, refs, review states, and stable error codes in English
 
 ## Mandatory Preflight And Init Flow
 
-Activate `threadwave-preflight` by skill name on every invocation, even when resuming a pending review or checking scheduler status. Pass the originating skill name, the unchanged daily-agent intent, and the required capability families. Do not invoke any `tw` command until preflight returns `ready` with every roster skill version confirmed latest.
+Activate `threadwave-preflight` by skill name at the start of each new daily-agent task or agent session and after any readiness invalidation defined by its contract. Pass the originating skill name, the unchanged daily-agent intent, and the required capability families. Reuse that successful result for unchanged pending reviews and workflow continuation in the same session; do not rerun preflight for a review decision alone. Do not invoke any `tw` command without a current or reusable `ready` result with every roster skill version confirmed latest.
 
 The selected capability gate requires `context`, `strategy`, `plan`, `task`, `draft`, and `scheduler`. If `threadwave-preflight` is unavailable, or it reports a missing/outdated skill, CLI, or extension module, preserve this request and direct the user to `https://www.threadwave.xyz/cli/setup/agent.md`; resume here after preflight verifies ready.
 

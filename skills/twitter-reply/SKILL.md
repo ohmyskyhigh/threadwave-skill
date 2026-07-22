@@ -26,7 +26,7 @@ Respond in English or Simplified Chinese from explicit preference, latest messag
 
 ## Mandatory Preflight
 
-Activate `threadwave-preflight` by skill name on every invocation and after every user gate. Pass this skill name, selected mode, unchanged request, and required capability families. Do not invoke `tw` until every roster skill, CLI contract, and Chrome setup check returns ready.
+Activate `threadwave-preflight` by skill name at the start of each new reply task or agent session and after any readiness invalidation defined by its contract. Pass this skill name, selected mode, unchanged request, and required capability families. Reuse that successful result for unchanged review decisions and workflow continuation in the same session; do not rerun preflight for a review decision alone. Do not invoke `tw` without a current or reusable ready result.
 
 Require CLI `1.0.1` plus `task`, `draft`, `plan`, `scheduler`, and `action` command families. Missing skill, CLI, or extension state routes to `https://www.threadwave.xyz/cli/setup/agent.md` while preserving the request.
 
@@ -46,13 +46,13 @@ Require `schema_version=tw_cli_harness_v1`, `ok=true`, and returned `manual_requ
 
 Inspect only the returned review ref with `tw task review show <review_ref> --json`. Present the reply surface, direction, requested count, acquisition route, and safe target-selection scope. Stop for explicit approval.
 
-After approval, rerun preflight and invoke `tw task review approve <same_review_ref> --json` once. Never transfer approval to a changed direction, count, ref, proposal hash, or target policy.
+After approval, invoke `tw task review approve <same_review_ref> --json` once under the reusable same-task preflight result. Never transfer approval to a changed direction, count, ref, proposal hash, or target policy.
 
 ### 3. Review Every Discovered Source
 
 Follow only CLI-returned source-selection refs. Inspect every ref with `tw task review show`, then present the complete pending target list from the current discovery batch together as one numbered set. Include each exact `review_ref` and its safe public source context so the user can compare every candidate without asking to reveal them one at a time.
 
-Accept a numbered decision map such as `1 approve, 2 reject, 3 skip`. After the complete target list has been displayed, also accept an explicit “approve all” as approval for every still-pending source review in that exact unchanged displayed set. Rerun preflight once, then invoke `tw task review approve <review_ref> --json` once per displayed ref and require every result to succeed. If the set is stale, changed, incomplete, or was not displayed in the immediately preceding review gate, display the current complete list and ask again. Leave every omitted item pending for per-item decision maps.
+Accept a numbered decision map such as `1 approve, 2 reject, 3 skip`. After the complete target list has been displayed, also accept an explicit “approve all” as approval for every still-pending source review in that exact unchanged displayed set. Reuse the same-task preflight result, then invoke `tw task review approve <review_ref> --json` once per displayed ref and require every result to succeed. If the set is stale, changed, incomplete, or was not displayed in the immediately preceding review gate, display the current complete list and ask again. Leave every omitted item pending for per-item decision maps.
 
 Target-list “approve all” authorizes draft generation from those exact sources only. Never apply it to a task proposal, generated reply/content review, scheduled mutation, undisplayed target, or changed ref.
 
@@ -73,7 +73,7 @@ Never guess a target or ref.
 
 - Before any source approval, treat “redo,” “redraft,” “start over,” “these candidates are wrong,” or a direction/source/angle change as a restart of the current manual reply task. Do not use `tw task retask` or `tw draft redraft` for this candidate-stage restart.
 - Follow only the current task's CLI-returned pending source-review refs. The user's explicit restart instruction authorizes closing that exact discovery batch: invoke `tw task review skip <review_ref> --json` once per still-pending source review and require every result to succeed. Inspect each skipped ref with `tw task review show <review_ref> --json`, require `status=skipped`, then remove it from the skill's active review set so it never appears again under `Reviews`, `Waiting for you`, or `Next`. Keep the durable historical record; removal means it is no longer active or pending, not deletion from append-only history. This is cancellation of pending review authority, not batch content or mutation approval.
-- Rerun preflight, then create one fresh task with `tw task create --surface reply --direction <latest_exact_user_direction> --count <same_count_unless_user_changed_it> --json`. Present the new proposal and stop for its new approval; no old approval, source, draft, or review authority transfers.
+- Reuse the same-task preflight result, then create one fresh task with `tw task create --surface reply --direction <latest_exact_user_direction> --count <same_count_unless_user_changed_it> --json`. Present the new proposal and stop for its new approval; no old approval, source, draft, or review authority transfers.
 - If any source is already approved or any reply mutation is scheduled, do not claim the old task was cancelled through review skips. Show the exact later-stage scope and use the supported retask/recovery path.
 - Same-source wording change: use `tw draft redraft`, then require a new content review.
 - Rejected source: create no draft or mutation for that source.
@@ -86,7 +86,7 @@ Require exactly one target accepted by the CLI contract and one exact final repl
 1. Run `tw action reply <exact_target> --text <exact_reply> --dry-run --json` through safe argv/stdin handling.
 2. Show the exact target and reply in full, the dry-run result, and the semantic operation; ask for explicit approval.
 3. Treat any target or character change as a new payload requiring a new dry-run and approval.
-4. After approval, rerun preflight and dispatch `tw action reply <same_target> --text <same_reply> --json` once.
+4. After approval, reuse the same-task preflight result and dispatch `tw action reply <same_target> --text <same_reply> --json` once.
 5. Require `ok=true`, an `action_ref`, and conclusive evidence before reporting complete. Never retry an unknown result or send a test reply.
 
 ## Boundaries
