@@ -14,6 +14,7 @@ const sections = rosterNames(suite).map((skill) => {
 
 const html = `<!doctype html><html lang="en"><meta charset="utf-8"><title>ThreadWave Skill Eval Review</title><style>body{font:15px/1.5 system-ui;margin:40px;max-width:1400px;color:#171717}h1{margin-bottom:4px}.note{color:#555}table{border-collapse:collapse;width:100%;margin:16px 0 36px}th,td{border:1px solid #ccc;text-align:left;vertical-align:top;padding:10px}th{background:#f3f3f3}code{background:#eee;padding:2px 4px}</style><body><h1>ThreadWave Skill Evaluation Review</h1><p class="note">Static review artifact. These cases are validated for structure and coverage; this is not an LLM benchmark result.</p>${sections}</body></html>`;
 const output = path.join(root, 'eval-review', 'index.html');
+fs.mkdirSync(path.dirname(output), { recursive: true });
 fs.writeFileSync(output, html);
 process.stdout.write(`${output}\n`);
 

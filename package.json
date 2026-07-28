@@ -16,6 +16,9 @@
     "validate": "node scripts/validate-suite.mjs",
     "version:skill": "node scripts/set-skill-version.mjs",
     "artifacts": "node scripts/build-release-artifacts.mjs",
+    "artifacts:index": "node scripts/build-release-artifacts.mjs --write-index",
+    "lint": "node --check scripts/build-release-artifacts.mjs && node --check scripts/set-skill-version.mjs && node --check scripts/validate-suite.mjs && npm run validate",
+    "release:static": "npm run lint && npm run artifacts && cmp release-index.json dist/release-index.candidate.json",
     "test": "node --test tests/*.test.mjs",
     "check": "npm run validate && npm test",
     "package": "mkdir -p dist && npm pack --pack-destination dist"

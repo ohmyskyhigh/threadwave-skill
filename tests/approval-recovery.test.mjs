@@ -20,7 +20,7 @@ test('post and reply peers support bounded tasks plus exact single-action safety
   for (const skill of manualOperationSkills) {
     const content = fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8');
     assert.match(content, /## Task Mode/);
-    assert.match(content, /--count <1\.\.5> --json/);
+    assert.match(content, skill === 'twitter-reply' ? /--count <5\.\.10> --json/ : /--count <1\.\.5> --json/);
     assert.match(content, /Do not collapse|Never collapse/i);
     assert.match(content, /one exact scheduled X mutation|one exact reply mutation/i);
     assert.match(content, /## Exact-Action Mode/);

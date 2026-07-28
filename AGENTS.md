@@ -59,13 +59,13 @@ A new version is complete only when the exact code on `origin/main`, the Git tag
 
 ### Mandatory Release Order
 
-1. Update the intended bundle and individual skill versions without changing unrelated skills.
-2. Run `npm run artifacts`, then `npm run check`, then `npm run package`. If any release input changes afterward, discard the staged release and rerun all three commands.
-3. Confirm the release commit contains the regenerated `release-index.json` and all version invariants pass.
+1. During release preparation, update the intended bundle and individual skill versions without changing unrelated skills.
+2. Run `npm run artifacts:index`, then `npm run check`, then `npm run package`. This explicitly stages the candidate `release-index.json`; ordinary `npm run artifacts` writes only `dist/release-index.candidate.json` and must never promote the public index by itself.
+3. Commit the final candidate on a non-public preparation branch and require green CI for that exact SHA before requesting release authorization. If any release input changes afterward, discard the staged release and repeat preparation and CI.
 4. Create a draft GitHub release named `suite-v<bundle_version>` targeting that exact commit. Upload every roster artifact from `dist/skills/` and the matching suite bundle from `dist/`.
 5. Download the draft assets into a fresh temporary directory. Verify the complete derived asset set, every indexed SHA-256, and the suite bundle against the local build. Do not publish a partial or mismatched draft.
 6. Publish the verified release without marking it Latest, then fast-forward or push that exact tagged commit to `main`, then mark the release Latest. Keep the interval between publication and the `main` update bounded to this release operation so the public index never points forward to missing assets.
-7. Perform a final unauthenticated download of every URL in `release-index.json`. Require HTTP success and matching SHA-256, and confirm the public suite bundle matches the local package.
+7. During the authorized release, rerun `npm run release:static` and `npm run package`, then perform a final unauthenticated download of every URL in `release-index.json`. Require HTTP success and matching SHA-256, and confirm the public suite bundle matches the local package. Do not rerun functionality tests during release; those belong to the green candidate CI.
 8. Confirm `origin/main`, the release tag target, and the release target commit are identical. Only then report the version release complete.
 
 If a version commit is already on `main` but its release or assets are missing, treat this as a release-blocking incident. Do not advance versions again or claim setup is healthy. Publish and verify the exact missing release when authorized; otherwise report the mismatch and the required release action.
@@ -78,6 +78,7 @@ Node.js 22 or newer is required. Use npm.
 
 ```bash
 npm run artifacts
+npm run artifacts:index  # release preparation only
 npm run check
 npm run package
 ```

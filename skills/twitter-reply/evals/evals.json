@@ -14,9 +14,10 @@
     {
       "id": 2,
       "prompt": "帮我回复 3 条讨论 AI 编程工具的帖子。",
-      "expected_output": "Uses Simplified Chinese interface text, preserves the direction, creates one count-3 reply task proposal, and waits for task approval.",
+      "expected_output": "Uses Simplified Chinese interface text, preserves the direction, and asks the user to choose a discovery count from 5 through 10 before invoking tw.",
       "expectations": [
-        "Uses task mode and count 3",
+        "Does not invoke tw with count 3",
+        "Explains that discovery tasks require a count from 5 through 10",
         "Keeps commands and refs in English",
         "Does not invent exact targets"
       ]
@@ -34,11 +35,11 @@
     {
       "id": 4,
       "prompt": "Reply to 10 startup posts.",
-      "expected_output": "Stops before invoking tw and asks the user to choose an explicit batch of at most five without silently creating two proposals.",
+      "expected_output": "Selects task mode, runs preflight, creates one reply task proposal with count 10, presents its exact review, and stops before approval.",
       "expectations": [
-        "Enforces the CLI count limit",
-        "Does not auto-chunk",
-        "Does not infer targets"
+        "Uses tw task create with surface reply and count 10",
+        "Creates one proposal rather than auto-chunking",
+        "Does not claim targets, drafts, or replies exist at proposal creation"
       ]
     },
     {
@@ -106,6 +107,16 @@
         "Does not rerun preflight for the exact unchanged approval",
         "Requires the same target, text, and dry-run scope",
         "Dispatches once and stops on unknown evidence"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "Find 11 reply targets about startup distribution.",
+      "expected_output": "Stops before invoking tw and asks the user to choose a discovery count from 5 through 10 without silently splitting the request.",
+      "expectations": [
+        "Does not invoke tw with count 11",
+        "Enforces the upper discovery limit of 10",
+        "Does not auto-chunk or infer targets"
       ]
     }
   ]

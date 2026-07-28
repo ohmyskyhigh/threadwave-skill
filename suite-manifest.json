@@ -33,7 +33,7 @@
   },
   "cli": {
     "binary": "tw",
-    "minimum_version": "1.0.4",
+    "minimum_version": "1.0.21",
     "missing_cli_setup_url": "https://www.threadwave.xyz/cli/setup/agent.md",
     "compatibility_authority": "tw capabilities --format json"
   },

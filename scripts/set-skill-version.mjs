@@ -26,7 +26,7 @@ export function setSkillVersion(root, skillName, nextVersion, { minimumSupported
     version: nextVersion,
     minimum_supported_version: release.minimum_supported_version,
     updated: ['skill-manifest.json', 'release-index.json'],
-    next_step: 'run npm run artifacts to rebuild the checksummed release artifacts for the new version'
+    next_step: 'run npm run artifacts:index during release preparation, then commit the final candidate and obtain green CI before release authorization'
   };
 }
 

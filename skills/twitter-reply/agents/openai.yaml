@@ -1,4 +1,4 @@
 interface:
   display_name: "Twitter Reply Tasks / 推特回复任务"
-  short_description: "Create 1–5 reply tasks or one exact reply"
-  default_prompt: "Use $twitter-reply to create and review one-to-five reply tasks, or safely send one exact final reply to one exact target."
+  short_description: "Create 5–10 reply tasks or one exact reply"
+  default_prompt: "Use $twitter-reply to create and review five-to-ten discovery reply tasks, or safely send one exact final reply to one exact target."

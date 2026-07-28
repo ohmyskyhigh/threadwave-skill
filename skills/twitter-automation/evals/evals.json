@@ -23,11 +23,11 @@
     },
     {
       "id": 3,
-      "prompt": "帮我回复 5 条关于 AI agent 的帖子。",
+      "prompt": "帮我回复 10 条关于 AI agent 的帖子。",
       "expected_output": "Uses Simplified Chinese routing text, hands the unchanged request to twitter-reply, and stops.",
       "expectations": [
         "Routes to twitter-reply by skill name",
-        "Preserves the Chinese direction and count",
+        "Preserves the Chinese direction and count 10",
         "Does not duplicate destination preflight"
       ]
     },
