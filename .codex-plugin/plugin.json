@@ -1,7 +1,7 @@
 {
   "name": "threadwave-skill",
-  "version": "0.6.3",
-  "description": "A bilingual, review-gated Twitter/X automation skill suite powered by ThreadWave.",
+  "version": "0.7.0",
+  "description": "A bilingual, review-gated Twitter/X automation and error-support skill suite powered by ThreadWave.",
   "author": {
     "name": "ThreadWave"
   },
@@ -14,6 +14,7 @@
     "cli",
     "chrome extension",
     "setup",
+    "error support",
     "reply",
     "\u4e2d\u6587",
     "\u63a8\u7279"
@@ -22,7 +23,7 @@
   "interface": {
     "displayName": "ThreadWave Twitter Automation Suite",
     "shortDescription": "Bilingual, independently versioned Twitter/X peer skills.",
-    "longDescription": "Install an optional Twitter automation router plus independent post, reply, and daily-agent peers with dedicated ThreadWave preflight and update skills. Every roster skill works in a flat skills directory without Node.js or shell-specific runtime dependencies, and uses one GitHub release index. Missing modules route to /cli/setup/agent.md.",
+    "longDescription": "Install an optional Twitter automation router plus independent post, reply, daily-agent, preflight, update, and error-support peers. Every roster skill works in a flat skills directory without Node.js or shell-specific runtime dependencies, and uses one GitHub release index. Missing modules route to /cli/setup/agent.md.",
     "developerName": "ThreadWave",
     "category": "Productivity",
     "capabilities": [

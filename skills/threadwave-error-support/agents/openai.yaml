@@ -1,0 +1,4 @@
+interface:
+  display_name: "ThreadWave Error Support"
+  short_description: "Find known fixes and draft safe ThreadWave bug reports."
+  default_prompt: "Help me understand this ThreadWave error, search for a known public solution, and draft a sanitized report if needed. 支持中文和英文。"

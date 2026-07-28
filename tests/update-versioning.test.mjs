@@ -25,6 +25,7 @@ test('the v2 release index is the complete runtime roster and independent versio
   assert.deepEqual(roster, suite.required_skills.map((entry) => entry.name));
   assert.ok(roster.includes(releaseIndex.roles.preflight));
   assert.ok(roster.includes(releaseIndex.roles.update));
+  assert.ok(roster.includes(releaseIndex.roles.support));
 
   for (const entry of releaseIndex.required_skills) {
     const declaration = suite.required_skills.find((skill) => skill.name === entry.name);

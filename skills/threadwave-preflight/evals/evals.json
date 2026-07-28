@@ -25,11 +25,12 @@
     {
       "id": 3,
       "prompt": "The GitHub release index failed twice. Make a report I can copy to the maintainer.",
-      "expected_output": "Uses issue-report-only mode to render a redacted report without rerunning update or sending anything.",
+      "expected_output": "Uses issue-report-only mode only to route sanitized metadata to one separate threadwave-error-support task, or returns one pasteable handoff when task creation is unavailable, without rerunning update or sending anything.",
       "expectations": [
         "Skips the update/preflight loop in report-only mode",
         "Excludes private paths and user content",
-        "States that the report was not sent"
+        "Does not classify, search, render, or submit the report in preflight",
+        "Does not resume the failed workflow"
       ]
     },
     {

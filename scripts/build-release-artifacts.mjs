@@ -58,13 +58,13 @@ export function buildReleaseArtifacts(root = path.resolve(path.dirname(fileURLTo
       sha256
     });
 
-    if (manifest.role === 'preflight' || manifest.role === 'update') {
+    if (['preflight', 'update', 'support'].includes(manifest.role)) {
       roles[manifest.role] = skill.name;
     }
   }
 
-  if (!roles.preflight || !roles.update) {
-    throw new Error('suite must declare one preflight skill and one update skill via manifest roles');
+  if (!roles.preflight || !roles.update || !roles.support) {
+    throw new Error('suite must declare one preflight, update, and support skill via manifest roles');
   }
 
   const index = {
@@ -73,7 +73,7 @@ export function buildReleaseArtifacts(root = path.resolve(path.dirname(fileURLTo
     bundle_version: suite.bundle_version,
     agent_skills_installer: suite.agent_skills_installer,
     setup_url: SETUP_URL,
-    roles: { preflight: roles.preflight, update: roles.update },
+    roles: { preflight: roles.preflight, update: roles.update, support: roles.support },
     required_skills: requiredSkills
   };
   fs.writeFileSync(path.join(root, 'release-index.json'), `${JSON.stringify(index, null, 2)}\n`);

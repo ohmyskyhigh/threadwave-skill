@@ -30,7 +30,7 @@ curl -fsSL --max-time 30 -H 'Cache-Control: no-cache' "https://raw.githubusercon
 $CacheBust = [int64][Math]::Floor(([DateTimeOffset]::UtcNow - [DateTimeOffset]'1970-01-01T00:00:00Z').TotalMilliseconds); (Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/ohmyskyhigh/threadwave-skill/main/release-index.json?cache_bust=$CacheBust" -Headers @{"Cache-Control"="no-cache"} -TimeoutSec 30).Content
 ```
 
-The command must exit successfully and return the JSON response body. The unique query prevents intermediary caches from returning an older roster. Never fetch the unversioned base URL or use any web/search tool as a fallback. Require `schema_version=threadwave-skill-release-index-v2`, the expected `repository` and `setup_url`, a `required_skills` array, and `roles.preflight` / `roles.update` naming roster skills.
+The command must exit successfully and return the JSON response body. The unique query prevents intermediary caches from returning an older roster. Never fetch the unversioned base URL or use any web/search tool as a fallback. Require `schema_version=threadwave-skill-release-index-v2`, the expected `repository` and `setup_url`, a `required_skills` array, and `roles.preflight` / `roles.update` / `roles.support` naming roster skills.
 
 3. Use the host's skill catalog and file-read capability to locate every installed roster peer and read its local `skill-manifest.json`. Require `schema_version=threadwave-skill-manifest-v1`, a `name` matching the discovered skill, and a valid independent SemVer `version`. Do not search arbitrary home directories or construct shell-specific paths.
 4. Compare each skill: the local version must equal that skill's own `latest_version` and be at least its `minimum_supported_version`.

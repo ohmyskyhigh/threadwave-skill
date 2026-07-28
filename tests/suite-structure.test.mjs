@@ -28,6 +28,19 @@ test('a partial flat installation blocks every operation', () => {
   assert.ok(problems.includes(`missing_skill:${releaseIndex.roles.update}`));
 });
 
+test('a missing support peer blocks every operation', () => {
+  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'threadwave-skill-test-'));
+  for (const skill of suite.required_skills.filter((item) => item.name !== releaseIndex.roles.support)) {
+    for (const relative of [skill.path, skill.manifest_path]) {
+      const destination = path.join(temporaryRoot, relative);
+      fs.mkdirSync(path.dirname(destination), { recursive: true });
+      fs.copyFileSync(path.join(root, relative), destination);
+    }
+  }
+  const problems = verifySuiteFiles(temporaryRoot, suite, releaseIndex);
+  assert.ok(problems.includes(`missing_skill:${releaseIndex.roles.support}`));
+});
+
 test('every roster skill is a flat peer with its own version matching the release index', () => {
   assert.deepEqual(rosterNames(suite), releaseIndex.required_skills.map((skill) => skill.name));
   for (const skill of suite.required_skills) {
@@ -75,16 +88,22 @@ test('tweet and reply task surfaces each have one independent owner', () => {
   assert.notEqual(tweetOwners[0], replyOwners[0]);
 });
 
-test('preflight and update each have one non-overlapping authority', () => {
+test('preflight, update, and support each have one non-overlapping authority', () => {
   const preflight = fs.readFileSync(path.join(root, 'skills', releaseIndex.roles.preflight, 'SKILL.md'), 'utf8');
   const update = fs.readFileSync(path.join(root, 'skills', releaseIndex.roles.update, 'SKILL.md'), 'utf8');
+  const support = fs.readFileSync(path.join(root, 'skills', releaseIndex.roles.support, 'SKILL.md'), 'utf8');
   assert.match(preflight, /threadwave-preflight -> threadwave-update/);
+  assert.match(preflight, /threadwave-preflight -> threadwave-error-support/);
   assert.match(preflight, /references\/preflight-contract\.md/);
-  assert.match(preflight, /references\/issue-report-contract\.md/);
+  assert.doesNotMatch(preflight, /references\/issue-report-contract\.md/);
   assert.match(update, /release-index\.json/);
   assert.match(update, /Never invoke `tw`/);
+  assert.match(support, /references\/error-support-contract\.md/);
+  assert.match(support, /Never .*mutate GitHub/);
   assert.equal(fs.existsSync(path.join(root, 'skills', releaseIndex.roles.preflight, 'scripts')), false);
   assert.equal(fs.existsSync(path.join(root, 'skills', releaseIndex.roles.update, 'scripts')), false);
+  assert.equal(fs.existsSync(path.join(root, 'skills', releaseIndex.roles.support, 'scripts')), false);
+  assert.equal(fs.existsSync(path.join(root, 'skills', releaseIndex.roles.preflight, 'references', 'issue-report-contract.md')), false);
   assert.equal(fs.existsSync(path.join(root, 'references', 'preflight-contract.md')), false);
 });
 

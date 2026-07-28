@@ -1,11 +1,12 @@
 {
   "schema_version": "threadwave-skill-suite-v2",
   "suite_name": "threadwave-skill",
-  "bundle_version": "0.6.3",
+  "bundle_version": "0.7.0",
   "install_modes": ["flat_peer_skills", "host_plugin_bundle"],
   "required_skills": [
     { "name": "threadwave-preflight", "path": "skills/threadwave-preflight/SKILL.md", "manifest_path": "skills/threadwave-preflight/skill-manifest.json" },
     { "name": "threadwave-update", "path": "skills/threadwave-update/SKILL.md", "manifest_path": "skills/threadwave-update/skill-manifest.json" },
+    { "name": "threadwave-error-support", "path": "skills/threadwave-error-support/SKILL.md", "manifest_path": "skills/threadwave-error-support/skill-manifest.json" },
     { "name": "twitter-automation", "path": "skills/twitter-automation/SKILL.md", "manifest_path": "skills/twitter-automation/skill-manifest.json" },
     { "name": "twitter-agent", "path": "skills/twitter-agent/SKILL.md", "manifest_path": "skills/twitter-agent/skill-manifest.json" },
     { "name": "twitter-post", "path": "skills/twitter-post/SKILL.md", "manifest_path": "skills/twitter-post/skill-manifest.json" },
@@ -27,6 +28,7 @@
     "doctor_schema": "threadwave-doctor-v1",
     "preflight_contract": "threadwave-preflight-v1",
     "setup_contract": "threadwave-setup-v1",
+    "error_support_handoff": "threadwave-error-support-handoff-v1",
     "issue_report_schema": "threadwave-issue-report-v2"
   },
   "cli": {

@@ -1,8 +1,8 @@
 {
   "schema_version": "threadwave-skill-manifest-v1",
-  "name": "threadwave-update",
-  "version": "0.3.3",
-  "role": "update",
+  "name": "threadwave-error-support",
+  "version": "0.1.0",
+  "role": "support",
   "dependencies": {
     "required_skills": []
   },
@@ -16,7 +16,7 @@
     "required_commands": []
   },
   "contracts": {
-    "release_index": "threadwave-skill-release-index-v2",
-    "update_result": "threadwave-skill-update-v1"
+    "issue_report_schema": "threadwave-issue-report-v2",
+    "error_support_handoff": "threadwave-error-support-handoff-v1"
   }
 }

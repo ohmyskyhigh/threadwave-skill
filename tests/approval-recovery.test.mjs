@@ -79,12 +79,16 @@ test('daily agent checks existing work before creating a plan', () => {
   assert.match(procedure, /exact `scheduled_task_ref`/);
 });
 
-test('every operation peer uses the preflight and issue-report authority', () => {
+test('every operation peer uses preflight and its error-support compatibility handoff', () => {
   for (const skill of operationSkillNames(suite, releaseIndex)) {
     const content = fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8');
     assert.match(content, /threadwave-preflight/);
     assert.match(content, /issue-report-only mode/);
   }
+  const preflight = fs.readFileSync(path.join(root, 'skills', releaseIndex.roles.preflight, 'SKILL.md'), 'utf8');
+  assert.match(preflight, /threadwave-error-support/);
+  assert.match(preflight, /separate .*task/i);
+  assert.match(preflight, /pasteable handoff/i);
 });
 
 test('same-task review continuations reuse one successful preflight until readiness invalidation', () => {

@@ -40,6 +40,7 @@ export function validateSuite(root = path.resolve(path.dirname(fileURLToPath(imp
   if (releaseIndex.setup_url !== 'https://www.threadwave.xyz/cli/setup/agent.md') errors.push('release index setup URL mismatch');
   if (!roster.includes(releaseIndex.roles?.preflight)) errors.push('release index preflight role must name a roster skill');
   if (!roster.includes(releaseIndex.roles?.update)) errors.push('release index update role must name a roster skill');
+  if (!roster.includes(releaseIndex.roles?.support)) errors.push('release index support role must name a roster skill');
   for (const entry of releaseIndex.required_skills ?? []) {
     if (!/^https:\/\//.test(entry?.artifact_url ?? '')) errors.push(`release index artifact URL invalid:${entry?.name}`);
     if (!/^[0-9a-f]{64}$/.test(entry?.sha256 ?? '')) errors.push(`release index artifact sha256 invalid:${entry?.name}`);
@@ -99,6 +100,13 @@ export function validateSuite(root = path.resolve(path.dirname(fileURLToPath(imp
     if (!content.includes(releaseIndex.roles.preflight)) errors.push(`${skillName}: must delegate to ${releaseIndex.roles.preflight}`);
   }
 
+  for (const role of ['preflight', 'update', 'support']) {
+    const owners = [...manifests.values()].filter((manifest) => manifest?.role === role);
+    if (owners.length !== 1 || owners[0]?.name !== releaseIndex.roles?.[role]) {
+      errors.push(`suite must contain exactly one ${role} role matching the release index`);
+    }
+  }
+
   const operationNames = operationSkillNames(suite, releaseIndex);
   const routerNames = operationNames.filter((name) => manifests.get(name)?.role === 'operation-router');
   if (routerNames.length !== 1) errors.push('suite must contain exactly one operation-router peer');
@@ -130,8 +138,24 @@ export function validateSuite(root = path.resolve(path.dirname(fileURLToPath(imp
   }
 
   const preflightRoot = path.join(root, 'skills', releaseIndex.roles.preflight);
-  for (const relative of ['references/preflight-contract.md', 'references/issue-report-contract.md']) {
+  for (const relative of ['references/preflight-contract.md']) {
     if (!fs.existsSync(path.join(preflightRoot, relative))) errors.push(`${releaseIndex.roles.preflight}: missing ${relative}`);
+  }
+  if (fs.existsSync(path.join(preflightRoot, 'references', 'issue-report-contract.md'))) {
+    errors.push(`${releaseIndex.roles.preflight}: duplicate issue-report contract is forbidden`);
+  }
+  const supportRoot = path.join(root, 'skills', releaseIndex.roles.support);
+  const supportContractPath = path.join(supportRoot, 'references', 'error-support-contract.md');
+  if (!fs.existsSync(supportContractPath)) {
+    errors.push(`${releaseIndex.roles.support}: missing references/error-support-contract.md`);
+  } else {
+    const supportContract = fs.readFileSync(supportContractPath, 'utf8');
+    if (!supportContract.includes('ohmyskyhigh/threadwave-errors')) errors.push(`${releaseIndex.roles.support}: public error repository missing`);
+    if (!/Never upload a screenshot, open an issue/.test(supportContract)) errors.push(`${releaseIndex.roles.support}: GitHub mutation prohibition missing`);
+  }
+  const supportManifest = manifests.get(releaseIndex.roles.support);
+  if ((supportManifest?.dependencies?.required_skills ?? []).length > 0) {
+    errors.push(`${releaseIndex.roles.support}: support must not depend on another suite skill`);
   }
   const updateRoot = path.join(root, 'skills', releaseIndex.roles.update);
   const updateSkill = fs.readFileSync(path.join(updateRoot, 'SKILL.md'), 'utf8');
@@ -160,6 +184,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
     process.exitCode = 1;
   } else {
     const suite = JSON.parse(fs.readFileSync(path.join(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'), 'suite-manifest.json'), 'utf8'));
-    process.stdout.write(`Suite validation passed: ${rosterNames(suite).length} independently versioned bilingual flat peer skills with centralized preflight and updates.\n`);
+    process.stdout.write(`Suite validation passed: ${rosterNames(suite).length} independently versioned bilingual flat peer skills with centralized preflight, updates, and error support.\n`);
   }
 }

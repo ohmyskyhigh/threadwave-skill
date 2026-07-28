@@ -11,7 +11,7 @@ Record in working memory only:
 - exact post/reply text and target when present;
 - whether this is a new task, an unchanged review continuation, or a readiness gate.
 
-Unless the user requested preflight directly, require the originating skill to be a release-index roster member other than the skills named by `roles.preflight` and `roles.update`. Never rely on a remembered operation-skill list. Never rewrite or translate exact user content.
+Unless the user requested preflight directly, require the originating skill to be a release-index roster member other than the skills named by `roles.preflight`, `roles.update`, and `roles.support`. Never rely on a remembered operation-skill list. Never rewrite or translate exact user content.
 
 Choose `en` or `zh-CN` from explicit preference, latest message, conversation language, then English.
 
@@ -54,7 +54,7 @@ Require the returned result to have:
 
 On missing or outdated skills, preserve the originating request and route to the setup guide. On an unconfirmed GitHub release index, stop with `twitter_skill_update_unconfirmed`; do not claim latest and do not continue to `tw`.
 
-Do not invoke update in issue-report-only mode. That mode only renders already-sanitized diagnostic metadata.
+Do not invoke update in issue-report-only mode. That compatibility mode only routes already-sanitized diagnostic metadata to `threadwave-error-support`.
 
 ## 4. Run The Recurring CLI Preflight
 
@@ -70,7 +70,7 @@ Require top-level `schema_version=tw-cli-v1`, `data.contract_version=threadwave-
 
 - `packaged`: do not run a worktree command.
 - `dev`: run `tw worktree tag --format json`; add `--expected <tag>` only when trusted workspace instructions provide it. Stop on `worktree_tag_missing` or `worktree_tag_mismatch`.
-- Other or missing: stop with `twitter_automation_install_mode_unknown` and generate a report.
+- Other or missing: stop with `twitter_automation_install_mode_unknown` and route a sanitized support handoff.
 
 Follow only the one returned action:
 
@@ -82,7 +82,7 @@ Follow only the one returned action:
 - `setup`: run `tw setup --format json` once and follow only its returned action. Automatically run only a returned command with `safe_to_run=true`; pause for every user-confirmation or wait action. Then rerun preflight once.
 - `retry_later`: network/backend verification is unavailable. Never report this as authentication failure; retry once later, then stop.
 
-After one action, rerun preflight once. If the same unresolved state repeats, run `tw doctor --format json` once, require `schemaVersion=threadwave-doctor-v1`, stop with `twitter_automation_setup_unresolved`, and generate a report. Never expose doctor paths in output or reports.
+After one action, rerun preflight once. If the same unresolved state repeats, run `tw doctor --format json` once, require `schemaVersion=threadwave-doctor-v1`, stop with `twitter_automation_setup_unresolved`, and route a sanitized support handoff. Never expose doctor paths in output or handoffs.
 
 ## 5. Check CLI Compatibility
 
@@ -114,10 +114,22 @@ Run the full preflight after install, after access, after setup, and at the star
 
 Use only `cli.required_command_families` and `cli.required_commands` from the originating skill's validated local manifest. Do not maintain a separate operation-skill or command mapping in this contract.
 
-Capability failure is `twitter_automation_capability_unavailable`. Generate a report only for skill/CLI drift, not a normal account or user gate.
+Capability failure is `twitter_automation_capability_unavailable`. Route a support handoff only for skill/CLI drift, not a normal account or user gate.
 
 ## 8. Return Without Expanding Authority
 
 Return `ready` plus every confirmed roster skill version to the originating skill. Resume the original request without asking the user to repeat it.
 
 Never treat skill update, setup, login, payment, preflight success, or the broad request as approval for strategy, plans, drafts, posting, replying, or scheduler mutation.
+
+## 9. Route Sanitized Failures Without Owning Support
+
+For a potentially report-worthy failure or issue-report-only compatibility request:
+
+1. Stop the originating workflow before any retry or mutation.
+2. Build `schema=threadwave-error-support-handoff-v1` using only locale, source skill, stable category/stage/error codes, version maps, update state, CLI version, install mode, platform family, allowlisted check states, command templates without user values, one sanitized summary, and one proposed user-controlled next step.
+3. Exclude user content, targets, URLs, handles, raw prompts, conversation history, secrets, private paths, environment values, raw logs, stack traces, DOM, GraphQL, browser state, backend payloads, and transport JSON.
+4. If host task creation is available and authority permits it, create at most one separate task for this failure and activate `threadwave-error-support` there. Reuse that task if the same failure is routed again.
+5. Otherwise return one pasteable handoff and ask the user to start a separate support task.
+
+Do not decide final report-worthiness, search GitHub, render a report, submit anything, or resume the source workflow.

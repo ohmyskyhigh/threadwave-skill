@@ -10,7 +10,11 @@ export function indexRosterNames(releaseIndex) {
 }
 
 export function operationSkillNames(suite, releaseIndex) {
-  const infrastructure = new Set([releaseIndex?.roles?.preflight, releaseIndex?.roles?.update].filter(Boolean));
+  const infrastructure = new Set([
+    releaseIndex?.roles?.preflight,
+    releaseIndex?.roles?.update,
+    releaseIndex?.roles?.support
+  ].filter(Boolean));
   return rosterNames(suite).filter((name) => !infrastructure.has(name));
 }
 

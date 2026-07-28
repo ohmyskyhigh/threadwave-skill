@@ -7,19 +7,20 @@ import { shouldGenerateIssueReport } from '../scripts/suite-policy.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const releaseIndex = JSON.parse(fs.readFileSync(path.join(root, 'release-index.json'), 'utf8'));
-const preflightRoot = path.join(root, 'skills', releaseIndex.roles.preflight);
+const supportRoot = path.join(root, 'skills', releaseIndex.roles.support);
 
-test('the issue-report contract is a runtime-free, redacted copy/paste template', () => {
-  const contract = fs.readFileSync(path.join(preflightRoot, 'references', 'issue-report-contract.md'), 'utf8');
+test('the error-support contract owns runtime-free retrieval and redacted copy/paste reports', () => {
+  const contract = fs.readFileSync(path.join(supportRoot, 'references', 'error-support-contract.md'), 'utf8');
   const schema = JSON.parse(fs.readFileSync(path.join(root, 'schemas', 'threadwave-issue-report-v2.schema.json'), 'utf8'));
 
   assert.match(contract, /Build the report directly as Markdown/);
-  assert.match(contract, /Do not invoke Node\.js, Python, `curl`, Bash, PowerShell, CMD, or a bundled script/);
-  assert.match(contract, /post\/reply text, target URL, status ID, ref, or handle/);
+  assert.match(contract, /Do not invoke Node\.js, Python, `curl`, Bash, PowerShell, CMD, `tw`, or a bundled script/);
+  assert.match(contract, /post\/reply text, targets, URLs, handles, raw prompts/);
   assert.match(contract, /tokens, cookies, authorization, CSRF/);
-  assert.match(contract, /raw DOM, GraphQL, browser, daemon, backend/);
+  assert.match(contract, /DOM, GraphQL, browser state, backend payloads/);
   assert.match(contract, /This report has not been sent; it is for copy\/paste only/);
-  assert.equal(fs.existsSync(path.join(preflightRoot, 'scripts')), false);
+  assert.match(contract, /Never upload a screenshot, open an issue/);
+  assert.equal(fs.existsSync(path.join(supportRoot, 'scripts')), false);
 
   assert.equal(schema.properties.submission.properties.mode.const, 'copy_paste');
   assert.equal(schema.properties.submission.properties.sent.const, false);
