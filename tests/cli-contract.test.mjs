@@ -11,12 +11,14 @@ const releaseIndex = JSON.parse(fs.readFileSync(path.join(root, 'release-index.j
 const skillManifest = (name) => JSON.parse(fs.readFileSync(path.join(root, 'skills', name, 'skill-manifest.json'), 'utf8'));
 const operationSkills = operationSkillNames(suite, releaseIndex);
 const operationManifests = operationSkills.map(skillManifest);
+const replySkill = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+const replyEvals = JSON.parse(fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'evals', 'evals.json'), 'utf8'));
 
 function capabilities() {
   return {
     schema_version: 'tw-cli-v1',
     data: {
-      cli_version: '1.0.1',
+      cli_version: '1.0.21',
       cli_schema_versions: ['tw-cli-v1'],
       harness_schema_versions: ['tw-harness-v1'],
       required_upgrades: [],
@@ -34,7 +36,7 @@ function capabilities() {
           'tw plan review skip <review_ref> --json'
         ] },
         { name: 'task', status: 'available', commands: [
-          'tw task create --surface <tweet|reply|quote> --direction <text> --count <1..5> --json',
+          'tw task create --surface <tweet|reply|quote> --direction <text> --count <1|5..10 reply; 1..5 otherwise> --json',
           'tw task review show <review_ref> --json',
           'tw task review approve <review_ref> --json',
           'tw task review reject <review_ref> --json',
@@ -77,10 +79,10 @@ test('missing task review command is detected before workflow creation', () => {
   }
 });
 
-test('task skills reject the pre-task CLI version while the router remains compatible', () => {
+test('task skills reject the pre-1.0.21 CLI version while the router remains compatible', () => {
   const value = capabilities();
-  value.data.cli_version = '1.0.0';
-  const taskOwners = operationManifests.filter((manifest) => manifest.cli.minimum_version === '1.0.1');
+  value.data.cli_version = '1.0.20';
+  const taskOwners = operationManifests.filter((manifest) => manifest.cli.minimum_version === '1.0.21');
   const routers = operationManifests.filter((manifest) => manifest.role === 'operation-router');
   assert.ok(taskOwners.length > 0);
   assert.equal(routers.length, 1);
@@ -88,6 +90,15 @@ test('task skills reject the pre-task CLI version while the router remains compa
     assert.ok(evaluateCapabilities(manifest, value).includes('cli_version_too_old'));
   }
   assert.deepEqual(evaluateCapabilities(routers[0], value), []);
+});
+
+test('reply discovery defaults to five and accepts only five through ten targets', () => {
+  assert.match(replySkill, /Default a missing discovery-task count to `5`/);
+  assert.match(replySkill, /Accept only an integer from `5` through `10`/);
+  assert.match(replySkill, /never auto-chunk/);
+  assert.match(replyEvals.evals.find((entry) => entry.id === 2).expected_output, /5 through 10/);
+  assert.match(replyEvals.evals.find((entry) => entry.id === 4).expectations.join(' '), /count 10/);
+  assert.match(replyEvals.evals.find((entry) => entry.id === 11).expectations.join(' '), /count 11/);
 });
 
 test('schema drift and required upgrades are blocking compatibility failures', () => {

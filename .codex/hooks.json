@@ -1,0 +1,42 @@
+{
+  "description": "ThreadWave-only release safeguards.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/Users/runkunmiao/.agents/skills/threadwave-release/scripts/release-gate.mjs' hook",
+            "timeout": 30,
+            "statusMessage": "Checking ThreadWave release authorization"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "^(Bash|exec_command)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/Users/runkunmiao/.agents/skills/threadwave-release/scripts/release-gate.mjs' hook",
+            "timeout": 30,
+            "statusMessage": "Checking ThreadWave release gate"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/Users/runkunmiao/.agents/skills/threadwave-release/scripts/release-gate.mjs' hook",
+            "timeout": 30,
+            "statusMessage": "Verifying ThreadWave release completion"
+          }
+        ]
+      }
+    ]
+  }
+}

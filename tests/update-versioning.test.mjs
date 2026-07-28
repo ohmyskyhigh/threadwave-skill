@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { buildReleaseArtifacts } from '../scripts/build-release-artifacts.mjs';
 import { setSkillVersion } from '../scripts/set-skill-version.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -13,6 +14,45 @@ const roster = releaseIndex.required_skills.map((entry) => entry.name);
 
 function readJson(relative) {
   return JSON.parse(fs.readFileSync(path.join(root, relative), 'utf8'));
+}
+
+test('artifact builds stage the candidate index without changing the public index', (t) => {
+  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'threadwave-skill-release-'));
+  t.after(() => fs.rmSync(fixture, { recursive: true, force: true }));
+  const oldIndex = {
+    schema_version: 'threadwave-skill-release-index-v2',
+    bundle_version: '0.1.0',
+    required_skills: [],
+  };
+  fs.writeFileSync(path.join(fixture, 'release-index.json'), `${JSON.stringify(oldIndex)}\n`);
+  const roster = [
+    { name: 'preflight', role: 'preflight' },
+    { name: 'update', role: 'update' },
+  ];
+  fs.writeFileSync(path.join(fixture, 'suite-manifest.json'), `${JSON.stringify({
+    bundle_version: '0.2.0',
+    agent_skills_installer: { package: 'skills', version: '1.5.18', registry: 'https://registry.npmjs.org' },
+    required_skills: roster.map(({ name }) => ({ name, manifest_path: `skills/${name}/skill-manifest.json` })),
+  })}\n`);
+  for (const skill of roster) {
+    const directory = path.join(fixture, 'skills', skill.name);
+    fs.mkdirSync(directory, { recursive: true });
+    fs.writeFileSync(path.join(directory, 'SKILL.md'), `# ${skill.name}\n`);
+    fs.writeFileSync(path.join(directory, 'skill-manifest.json'), `${JSON.stringify({
+      name: skill.name,
+      version: '0.2.0',
+      role: skill.role,
+    })}\n`);
+  }
+
+  buildReleaseArtifacts(fixture);
+
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(fixture, 'release-index.json'), 'utf8')), oldIndex);
+  assert.equal(readFixtureJson(fixture, 'dist/release-index.candidate.json').bundle_version, '0.2.0');
+});
+
+function readFixtureJson(fixture, relative) {
+  return JSON.parse(fs.readFileSync(path.join(fixture, relative), 'utf8'));
 }
 
 test('the v2 release index is the complete runtime roster and independent version authority', () => {

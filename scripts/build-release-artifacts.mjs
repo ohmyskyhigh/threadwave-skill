@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build per-skill release artifacts and regenerate release-index.json (v2).
+// Build per-skill release artifacts and a candidate release index (v2).
 //
 // The release index is the single remote authority for user setup: it declares
 // the required skill roster, suite roles, each skill's current version, and the
@@ -16,7 +16,10 @@ const REPOSITORY = 'ohmyskyhigh/threadwave-skill';
 const INDEX_SCHEMA = 'threadwave-skill-release-index-v2';
 const SETUP_URL = 'https://www.threadwave.xyz/cli/setup/agent.md';
 
-export function buildReleaseArtifacts(root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')) {
+export function buildReleaseArtifacts(
+  root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'),
+  options = {}
+) {
   const suite = readJson(path.join(root, 'suite-manifest.json'));
   const previousIndex = readJson(path.join(root, 'release-index.json'));
   const previousEntries = previousIndex?.required_skills ?? previousIndex?.skills ?? [];
@@ -76,14 +79,22 @@ export function buildReleaseArtifacts(root = path.resolve(path.dirname(fileURLTo
     roles: { preflight: roles.preflight, update: roles.update },
     required_skills: requiredSkills
   };
-  fs.writeFileSync(path.join(root, 'release-index.json'), `${JSON.stringify(index, null, 2)}\n`);
+  const candidateIndexPath = path.join(root, 'dist', 'release-index.candidate.json');
+  fs.writeFileSync(candidateIndexPath, `${JSON.stringify(index, null, 2)}\n`);
+  if (options.writeIndex === true) {
+    fs.writeFileSync(path.join(root, 'release-index.json'), `${JSON.stringify(index, null, 2)}\n`);
+  }
 
   return {
     schema_version: INDEX_SCHEMA,
     bundle_version: suite.bundle_version,
     artifact_base: artifactBase,
+    candidate_index: path.relative(root, candidateIndexPath),
+    wrote_public_index: options.writeIndex === true,
     artifacts: requiredSkills.map((entry) => path.join('dist', 'skills', path.basename(entry.artifact_url))),
-    note: 'release-index.json regenerated; upload dist/skills/*.tgz to the matching GitHub release before announcing the version'
+    note: options.writeIndex === true
+      ? 'release-index.json staged for the release candidate; do not push it to main before every public asset is verified'
+      : 'candidate index generated under dist; the public release-index.json was not changed'
   };
 }
 
@@ -101,7 +112,9 @@ function shellQuote(value) {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   try {
-    const result = buildReleaseArtifacts();
+    const unknown = process.argv.slice(2).filter((arg) => arg !== '--write-index');
+    if (unknown.length) throw new Error(`unknown_argument:${unknown.join(',')}`);
+    const result = buildReleaseArtifacts(undefined, { writeIndex: process.argv.includes('--write-index') });
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   } catch (error) {
     process.stderr.write(`artifact_build_failed: ${error instanceof Error ? error.message : String(error)}\n`);

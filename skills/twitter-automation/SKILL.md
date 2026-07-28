@@ -29,7 +29,7 @@ Classify only the workflow owner:
 
 - setup, dependency, CLI, extension, readiness, or repair: remain here;
 - ad-hoc tweet creation, one-to-five tweet tasks, or one exact post: `twitter-post`;
-- ad-hoc reply creation, one-to-five reply tasks, target discovery, or one exact reply: `twitter-reply`;
+- ad-hoc reply creation, five-to-ten discovery reply tasks, target discovery, or one exact reply: `twitter-reply`;
 - daily growth, strategy, plan, scheduled daily work, reviews, or outcomes: `twitter-agent`.
 
 When the request already has a clear destination, activate that peer with the unchanged request and stop this router flow. Do not run router preflight first; the destination peer owns its mandatory preflight.

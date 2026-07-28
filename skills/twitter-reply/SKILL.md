@@ -1,6 +1,6 @@
 ---
 name: twitter-reply
-description: "Create and review one-to-five Twitter/X reply tasks with target discovery through ThreadWave, or send one exact final reply to one exact target through a strict dry-run and approval flow. Use for create replies, reply to several posts, batch reply tasks, engage with posts about a topic, manual Twitter replies, or reply to this exact tweet with this exact text. Do not use for original posts or the daily strategy/plan loop. 中文：用于创建并审核 1 到 5 条带目标发现的推特回复任务、批量回复任务，或在严格 dry-run 和批准后向一个准确目标发送一条准确回复；不用于原创推文或日常策略计划。"
+description: "Create and review five-to-ten Twitter/X reply tasks with target discovery through ThreadWave, or send one exact final reply to one exact target through a strict dry-run and approval flow. Use for create replies, reply to several posts, batch reply tasks, engage with posts about a topic, manual Twitter replies, or reply to this exact tweet with this exact text. Do not use for original posts or the daily strategy/plan loop. 中文：用于创建并审核 5 到 10 条带目标发现的推特回复任务、批量回复任务，或在严格 dry-run 和批准后向一个准确目标发送一条准确回复；不用于原创推文或日常策略计划。"
 ---
 
 # Twitter Reply
@@ -9,13 +9,13 @@ Own ad-hoc reply work as an independent flat peer. Never activate or depend on `
 
 ## Select One Mode
 
-Select **task mode** when the user supplies a direction, topic, literal search anchor, account/surface criteria, target-discovery request, or a count from `1` through `5`. Any count above one selects task mode.
+Select **task mode** when the user supplies a direction, topic, literal search anchor, account/surface criteria, target-discovery request, or a discovery count from `5` through `10`.
 
 Select **exact-action mode** only when the user supplies one exact target, one complete final reply, and explicit immediate-send intent.
 
-- Default a missing task count to `1`.
-- Accept only an integer from `1` through `5`.
-- For a count above `5`, ask the user to split it explicitly; never create multiple proposals automatically.
+- Default a missing discovery-task count to `5`.
+- Accept only an integer from `5` through `10` for target discovery.
+- For a discovery count below `5` or above `10`, ask the user to choose `5..10`; never auto-chunk or reinterpret it as exact-action mode.
 - Never infer an exact target from browser state, a screenshot, a profile URL, or “that tweet.”
 - For several exact target/text pairs, ask whether the user wants one direction-based discovery task or separate exact actions.
 - If exactness versus discovery/direction is unclear, ask one concise question before invoking `tw`.
@@ -28,7 +28,7 @@ Respond in English or Simplified Chinese from explicit preference, latest messag
 
 Activate `threadwave-preflight` by skill name at the start of each new reply task or agent session and after any readiness invalidation defined by its contract. Pass this skill name, selected mode, unchanged request, and required capability families. Reuse that successful result for unchanged review decisions and workflow continuation in the same session; do not rerun preflight for a review decision alone. Do not invoke `tw` without a current or reusable ready result.
 
-Require CLI `1.0.1` plus `task`, `draft`, `plan`, `scheduler`, and `action` command families. Missing skill, CLI, or extension state routes to `https://www.threadwave.xyz/cli/setup/agent.md` while preserving the request.
+Require CLI `1.0.21` plus `task`, `draft`, `plan`, `scheduler`, and `action` command families. Missing skill, CLI, or extension state routes to `https://www.threadwave.xyz/cli/setup/agent.md` while preserving the request.
 
 ## Task Mode
 
@@ -37,7 +37,7 @@ Require CLI `1.0.1` plus `task`, `draft`, `plan`, `scheduler`, and `action` comm
 Pass direction as one safe argument; never concatenate user content into shell syntax. Run the semantic equivalent of:
 
 ```text
-tw task create --surface reply --direction <exact_user_direction> --count <1..5> --json
+tw task create --surface reply --direction <exact_user_direction> --count <5..10> --json
 ```
 
 Require `schema_version=tw_cli_harness_v1`, `ok=true`, and returned `manual_request_ref`, `task_blueprint_proposal_ref`, and `review_ref`. Task creation authorizes no discovery, generation, or X mutation until its exact review gate passes.
@@ -91,7 +91,7 @@ Require exactly one target accepted by the CLI contract and one exact final repl
 
 ## Boundaries
 
-- Task mode creates one proposal with `1..5` independent possible reply items; it does not grant batch mutation approval.
+- Task mode creates one proposal with `5..10` independent possible reply items; it does not grant batch mutation approval.
 - Exact-action mode controls one target/text pair only and remains outside task/plan lineage.
 - Do not create original posts, quote, like, save, follow, or operate the browser UI directly.
 - Do not expose reply text, targets, raw payloads, private refs, or local paths in diagnostics.

@@ -1,7 +1,7 @@
 {
   "schema_version": "threadwave-skill-manifest-v1",
   "name": "twitter-post",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "role": "manual-operation",
   "dependencies": {
     "required_skills": [
@@ -16,7 +16,7 @@
     "setup_url": "https://www.threadwave.xyz/cli/setup/agent.md"
   },
   "cli": {
-    "minimum_version": "1.0.1",
+    "minimum_version": "1.0.21",
     "required_command_families": [
       "task",
       "draft",
@@ -25,7 +25,7 @@
       "action"
     ],
     "required_commands": [
-      "tw task create --surface <tweet|reply|quote> --direction <text> --count <1..5> --json",
+      "tw task create --surface <tweet|reply|quote> --direction <text> --count <1|5..10 reply; 1..5 otherwise> --json",
       "tw task review show <review_ref> --json",
       "tw task review approve <review_ref> --json",
       "tw task review reject <review_ref> --json",
