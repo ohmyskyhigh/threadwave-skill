@@ -1,7 +1,7 @@
 {
   "schema_version": "threadwave-skill-release-index-v2",
   "repository": "ohmyskyhigh/threadwave-skill",
-  "bundle_version": "0.6.3",
+  "bundle_version": "0.7.0",
   "agent_skills_installer": {
     "package": "skills",
     "version": "1.5.18",
@@ -10,50 +10,58 @@
   "setup_url": "https://www.threadwave.xyz/cli/setup/agent.md",
   "roles": {
     "preflight": "threadwave-preflight",
-    "update": "threadwave-update"
+    "update": "threadwave-update",
+    "support": "threadwave-error-support"
   },
   "required_skills": [
     {
       "name": "threadwave-preflight",
-      "latest_version": "0.3.2",
+      "latest_version": "0.4.0",
       "minimum_supported_version": "0.3.0",
-      "artifact_url": "https://github.com/ohmyskyhigh/threadwave-skill/releases/download/suite-v0.6.3/threadwave-preflight-0.3.2.tgz",
-      "sha256": "4ed4dce859a9233007098fe65e1ef08580b7289256884c9c7af5a78160c8ffcc"
+      "artifact_url": "https://github.com/ohmyskyhigh/threadwave-skill/releases/download/suite-v0.7.0/threadwave-preflight-0.4.0.tgz",
+      "sha256": "04cda6380d94c9b12a133079832d0c1a33a53933dfe0343a3d45285e0a1ce7af"
     },
     {
       "name": "threadwave-update",
-      "latest_version": "0.3.2",
+      "latest_version": "0.3.3",
       "minimum_supported_version": "0.3.0",
-      "artifact_url": "https://github.com/ohmyskyhigh/threadwave-skill/releases/download/suite-v0.6.3/threadwave-update-0.3.2.tgz",
-      "sha256": "0868ab91194c4d73170f0bd0114256a381c712c1e46615fe403e97be49b6247a"
+      "artifact_url": "https://github.com/ohmyskyhigh/threadwave-skill/releases/download/suite-v0.7.0/threadwave-update-0.3.3.tgz",
+      "sha256": "3b38a31f56e50de41d0a559fdfeb56cb9d9e727641271d28989a23d09e787d71"
+    },
+    {
+      "name": "threadwave-error-support",
+      "latest_version": "0.1.0",
+      "minimum_supported_version": "0.1.0",
+      "artifact_url": "https://github.com/ohmyskyhigh/threadwave-skill/releases/download/suite-v0.7.0/threadwave-error-support-0.1.0.tgz",
+      "sha256": "63c68f895fb8107e1c179b66a2262609a9fd3a28263c976fb2e4b21e3db4fb89"
     },
     {
       "name": "twitter-automation",
-      "latest_version": "0.5.0",
+      "latest_version": "0.5.1",
       "minimum_supported_version": "0.4.0",
-      "artifact_url": "https://github.com/ohmyskyhigh/threadwave-skill/releases/download/suite-v0.6.3/twitter-automation-0.5.0.tgz",
-      "sha256": "5ebfa19ff289eabebd602ceea41f56ab21818ea1ed36f7f19efae67849537147"
+      "artifact_url": "https://github.com/ohmyskyhigh/threadwave-skill/releases/download/suite-v0.7.0/twitter-automation-0.5.1.tgz",
+      "sha256": "6eaa885c9e1a9efb59807c331fac3875d89249949a65052726fe120f49043aac"
     },
     {
       "name": "twitter-agent",
       "latest_version": "0.4.2",
       "minimum_supported_version": "0.4.0",
-      "artifact_url": "https://github.com/ohmyskyhigh/threadwave-skill/releases/download/suite-v0.6.3/twitter-agent-0.4.2.tgz",
-      "sha256": "b3baab9bf6f6fe28000654c18c5b4088cc8794aafa8312b75916c62095863eb0"
+      "artifact_url": "https://github.com/ohmyskyhigh/threadwave-skill/releases/download/suite-v0.7.0/twitter-agent-0.4.2.tgz",
+      "sha256": "19425bfcb414384960b4956c873b0d4d2eda5dd49a91a4ffd161f5eabbd4dc4d"
     },
     {
       "name": "twitter-post",
-      "latest_version": "0.5.1",
+      "latest_version": "0.5.2",
       "minimum_supported_version": "0.4.0",
-      "artifact_url": "https://github.com/ohmyskyhigh/threadwave-skill/releases/download/suite-v0.6.3/twitter-post-0.5.1.tgz",
-      "sha256": "c15b212f3684343672564ac98ef56ed0fc0450656031f5b309c1514f55c93f76"
+      "artifact_url": "https://github.com/ohmyskyhigh/threadwave-skill/releases/download/suite-v0.7.0/twitter-post-0.5.2.tgz",
+      "sha256": "88c938731a30f20b2e2b894a974fccca3523616ec651178736a6f39c75f84a70"
     },
     {
       "name": "twitter-reply",
-      "latest_version": "0.5.2",
+      "latest_version": "0.5.3",
       "minimum_supported_version": "0.4.0",
-      "artifact_url": "https://github.com/ohmyskyhigh/threadwave-skill/releases/download/suite-v0.6.3/twitter-reply-0.5.2.tgz",
-      "sha256": "85d0cb2e1ac324bf46607be90e88b65d1a99ca543b2accb1fefd12f8492b479d"
+      "artifact_url": "https://github.com/ohmyskyhigh/threadwave-skill/releases/download/suite-v0.7.0/twitter-reply-0.5.3.tgz",
+      "sha256": "0983caf44d34d6927d6417a1bab73f66750c6c4d34778771f78da8a52f592e39"
     }
   ]
 }
