@@ -37,6 +37,7 @@ function capabilities() {
         ] },
         { name: 'task', status: 'available', commands: [
           'tw task create --surface <tweet|reply|quote> --direction <text> --count <1|5..10 reply; 1..5 otherwise> --json',
+          'tw task show <task_blueprint_ref> --json',
           'tw task review show <review_ref> --json',
           'tw task review approve <review_ref> --json',
           'tw task review reject <review_ref> --json',
@@ -76,6 +77,15 @@ test('missing task review command is detected before workflow creation', () => {
   assert.ok(taskOwners.length > 0);
   for (const manifest of taskOwners) {
     assert.ok(evaluateCapabilities(manifest, value).some((failure) => failure.startsWith('required_command_missing:')));
+  }
+});
+
+test('manual task peers require exact task projection lookup', () => {
+  const value = capabilities();
+  const task = value.data.command_families.find((family) => family.name === 'task');
+  task.commands = task.commands.filter((command) => !command.startsWith('tw task show'));
+  for (const skill of ['twitter-post', 'twitter-reply']) {
+    assert.ok(evaluateCapabilities(skillManifest(skill), value).some((failure) => failure.startsWith('required_command_missing:')));
   }
 });
 

@@ -70,6 +70,17 @@
         "Requires the same text and dry-run scope",
         "Dispatches once and stops on unknown evidence"
       ]
+    },
+    {
+      "id": 8,
+      "prompt": "I approved the post task proposal. Its exact task reads still say awaiting_selection after 105 seconds, then return source_reviews_created before 180 seconds. Check whether this task has source reviews waiting.",
+      "expected_output": "Keeps polling every exact task blueprint ref returned by approval within one fixed deadline, does not report a false block after 105 seconds, and follows only pending source-review refs when source_reviews_created appears.",
+      "expectations": [
+        "Runs tw task show with each exact returned task_blueprint_ref",
+        "Uses only source_review_refs_by_status.pending when source reviews are created",
+        "Never searches a global review list or guesses the latest review",
+        "Treats approved or archived-only buckets as having no source decision waiting"
+      ]
     }
   ]
 }

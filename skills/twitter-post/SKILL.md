@@ -47,6 +47,10 @@ Inspect only the returned review ref with `tw task review show <review_ref> --js
 
 After approval, invoke `tw task review approve <same_review_ref> --json` once under the reusable same-task preflight result. Reject or skip only after an explicit matching user decision. Never transfer approval to a changed direction, count, ref, or proposal hash.
 
+Capture every exact `task_blueprint_ref` returned by that approval. Start one fixed 180-second deadline, immediately inspect each with `tw task show <task_blueprint_ref> --json`, and repeat only while its `source_status=awaiting_selection`; before each retry, wait `min(15 seconds, remaining time)` so the deadline receives one final read. Never use `tw task review list`, a global review list, or a latest review to discover this task's source reviews.
+
+When `source_status=source_reviews_created`, follow only `source_review_refs_by_status.pending`. If `pending` is empty but `approved` or `archived` is nonempty, that task has no source decision waiting. If all three buckets are empty, treat the response as CLI contract drift and stop. Handle `no_valid_targets_found` as a shortfall and follow CLI-returned refs directly for any other terminal source status.
+
 ### 3. Follow Returned Workflow Refs
 
 Use only refs and next actions returned by the CLI:

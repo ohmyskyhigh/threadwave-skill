@@ -56,6 +56,20 @@ test('reply peer restarts wrong candidate batches without plan-backed retask', (
   assert.match(content, /no old approval, source, draft, or review authority transfers/i);
 });
 
+test('manual task peers discover source reviews from each approved blueprint', () => {
+  for (const skill of ['twitter-post', 'twitter-reply']) {
+    const content = fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8');
+    assert.match(content, /Capture every exact `task_blueprint_ref` returned by that approval/);
+    assert.match(content, /immediately inspect each with `tw task show <task_blueprint_ref> --json`/);
+    assert.match(content, /fixed 180-second deadline/);
+    assert.match(content, /wait `min\(15 seconds, remaining time\)`/);
+    assert.match(content, /source_status=source_reviews_created/);
+    assert.match(content, /only `source_review_refs_by_status\.pending`/);
+    assert.match(content, /all three buckets are empty.*CLI contract drift/i);
+    assert.match(content, /Never use `tw task review list`, a global review list, or a latest review/);
+  }
+});
+
 test('automation is a pure router to independent peers', () => {
   const operationSkills = operationSkillNames(suite, releaseIndex);
   const routerName = operationSkills.find((skill) => manifests.get(skill)?.role === 'operation-router');

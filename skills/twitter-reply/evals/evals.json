@@ -118,6 +118,17 @@
         "Enforces the upper discovery limit of 10",
         "Does not auto-chunk or infer targets"
       ]
+    },
+    {
+      "id": 12,
+      "prompt": "I approved the reply task proposal. Its exact task reads still say awaiting_selection after 105 seconds, then return source_reviews_created before 180 seconds. Find the source reviews that belong to it.",
+      "expected_output": "Keeps polling every exact task blueprint ref returned by approval within one fixed deadline, does not report a false block after 105 seconds, and follows only pending source-review refs when source_reviews_created appears.",
+      "expectations": [
+        "Runs tw task show with each exact returned task_blueprint_ref",
+        "Uses only source_review_refs_by_status.pending when source reviews are created",
+        "Never searches a global review list or guesses the latest review",
+        "Stops as contract drift when source_reviews_created has three empty buckets"
+      ]
     }
   ]
 }
