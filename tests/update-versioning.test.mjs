@@ -46,10 +46,19 @@ test('artifact builds stage the candidate index without changing the public inde
     })}\n`);
   }
 
+  const first = buildReleaseArtifacts(fixture);
+  const firstIndex = readFixtureJson(fixture, 'dist/release-index.candidate.json');
+  const artifact = path.join(fixture, first.artifacts[0]);
+  const firstBytes = fs.readFileSync(artifact);
+  const skillFile = path.join(fixture, 'skills', 'preflight', 'SKILL.md');
+  fs.chmodSync(skillFile, 0o600);
+  fs.utimesSync(skillFile, new Date('2025-01-01T00:00:00Z'), new Date('2025-01-01T00:00:00Z'));
   buildReleaseArtifacts(fixture);
 
   assert.deepEqual(JSON.parse(fs.readFileSync(path.join(fixture, 'release-index.json'), 'utf8')), oldIndex);
-  assert.equal(readFixtureJson(fixture, 'dist/release-index.candidate.json').bundle_version, '0.2.0');
+  assert.deepEqual(readFixtureJson(fixture, 'dist/release-index.candidate.json'), firstIndex);
+  assert.deepEqual(fs.readFileSync(artifact), firstBytes);
+  assert.equal(firstIndex.bundle_version, '0.2.0');
 });
 
 function readFixtureJson(fixture, relative) {

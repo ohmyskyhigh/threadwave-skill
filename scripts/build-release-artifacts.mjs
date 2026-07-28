@@ -7,10 +7,10 @@
 // stays the repository/CI declaration; this script derives the public index
 // from it and from each skill's local skill-manifest.json.
 import crypto from 'node:crypto';
-import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gzipSync } from 'node:zlib';
 
 const REPOSITORY = 'ohmyskyhigh/threadwave-skill';
 const INDEX_SCHEMA = 'threadwave-skill-release-index-v2';
@@ -41,16 +41,7 @@ export function buildReleaseArtifacts(
 
     const artifactName = `${skill.name}-${manifest.version}.tgz`;
     const artifactPath = path.join(distDir, artifactName);
-    // Portable pipeline: no macOS metadata, no gzip timestamp. The index and
-    // its checksums are always regenerated together with the artifacts.
-    execFileSync(
-      'sh',
-      [
-        '-c',
-        `COPYFILE_DISABLE=1 tar --exclude='.DS_Store' -cf - -C skills ${shellQuote(skill.name)} | gzip -n > ${shellQuote(artifactPath)}`
-      ],
-      { cwd: root, stdio: ['ignore', 'ignore', 'inherit'] }
-    );
+    fs.writeFileSync(artifactPath, buildSkillArchive(path.join(root, 'skills', skill.name), skill.name));
     const sha256 = sha256File(artifactPath);
 
     requiredSkills.push({
@@ -106,8 +97,81 @@ function sha256File(file) {
   return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 }
 
-function shellQuote(value) {
-  return `'${String(value).replace(/'/g, `'\\''`)}'`;
+function buildSkillArchive(skillRoot, skillName) {
+  const blocks = [];
+  appendTarEntry(blocks, skillRoot, skillName);
+  blocks.push(Buffer.alloc(1024));
+  // Stored deflate blocks plus a fixed header keep gzip bytes stable across platforms.
+  const archive = gzipSync(Buffer.concat(blocks), { level: 0, mtime: 0 });
+  archive.fill(0, 4, 8);
+  archive[9] = 255;
+  return archive;
+}
+
+function appendTarEntry(blocks, source, archiveName) {
+  const stat = fs.lstatSync(source);
+  if (stat.isDirectory()) {
+    blocks.push(tarHeader(archiveName, '5', 0, 0o755));
+    const entries = fs.readdirSync(source, { withFileTypes: true })
+      .filter((entry) => entry.name !== '.DS_Store')
+      .sort((left, right) => left.name < right.name ? -1 : left.name > right.name ? 1 : 0);
+    for (const entry of entries) {
+      appendTarEntry(blocks, path.join(source, entry.name), `${archiveName}/${entry.name}`);
+    }
+    return;
+  }
+  if (!stat.isFile()) throw new Error(`unsupported_archive_entry:${archiveName}`);
+  const content = fs.readFileSync(source);
+  blocks.push(tarHeader(archiveName, '0', content.length, 0o644), content);
+  const padding = (512 - (content.length % 512)) % 512;
+  if (padding) blocks.push(Buffer.alloc(padding));
+}
+
+function tarHeader(archiveName, type, size, mode) {
+  const header = Buffer.alloc(512);
+  const [name, prefix] = splitTarPath(archiveName);
+  writeTarString(header, 0, 100, name);
+  writeTarOctal(header, 100, 8, mode);
+  writeTarOctal(header, 108, 8, 0);
+  writeTarOctal(header, 116, 8, 0);
+  writeTarOctal(header, 124, 12, size);
+  writeTarOctal(header, 136, 12, 0);
+  header.fill(0x20, 148, 156);
+  header.write(type, 156, 1, 'ascii');
+  writeTarString(header, 257, 6, 'ustar');
+  writeTarString(header, 263, 2, '00');
+  writeTarString(header, 265, 32, 'root');
+  writeTarString(header, 297, 32, 'root');
+  writeTarOctal(header, 329, 8, 0);
+  writeTarOctal(header, 337, 8, 0);
+  writeTarString(header, 345, 155, prefix);
+  const checksum = [...header].reduce((sum, byte) => sum + byte, 0).toString(8).padStart(6, '0');
+  header.write(checksum, 148, 6, 'ascii');
+  header[154] = 0;
+  header[155] = 0x20;
+  return header;
+}
+
+function splitTarPath(value) {
+  if (Buffer.byteLength(value) <= 100) return [value, ''];
+  for (let separator = value.lastIndexOf('/'); separator > 0; separator = value.lastIndexOf('/', separator - 1)) {
+    const prefix = value.slice(0, separator);
+    const name = value.slice(separator + 1);
+    if (Buffer.byteLength(prefix) <= 155 && Buffer.byteLength(name) <= 100) return [name, prefix];
+  }
+  throw new Error(`archive_path_too_long:${value}`);
+}
+
+function writeTarString(buffer, offset, length, value) {
+  const encoded = Buffer.from(value);
+  if (encoded.length > length) throw new Error(`archive_field_too_long:${value}`);
+  encoded.copy(buffer, offset);
+}
+
+function writeTarOctal(buffer, offset, length, value) {
+  const encoded = value.toString(8).padStart(length - 1, '0');
+  if (encoded.length >= length) throw new Error(`archive_number_too_large:${value}`);
+  buffer.write(encoded, offset, length - 1, 'ascii');
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {

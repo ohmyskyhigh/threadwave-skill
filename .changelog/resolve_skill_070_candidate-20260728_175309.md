@@ -7,6 +7,7 @@ Integrate the pending suite integrity and CLI contract changes with the error-su
 - Preserved the 0.6.4 release-integrity and CLI 1.0.21 contract changes.
 - Resolved bundle metadata at 0.7.0 and retained the new error-support peer and support role.
 - Added the support role to the candidate-index regression fixture.
+- Replaced platform-dependent archive creation with deterministic Node tar/gzip output and verified it ignores source mode and timestamp differences.
 - Staged the generated 0.7.0 candidate release index on the non-public preparation branch while leaving `main` unchanged.
 
 # Final Result
