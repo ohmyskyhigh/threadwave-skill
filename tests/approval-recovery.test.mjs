@@ -73,6 +73,9 @@ test('reply peer watches every scheduled mutation through a durable outcome', ()
   assert.match(content, /poll that ref with `tw scheduler show <scheduled_task_ref> --json` at intervals no longer than 15 seconds/i);
   assert.match(content, /Do not invoke `tw scheduler execute` merely to accelerate/i);
   assert.match(content, /tw scheduler evidence <scheduled_task_ref> --json/);
+  assert.match(content, /place every draft under exactly one heading: `Sent`, `Not sent yet`, or `Needs attention`/i);
+  assert.match(content, /Use `Sent` only for `succeeded` with conclusive evidence and `Not sent yet` only for `scheduled` or `running`/i);
+  assert.match(content, /repeat the complete numbered split at least once every 60 seconds/i);
   assert.match(content, /Continue until every returned ref is terminal or needs user action/i);
   assert.match(content, /never finish the reply flow merely because all drafts are scheduled/i);
 });

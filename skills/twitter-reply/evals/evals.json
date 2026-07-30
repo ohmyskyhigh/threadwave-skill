@@ -145,10 +145,12 @@
     {
       "id": 14,
       "prompt": "I approved the reply drafts. They are all scheduled now, so keep watching and tell me which ones actually send.",
-      "expected_output": "Keeps the session active, polls each exact returned scheduled-task ref through scheduler show, then reads scheduler evidence when each leaves scheduled/running. It reports final per-reply outcomes instead of ending at scheduled.",
+      "expected_output": "Keeps the session active, polls each exact returned scheduled-task ref, and repeatedly reports every original draft number under Sent, Not sent yet, or Needs attention. It reads scheduler evidence when each leaves scheduled/running and reports final per-reply outcomes instead of ending at scheduled.",
       "expectations": [
         "Does not treat scheduled as completion",
         "Polls only the exact returned scheduled-task refs",
+        "Reports every draft number as Sent, Not sent yet, or Needs attention after status changes and at least every 60 seconds while unchanged",
+        "Uses Not sent yet only for scheduled or running and never for an unknown outcome",
         "Does not execute tasks merely to accelerate their reservations",
         "Reads durable scheduler evidence for terminal results",
         "Finishes only when every reply is terminal or needs user action"
