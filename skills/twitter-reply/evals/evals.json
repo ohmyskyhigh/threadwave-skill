@@ -129,6 +129,30 @@
         "Never searches a global review list or guesses the latest review",
         "Stops as contract drift when source_reviews_created has three empty buckets"
       ]
+    },
+    {
+      "id": 13,
+      "prompt": "Retry #5. The current task shows its unchanged target and reply, and the durable result is action_preparation_failed with reply:blocked_before_dispatch, no dispatched_at, and confirmation_state not_required.",
+      "expected_output": "Treats the old reply as conclusively not sent, reruns preflight, and creates a fresh exact-action dry-run from the same exact target/text without reopening the old scheduled mutation. It displays the fresh dry-run and waits for explicit approval before one dispatch.",
+      "expectations": [
+        "Does not treat ActionRecord or EvidenceRecord counts as proof of dispatch",
+        "Does not execute or reschedule the failed scheduled task",
+        "Uses the exact unchanged target and reply from the current task",
+        "Runs a fresh exact-action dry-run and requires fresh explicit approval",
+        "Still refuses retries for unknown, post-dispatch, confirmed, or inconclusive outcomes"
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "I approved the reply drafts. They are all scheduled now, so keep watching and tell me which ones actually send.",
+      "expected_output": "Keeps the session active, polls each exact returned scheduled-task ref through scheduler show, then reads scheduler evidence when each leaves scheduled/running. It reports final per-reply outcomes instead of ending at scheduled.",
+      "expectations": [
+        "Does not treat scheduled as completion",
+        "Polls only the exact returned scheduled-task refs",
+        "Does not execute tasks merely to accelerate their reservations",
+        "Reads durable scheduler evidence for terminal results",
+        "Finishes only when every reply is terminal or needs user action"
+      ]
     }
   ]
 }

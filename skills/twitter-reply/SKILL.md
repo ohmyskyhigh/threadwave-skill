@@ -1,6 +1,6 @@
 ---
 name: twitter-reply
-description: "Create and review five-to-ten Twitter/X reply tasks with target discovery through ThreadWave, or send one exact final reply to one exact target through a strict dry-run and approval flow. Use for create replies, reply to several posts, batch reply tasks, engage with posts about a topic, manual Twitter replies, or reply to this exact tweet with this exact text. Do not use for original posts or the daily strategy/plan loop. 中文：用于创建并审核 5 到 10 条带目标发现的推特回复任务、批量回复任务，或在严格 dry-run 和批准后向一个准确目标发送一条准确回复；不用于原创推文或日常策略计划。"
+description: "Create, review, and monitor five-to-ten Twitter/X reply tasks with target discovery through ThreadWave, retry one conclusively undispatched reviewed reply through a fresh exact-action flow, or send one exact final reply to one exact target through a strict dry-run and approval flow. Use for create replies, retry failed replies, reply to several posts, batch reply tasks, engage with posts about a topic, manual Twitter replies, or reply to this exact tweet with this exact text. Do not use for original posts or the daily strategy/plan loop. 中文：用于创建、审核并监控 5 到 10 条带目标发现的推特回复任务、通过新的精确操作流程重试一条已确认未发送的已审核回复、批量回复任务，或在严格 dry-run 和批准后向一个准确目标发送一条准确回复；不用于原创推文或日常策略计划。"
 ---
 
 # Twitter Reply
@@ -12,6 +12,8 @@ Own ad-hoc reply work as an independent flat peer. Never activate or depend on `
 Select **task mode** when the user supplies a direction, topic, literal search anchor, account/surface criteria, target-discovery request, or a discovery count from `5` through `10`.
 
 Select **exact-action mode** only when the user supplies one exact target, one complete final reply, and explicit immediate-send intent.
+
+Also select exact-action mode when the user explicitly retries one exact unchanged draft from the current task and its durable result conclusively proves that dispatch never started. A retry creates a fresh exact-action flow; it never reopens, reschedules, or executes the failed scheduled mutation.
 
 - Default a missing discovery-task count to `5`.
 - Accept only an integer from `5` through `10` for target discovery.
@@ -67,7 +69,9 @@ Source approval authorizes draft generation for that exact source only. It never
 - Inspect generated artifacts through `tw draft show <artifact_ref> --json`.
 - Inspect each content review through `tw plan review show <review_ref> --json`.
 - Approve, reject, or skip each content review independently.
-- Inspect each returned scheduled mutation through `tw scheduler show` and `tw scheduler evidence`.
+- Capture every exact returned `scheduled_task_ref`. Scheduling is not completion: while any ref reports `scheduled` or `running`, keep the session active and poll that ref with `tw scheduler show <scheduled_task_ref> --json` at intervals no longer than 15 seconds. Do not invoke `tw scheduler execute` merely to accelerate the daemon-owned reservation.
+- When a ref leaves `scheduled` or `running`, inspect it once with `tw scheduler evidence <scheduled_task_ref> --json`. Treat `succeeded` as sent only with its conclusive scheduler evidence. Classify `failed`, `recovery_required`, `past_due`, `cancelled`, `retask_superseded`, and `scheduled_mutation_revoked` from that durable evidence without assuming whether dispatch started. A `paused` or `waiting_review` ref needs user action; show that blocker and keep every other ref under observation.
+- Continue until every returned ref is terminal or needs user action. Provide brief progress updates while watching, but never finish the reply flow merely because all drafts are scheduled.
 
 When multiple content reviews are pending, present them together as one numbered set with each exact target, reply text, and `review_ref`. Require an explicit per-item decision map. Never collapse multiple replies into “approve all” or treat a bare decision as batch mutation authority. Each content approval authorizes one exact reply mutation only.
 
@@ -81,7 +85,9 @@ Never guess a target or ref.
 - If any source is already approved or any reply mutation is scheduled, do not claim the old task was cancelled through review skips. Show the exact later-stage scope and use the supported retask/recovery path.
 - Same-source wording change: use `tw draft redraft`, then require a new content review.
 - Rejected source: create no draft or mutation for that source.
-- Unknown scheduler or mutation evidence: stop without retry and request a sanitized issue report.
+- Treat `relay_unavailable` with no dispatch `ActionRecord`, and `action_preparation_failed` with `reply:blocked_before_dispatch`, no `dispatched_at`, and `confirmation_state=not_required`, as conclusively not sent. An `ActionRecord` or `EvidenceRecord` count alone is audit evidence and does not prove dispatch.
+- When the user says `retry` and identifies one or more exact drafts from the current unchanged displayed set, resolve each exact target/text pair only from the current task's returned refs. Rerun mandatory preflight because the prior readiness was invalidated, then start one fresh exact-action dry-run per pair. Show each exact pair and dry-run result and require fresh explicit approval before dispatching it once. Do not execute or reschedule the old scheduled-task ref, and do not transfer its task/content approval as fresh mutation approval.
+- If the numbered draft mapping is stale, the target/text changed, or the current task does not already contain conclusive pre-dispatch evidence, ask for the exact current draft/ref or stop as unknown. Unknown, post-dispatch, `unknown_confirmation`, confirmed, or otherwise inconclusive outcomes never enter this retry flow and require a sanitized issue report.
 
 ## Exact-Action Mode
 
@@ -107,7 +113,7 @@ For explicit report requests, CLI drift, repeated unresolved setup, or unknown e
 ## Return Format
 
 ```text
-State: <needs task approval | needs source approval | needs content approval | scheduled | complete | blocked | unknown>
+State: <needs task approval | needs source approval | needs content approval | monitoring | complete | blocked | unknown>
 Mode: <task | exact action>
 Count: <requested / valid sources / approved / scheduled>
 Reviews: <all current source or content reviews, numbered with exact review_ref>

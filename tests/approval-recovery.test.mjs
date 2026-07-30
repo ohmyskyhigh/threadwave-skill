@@ -56,6 +56,27 @@ test('reply peer restarts wrong candidate batches without plan-backed retask', (
   assert.match(content, /no old approval, source, draft, or review authority transfers/i);
 });
 
+test('reply peer recreates only conclusively undispatched replies as fresh exact actions', () => {
+  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+  assert.match(content, /relay_unavailable.*no dispatch `ActionRecord`/i);
+  assert.match(content, /action_preparation_failed.*reply:blocked_before_dispatch.*no `dispatched_at`.*confirmation_state=not_required/i);
+  assert.match(content, /ActionRecord.*EvidenceRecord.*audit evidence and does not prove dispatch/i);
+  assert.match(content, /start one fresh exact-action dry-run per pair/i);
+  assert.match(content, /Do not execute or reschedule the old scheduled-task ref/i);
+  assert.match(content, /require fresh explicit approval before dispatching it once/i);
+  assert.match(content, /Unknown, post-dispatch, `unknown_confirmation`, confirmed, or otherwise inconclusive outcomes never enter this retry flow/i);
+});
+
+test('reply peer watches every scheduled mutation through a durable outcome', () => {
+  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+  assert.match(content, /Scheduling is not completion/i);
+  assert.match(content, /poll that ref with `tw scheduler show <scheduled_task_ref> --json` at intervals no longer than 15 seconds/i);
+  assert.match(content, /Do not invoke `tw scheduler execute` merely to accelerate/i);
+  assert.match(content, /tw scheduler evidence <scheduled_task_ref> --json/);
+  assert.match(content, /Continue until every returned ref is terminal or needs user action/i);
+  assert.match(content, /never finish the reply flow merely because all drafts are scheduled/i);
+});
+
 test('manual task peers discover source reviews from each approved blueprint', () => {
   for (const skill of ['twitter-post', 'twitter-reply']) {
     const content = fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8');
