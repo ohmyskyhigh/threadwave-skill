@@ -6,9 +6,9 @@ This repository contains independently versioned, flat-installable peer skills p
 
 ## Required Suite
 
-The system is runnable only when every skill in the `required_skills` roster of `release-index.json` is installed and confirmed current. Never hardcode the roster in documentation, scripts, or tests — derive it from the release index (runtime) or `suite-manifest.json` (repository/CI) and keep the two in sync.
+The system is runnable when every skill in the `required_skills` roster of `release-index.json` is installed at a version from its `minimum_supported_version` through `latest_version`, and the latest-version check is confirmed. Never hardcode the roster in documentation, scripts, or tests — derive it from the release index (runtime) or `suite-manifest.json` (repository/CI) and keep the two in sync.
 
-The dependency flow is one-way: operation skill -> preflight role skill -> update role skill, with failed workflows routed from preflight to the support role skill. Do not create a circular dependency. The update skill never invokes preflight or `tw`; it only compares local manifests with the GitHub release index. The support skill never resumes workflows or invokes operation skills. Every operation skill invokes preflight before its workflow. A missing, incompatible, outdated, or update-unconfirmed peer blocks every operation before `tw` is invoked.
+The dependency flow is one-way: operation skill -> preflight role skill -> update role skill, with failed workflows routed from preflight to the support role skill. Do not create a circular dependency. The update skill never invokes preflight or `tw`; it only compares local manifests with the GitHub release index. The support skill never resumes workflows or invokes operation skills. Every operation skill invokes preflight before its workflow. A missing, incompatible, ahead-of-public, or update-unconfirmed peer blocks every operation before `tw` is invoked. A supported older peer is non-blocking: preflight offers one choice to continue with the installed versions or approve an automatic update through the canonical setup guide, and a skipped unchanged offer is not repeated until the next agent session.
 
 ## Authority
 
@@ -30,7 +30,7 @@ Product positioning, pricing, credits, and public copy defaults live in the know
 
 - Keep every roster skill as a flat peer. Skill references use skill names, not relative paths into another skill.
 - Keep the preflight contract only in the preflight role skill, the update contract only in the update role skill, and the error-support contract only in the support role skill.
-- Keep individual skill versions independent. Do not require versions to be equal; compare each installed manifest with its own `latest_version` in `release-index.json`.
+- Keep individual skill versions independent. Do not require versions to be equal; compare each installed manifest with its own `minimum_supported_version` and `latest_version` in `release-index.json`.
 - Keep optional host plugin bundles atomic, but support flat installation of all roster skill folders.
 - Keep all user-facing flows available in English and Simplified Chinese.
 - Keep command names, JSON keys, refs, and stable error codes in English.
