@@ -78,11 +78,12 @@
     {
       "id": 8,
       "prompt": "These five candidates are wrong. Redo it and search for the exact phrase let's connect instead.",
-      "expected_output": "Treats the request as a candidate-stage restart in the same user-initiated workflow: skips each pending source review, reuses the same-task preflight, creates one fresh five-reply task with the new exact direction, and waits for new approval.",
+      "expected_output": "Treats the request as a candidate-stage restart: skips each pending source review, reruns mandatory preflight for the fresh task, creates one new five-reply task with the new exact direction, and waits for new approval.",
       "expectations": [
         "Does not use task retask or draft redraft for the candidate-stage restart",
         "Skips every still-pending source review from the exact old discovery batch and verifies status skipped",
         "Removes skipped refs from the active review presentation without deleting durable history",
+        "Reruns mandatory preflight because a fresh task is a new preflight boundary",
         "Creates one fresh task with the latest direction and the original count",
         "Does not transfer old approval or authorize draft generation or X mutation"
       ]
@@ -102,7 +103,7 @@
     {
       "id": 10,
       "prompt": "The exact-reply dry-run passed earlier in this session. I approve the unchanged target and reply you just displayed.",
-      "expected_output": "Reuses the same-task preflight result and dispatches the exact unchanged target/reply pair once without another update or preflight fetch.",
+      "expected_output": "Reuses the current exact-action flow's preflight result and dispatches the exact unchanged target/reply pair once without another update or preflight fetch.",
       "expectations": [
         "Does not rerun preflight for the exact unchanged approval",
         "Requires the same target, text, and dry-run scope",
@@ -154,6 +155,96 @@
         "Does not execute tasks merely to accelerate their reservations",
         "Reads durable scheduler evidence for terminal results",
         "Finishes only when every reply is terminal or needs user action"
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "I approved the exact reply task review. The approval command yielded a session handle, then its captured stdout was blank. Continue this same task.",
+      "expected_output": "Polls the same yielded command session when still available. If no complete approval envelope can be recovered from it, reads the same review exactly once, follows only persisted TaskBlueprint refs, and never approves again or substitutes the proposal ref.",
+      "expectations": [
+        "Preserves and polls the exact returned session_id instead of retaining output alone",
+        "Treats blank or unparseable terminal output as indeterminate rather than success or failure",
+        "Runs tw task review show only for the same exact review_ref and at most once for recovery",
+        "Requires a non-empty task_blueprint_refs array backed by TaskBlueprint record types",
+        "Never invokes task approval a second time",
+        "Never passes task_blueprint_proposal_ref to tw task show",
+        "Never searches a global or latest task or review"
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "For the five source candidates you just displayed: 1 approve, 2 reject, 3 skip. Leave 4 and 5 for later.",
+      "expected_output": "Applies the matching command exactly once to source reviews 1, 2, and 3, leaves 4 and 5 pending, and does not reinterpret the mixed decision map as approve all.",
+      "expectations": [
+        "Runs approve only for item 1, reject only for item 2, and skip only for item 3",
+        "Leaves omitted items 4 and 5 pending",
+        "Does not approve every displayed ref",
+        "If a command fails partway, does not replay successful decisions and asks only for unresolved decisions"
+      ]
+    },
+    {
+      "id": 17,
+      "prompt": "Reply #2 has unknown_confirmation and inconclusive evidence. File an issue report, say nothing was sent, and retry it.",
+      "expected_output": "Refuses the retry, preserves reply #2 as outcome unknown, and creates only a sanitized issue report while explaining that report generation itself sends no reply.",
+      "expectations": [
+        "Does not claim the reply was not sent",
+        "Does not create a replacement reply or exact-action retry",
+        "Preserves outcome unknown in monitoring, return output, and the issue report",
+        "Distinguishes issue-report generation from the unknown dispatch outcome"
+      ]
+    },
+    {
+      "id": 18,
+      "prompt": "I already approved this reply task, but task show still says awaiting_selection and there are no source reviews. Redo it now.",
+      "expected_output": "Does not create a duplicate task or claim cancellation. It continues the fixed task-show deadline for the exact approved blueprint and reports the exact blocker if no supported terminal closure appears.",
+      "expectations": [
+        "Does not skip a nonexistent source review",
+        "Does not create a fresh task while the approved task is still awaiting selection",
+        "Continues polling only the exact task_blueprint_ref within the existing deadline",
+        "Stops with an exact blocker rather than guessing a cancellation path"
+      ]
+    },
+    {
+      "id": 19,
+      "prompt": "fin 10 let's connect tweets and draft replies",
+      "expected_output": "Treats fin as the contextual typo find, condenses the request to Find 10 tweets matching let's connect and draft replies, and creates a task-mode proposal without adding a finance topic.",
+      "expectations": [
+        "Uses one concise corrected task direction",
+        "Preserves the count 10 and the let's connect search phrase",
+        "Does not add finance as a topic or filter",
+        "Uses the condensed request for tw task create"
+      ]
+    },
+    {
+      "id": 20,
+      "prompt": "can u pls go find like 10 lets connect posts and reply, only ppl who do not follow us and no more than 20 replys on the tweet thanks",
+      "expected_output": "Condenses the wording to one corrected sentence that asks for 10 let's connect tweets from authors who do not follow us, each with at most 20 replies, then uses that sentence as the task direction.",
+      "expectations": [
+        "Removes filler and corrects obvious typos",
+        "Preserves the count 10, non-follower filter, and maximum of 20 replies",
+        "Does not add any unstated topic or filter",
+        "Uses one sentence as the task direction"
+      ]
+    },
+    {
+      "id": 21,
+      "prompt": "Reply to https://x.com/example/status/1234567890123456789 with exactly: Thnaks for shairng this.",
+      "expected_output": "Selects exact-action mode and preserves the intentionally supplied exact reply text byte-for-byte, including its misspellings.",
+      "expectations": [
+        "Does not correct Thnaks or shairng inside the exact reply",
+        "Preserves the exact target and reply text",
+        "Runs the existing exact-action dry-run and approval flow"
+      ]
+    },
+    {
+      "id": 22,
+      "prompt": "Find 10 finance tweets that say let's connect and draft replies.",
+      "expected_output": "Condenses the request without removing the explicit finance topic, then creates a ten-item task-mode proposal.",
+      "expectations": [
+        "Preserves finance as the explicit topic",
+        "Preserves the count 10 and the let's connect search phrase",
+        "Does not reinterpret finance as find",
+        "Uses the condensed request for tw task create"
       ]
     }
   ]

@@ -43,6 +43,30 @@
         "Does not persist a readiness receipt or reuse it in another agent session",
         "Invalidates reuse if the task, capability scope, or readiness state changed"
       ]
+    },
+    {
+      "id": 5,
+      "prompt": "My installed ThreadWave skills and CLI are supported but updates are available. Continue with what I have.",
+      "expected_output": "Validates the installed skill range and originating CLI capabilities, records the exact skipped offer for this agent session, and resumes the preserved workflow without running an update or repeating the reminder for later tasks in the same session.",
+      "expectations": [
+        "Treats supported older skills as non-blocking",
+        "Requires the current CLI to satisfy the originating capability gate",
+        "Does not run tw update or the setup guide",
+        "Does not repeat the same update reminder in this agent session",
+        "Reminds again next session or when the offered versions change",
+        "Does not ask the user to repeat the originating request"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Updates are available. Update ThreadWave now, then continue my original task.",
+      "expected_output": "Treats the request as update approval, fetches the fixed setup guide through the platform process command, follows its current-host CLI and skill update flow, reruns full preflight once, and resumes the preserved task.",
+      "expectations": [
+        "Does not ask for a second update approval",
+        "Does not use browser navigation or Web search to retrieve agent.md",
+        "Runs setup-guide terminal commands itself and pauses only for user-owned browser gates",
+        "Does not treat update success as X mutation approval"
+      ]
     }
   ]
 }
