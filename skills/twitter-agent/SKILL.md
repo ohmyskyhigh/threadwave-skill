@@ -28,9 +28,9 @@ Keep commands, JSON keys, refs, review states, and stable error codes in English
 
 ## Mandatory Preflight And Init Flow
 
-Activate `threadwave-preflight` by skill name at the start of each new daily-agent task or agent session and after any readiness invalidation defined by its contract. Pass the originating skill name, the unchanged daily-agent intent, and the required capability families. Reuse that successful result for unchanged pending reviews and workflow continuation in the same session; do not rerun preflight for a review decision alone. Do not invoke any `tw` command without a current or reusable `ready` result with every roster skill version confirmed supported and its latest-version status known.
+Activate `threadwave-preflight` by skill name at the start of each new daily-agent task or agent session and after any readiness invalidation defined by its contract. Pass the originating skill name, the unchanged daily-agent intent, and the required capability families. Reuse that successful result for unchanged pending reviews and workflow continuation in the same session; do not rerun preflight for a review decision alone. Do not invoke any `tw` command without a current or reusable `ready` result with every roster skill version confirmed latest.
 
-The selected capability gate requires `context`, `strategy`, `plan`, `task`, `draft`, and `scheduler`. If `threadwave-preflight` is unavailable, or it reports a missing, incompatible, or unconfirmed skill, CLI, or extension module, preserve this request and let preflight run `https://www.threadwave.xyz/cli/setup/agent.md` after approval. A supported older skill or CLI follows preflight's non-blocking continue-or-update choice.
+The selected capability gate requires `context`, `strategy`, `plan`, `task`, `draft`, and `scheduler`. If `threadwave-preflight` is unavailable, or it reports a missing/outdated skill, CLI, or extension module, preserve this request and direct the user to `https://www.threadwave.xyz/cli/setup/agent.md`; resume here after preflight verifies ready.
 
 After setup is ready, resume the original daily-agent intent; setup readiness is not content approval.
 

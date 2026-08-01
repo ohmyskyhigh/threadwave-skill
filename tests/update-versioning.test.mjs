@@ -109,15 +109,6 @@ test('the update contract refuses to guess when remote or local reads are unavai
   assert.match(skill, /Release index unavailable or invalid: return `twitter_skill_update_unconfirmed`/);
 });
 
-test('supported older skills are updateable without blocking the operation', () => {
-  const skill = fs.readFileSync(path.join(root, 'skills', releaseIndex.roles.update, 'SKILL.md'), 'utf8');
-  assert.match(skill, /`update_available`: local is at least `minimum_supported_version` and lower than `latest_version`/);
-  assert.match(skill, /Set `ok=true` and `state=ready` whenever every installed version is supported/);
-  assert.match(skill, /Supported older skill:.*non-blocking `twitter_skill_update_available`/s);
-  assert.match(skill, /nonempty `updates` array/);
-  assert.match(skill, /Missing, invalid, unsupported, or unrecognized skill: return `state=blocked`/);
-});
-
 test('the version command updates only the selected local manifest and release index', () => {
   const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'threadwave-version-bump-'));
   fs.mkdirSync(path.join(temporaryRoot, 'skills', 'twitter-agent'), { recursive: true });

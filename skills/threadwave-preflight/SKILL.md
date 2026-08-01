@@ -1,6 +1,6 @@
 ---
 name: threadwave-preflight
-description: "Run the mandatory readiness gate for every ThreadWave Twitter/X workflow: require the update skill, confirm every release-index roster skill's individual version through GitHub, offer supported-version continuation, run approved CLI/skill updates through the canonical setup guide, verify the tw CLI and supported contracts, check the Chrome extension/setup relay, preserve the original request, and route sanitized failures to threadwave-error-support. Use before twitter-automation, twitter-agent, twitter-post, or twitter-reply, and for ThreadWave setup, update, readiness, dependency, or repair requests. 中文：用于所有 ThreadWave 推特工作流的强制预检，检查发布索引中的技能版本、允许继续使用受支持版本、在批准后通过官方设置指南自动更新 CLI 和技能、检查 Chrome 扩展与依赖，并将净化后的故障转交给 threadwave-error-support。"
+description: "Run the mandatory readiness gate for every ThreadWave Twitter/X workflow: require the update skill, confirm every release-index roster skill's individual version through GitHub, verify the tw CLI and supported contracts, check the Chrome extension/setup relay, preserve the original request, and route sanitized failures to threadwave-error-support. Use before twitter-automation, twitter-agent, twitter-post, or twitter-reply, and for ThreadWave setup, readiness, dependency, or repair requests. 中文：用于所有 ThreadWave 推特工作流的强制预检，检查发布索引中的技能版本、tw CLI、Chrome 扩展、安装状态与依赖，并将净化后的故障转交给 threadwave-error-support。"
 ---
 
 # ThreadWave Preflight
@@ -22,13 +22,11 @@ Never call an operation skill during preflight. Return readiness to the originat
 
 ## Setup Ownership
 
-When any required skill, CLI, or Chrome extension module is missing or incompatible, preserve the original request and use:
+When any required skill, CLI, or Chrome extension module is missing or outdated, preserve the original request and direct the user to:
 
 `https://www.threadwave.xyz/cli/setup/agent.md`
 
-A supported older skill or CLI is non-blocking. Offer one localized choice only when the user has not already decided in this agent session for the exact same offered versions: continue with the installed versions, or update now. Continue only after the originating capability gate passes.
-
-When the user approves the update, fetch the fixed guide through process execution, follow its current-host update flow yourself, rerun full preflight once, and resume the preserved request. Do not send the user to a browser, ask them to paste the guide, or ask them to type terminal commands. Pause only for the guide's user-owned Chrome, sign-in, payment, or X gates. Setup or update success is not approval for strategy, content, posting, replying, or another X mutation.
+Do not download skills, the CLI, or the extension directly. Setup success is not approval for strategy, content, posting, replying, or another X mutation.
 
 ## Language
 
