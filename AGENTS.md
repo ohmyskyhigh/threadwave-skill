@@ -24,7 +24,11 @@ The dependency flow is one-way: operation skill -> preflight role skill -> updat
 
 The active ThreadWave CLI implementation and its source-of-truth docs live in the sibling `threadwave-chrome-extension` repository. Do not silently invent commands, output fields, update endpoints, or approval paths. Update this suite only after checking the current CLI contract.
 
-Product positioning, pricing, credits, and public copy defaults live in the knowledge vault: `/Users/runkunmiao/FunStuff/threadwave/threadwave-obsidian-vault/threadwave-product-source-of-truth.json` (human guide: `threadwave-product-source-of-truth.md` in the same folder). Check it before restating product or pricing claims in skill copy.
+Product positioning, pricing, credits, and public copy defaults live in the sibling Vault at `../threadwave-obsidian-vault/01-Product/Product-Definition.json` and `Product-Definition.md`.
+
+## Substantial Change Gate
+
+The Vault owns substantial skill workflow, public behavior, compatibility-policy, setup/preflight, and cross-repository contract decisions. Update or confirm its Product, System, or Skills component contract before implementing such a change, and update `04-Files/Skills/` when source/test ownership changes. `release-index.json`, manifests, and published artifacts remain authority for installed/runtime versions and checksums. Behavior-preserving refactors, tests-only changes, formatting, validation cleanup, and generated mirror refreshes are excluded unless compatibility or policy changes.
 
 ## Change Rules
 
