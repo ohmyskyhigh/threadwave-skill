@@ -11,6 +11,8 @@ Own the single mandatory preflight, setup, and recovery contract. Every operatio
 
 Read [references/preflight-contract.md](references/preflight-contract.md) completely. Run its full flow at the start of each new ThreadWave task or agent session and after any readiness invalidation. Reuse its successful result for an unchanged review or workflow continuation in the same session; a review decision alone is not a new preflight boundary.
 
+Select and retain the contract's platform invocation adapter before the first CLI readiness call. A Windows packaged install uses the absolute system `cmd.exe` and canonical managed `tw.cmd` only for the fixed readiness templates; it never invokes a version-directory `tw.exe` or inserts user content into `cmd.exe /c`.
+
 The one-way dependency is:
 
 ```text

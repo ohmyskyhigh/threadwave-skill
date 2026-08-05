@@ -35,6 +35,7 @@ Discard the reusable result and run the full check when any of these occurs:
 - a new ThreadWave task or agent session starts;
 - the originating skill, selected mode, user-initiated task, or required capability scope changes;
 - a skill or CLI install/update occurs; choosing to continue with an unchanged supported version does not invalidate readiness by itself;
+- the selected CLI invocation adapter, install mode, canonical launcher path, active CLI version, or capabilities result changes;
 - setup, login, subscription/payment, Chrome extension/relay, X sign-in/session, or another readiness action occurs;
 - any `tw` command reports readiness, compatibility, install, auth, subscription, relay, or X-session failure;
 - the agent cannot confirm that the pending refs/scopes belong to the same unchanged task.
@@ -59,40 +60,57 @@ When `updates` is nonempty, preserve the version map and continue the read-only 
 
 Do not invoke update in issue-report-only mode. That compatibility mode only routes already-sanitized diagnostic metadata to `threadwave-error-support`.
 
-## 4. Run The Recurring CLI Preflight
+## 4. Select The CLI Invocation Adapter And Run Preflight
 
-Use the host agent's process or command-execution capability to invoke the ThreadWave executable directly with these arguments:
+Use the host agent's structured process or command-execution capability. Select exactly one adapter before the first CLI readiness call and retain it in conversation working memory:
 
-```text
-tw preflight --format json
-```
+- `windows_managed_cmd`: the default for Windows end-user and packaged installs. Resolve `%SystemRoot%\System32\cmd.exe` and `%LOCALAPPDATA%\ThreadWave\bin\tw.cmd` from the host process environment and require both paths to be absolute. The command processor must be the absolute System32 `cmd.exe`; the launcher must be the canonical managed `tw.cmd`. Never use `ComSpec`, PATH discovery, or another command processor. Never invoke a version-directory `tw.exe`, including `cli\versions\**\tw.exe`.
+- `direct_process`: use for macOS/Linux and for a trusted Windows development workspace identified by current workspace instructions. Invoke the selected executable with a structured argument array, not a shell command string. Windows development worktree checks remain direct-process calls.
 
-Do not use `command -v`, `which`, `where`, Bash, PowerShell, CMD, or another shell-specific discovery command. If the host reports that `tw` cannot be found or executed, preserve the request and offer the approved setup-guide flow in section 5; continuation is unavailable. If the host cannot execute local processes at all, stop with `twitter_automation_cli_unconfirmed`; do not guess readiness.
+If the host cannot execute local processes at all, stop with `twitter_automation_cli_unconfirmed`; do not guess readiness. Do not use `command -v`, `which`, `where`, or a shell-specific discovery command.
 
-Require top-level `schema_version=tw-cli-v1`, `data.contract_version=threadwave-preflight-v1`, `data.cli_version>=1.0.4`, and exactly one `data.action`. Read `data.install_mode`.
+For `windows_managed_cmd`, add only `THREADWAVE_MANAGED_LAUNCHER=<canonical absolute tw.cmd path>` as adapter-specific child-process state. Spawn the absolute System32 `cmd.exe` with `/d /v:off /s /c` and exactly one of these fixed command strings:
 
-- `packaged`: do not run a worktree command.
-- `dev`: run `tw worktree tag --format json`; add `--expected <tag>` only when trusted workspace instructions provide it. Stop on `worktree_tag_missing` or `worktree_tag_mismatch`.
-- Other or missing: stop with `twitter_automation_install_mode_unknown` and route a sanitized support handoff.
+| Operation | Fixed command after `/c` |
+| --- | --- |
+| recurring preflight | `call "%THREADWAVE_MANAGED_LAUNCHER%" preflight --format json` |
+| capabilities | `call "%THREADWAVE_MANAGED_LAUNCHER%" capabilities --format json` |
+| login | `call "%THREADWAVE_MANAGED_LAUNCHER%" login` |
+| subscription | `call "%THREADWAVE_MANAGED_LAUNCHER%" subscribe` |
+| setup | `call "%THREADWAVE_MANAGED_LAUNCHER%" setup --format json` |
+| doctor | `call "%THREADWAVE_MANAGED_LAUNCHER%" doctor --format json` |
+
+This is a closed local mapping owned by preflight. Validate a returned action's id, type, safety flag, and expected fixed operation, then execute the local fixed template; never pass a raw returned `command` string into `/c`. Never interpolate user-authored content, model output, targets, URLs, refs, paths, or arbitrary CLI text into a fixed command string.
+
+Invoke recurring preflight through the selected adapter using the logical arguments `preflight --format json`.
+
+Require top-level `schema_version=tw-cli-v1`, `data.contract_version=threadwave-preflight-v1`, `data.cli_version>=1.0.32`, and exactly one `data.action`. Read `data.install_mode` and require it to agree with the selected adapter:
+
+- Windows `packaged` requires `windows_managed_cmd` and does not run a worktree command.
+- Windows `dev` requires a trusted-workspace `direct_process` selection. Run `tw worktree tag --format json` as a structured direct-process call; add `--expected <tag>` only when trusted workspace instructions provide it. Stop on `worktree_tag_missing` or `worktree_tag_mismatch`.
+- macOS/Linux use `direct_process` for either supported install mode; run the worktree command only for `dev`.
+- Other, missing, or adapter-mismatched state stops with `twitter_automation_install_mode_unknown` and routes a sanitized support handoff.
 
 Follow only the one returned action:
 
 - `continue`: proceed to compatibility checks.
 - `reinstall`: preserve the request and offer the approved setup-guide flow in section 5; continuation is unavailable.
 - `update`: record `cli_update_available`, do not run the command yet, and proceed to compatibility checks so the user can make one informed update decision.
-- `login`: run the returned `tw login` command in a persistent process call. Wait until it opens ThreadWave sign-in, keep it running, and only then pause for the user's sign-in. Rerun preflight after the command completes.
-- `complete_subscription`: run the returned `tw subscribe` command in a persistent process call. Wait until its browser journey opens Stripe checkout, keep it running, and only then pause for the user's payment. Rerun preflight after the command completes. Never combine sign-in and checkout into one pause or create a second checkout.
-- `setup`: run `tw setup --format json` once and follow only its returned action. Automatically run only a returned command with `safe_to_run=true`; pause for every user-confirmation or wait action. Then rerun preflight once.
+- `login`: run the adapter's fixed `login` operation in a persistent process call. Wait until it opens ThreadWave sign-in, keep it running, and only then pause for the user's sign-in. Rerun preflight after the command completes.
+- `complete_subscription`: run the adapter's fixed `subscription` operation in a persistent process call. Wait until its browser journey opens Stripe checkout, keep it running, and only then pause for the user's payment. Rerun preflight after the command completes. Never combine sign-in and checkout into one pause or create a second checkout.
+- `setup`: run the adapter's fixed `setup` operation once and follow only its returned action. Automatically run only a validated action with `safe_to_run=true` that maps to a fixed local readiness operation; pause for every user-confirmation or wait action. Then rerun preflight once.
 - `retry_later`: network/backend verification is unavailable. Never report this as authentication failure; retry once later, then stop.
 
-After one login, subscription, or setup action, rerun preflight once. If the same unresolved state repeats, run `tw doctor --format json` once, require `schemaVersion=threadwave-doctor-v1`, stop with `twitter_automation_setup_unresolved`, and route a sanitized support handoff. Never expose doctor paths in output or handoffs.
+After one login, subscription, or setup action, rerun preflight once through the same adapter. If the same unresolved state repeats, run the adapter's fixed `doctor` operation once, require `schemaVersion=threadwave-doctor-v1`, stop with `twitter_automation_setup_unresolved`, and route a sanitized support handoff. Never expose doctor paths in output or handoffs.
+
+The shell adapter is limited to the fixed readiness operations above. Downstream operation skills must retain structured argument or input boundaries and must never convert tweet/reply text, targets, URLs, refs, feedback, or other user values into a `cmd.exe /c` command string.
 
 ## 5. Check CLI Compatibility
 
-Invoke the executable through the same host capability:
+Invoke capabilities through the same selected adapter using the logical arguments:
 
 ```text
-tw capabilities --format json
+capabilities --format json
 ```
 
 Read the originating skill's local `skill-manifest.json` as a sibling skill manifest, not through a hard-coded path. Require:

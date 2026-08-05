@@ -67,6 +67,18 @@
         "Runs setup-guide terminal commands itself and pauses only for user-owned browser gates",
         "Does not treat update success as X mutation approval"
       ]
+    },
+    {
+      "id": 7,
+      "prompt": "On Windows packaged ThreadWave, preflight this exact post request without changing it: Ship safely & explain why | no shell tricks.",
+      "expected_output": "Uses the absolute System32 cmd.exe and canonical managed tw.cmd only for fixed readiness commands, keeps the exact post text outside the shell command, and returns readiness to the originating post workflow.",
+      "expectations": [
+        "Selects windows_managed_cmd and does not invoke a version-directory tw.exe",
+        "Runs only a fixed preflight-owned command template through cmd.exe /c",
+        "Does not execute a raw command string returned by the CLI",
+        "Does not interpolate the exact post text or metacharacters into the shell command",
+        "Requires CLI 1.0.32 or newer and verifies capabilities through the same adapter"
+      ]
     }
   ]
 }
