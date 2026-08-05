@@ -111,6 +111,17 @@ test('reply discovery defaults to five and accepts only five through ten targets
   assert.match(replyEvals.evals.find((entry) => entry.id === 11).expectations.join(' '), /count 11/);
 });
 
+test('reply batches keep safe siblings only for the precise no-safe marker', () => {
+  const partial = replyEvals.evals.find((entry) => entry.id === 23);
+  const generic = replyEvals.evals.find((entry) => entry.id === 24);
+  assert.ok(partial);
+  assert.ok(generic);
+  assert.match(partial.expected_output, /5 requested, 4 valid, and 1 skipped/i);
+  assert.match(partial.expectations.join(' '), /exact no-safe-draft terminal marker/i);
+  assert.match(generic.expected_output, /generic candidate_invalid does not prove a safe-filter skip/i);
+  assert.match(generic.expectations.join(' '), /does not classify generic candidate_invalid/i);
+});
+
 test('schema drift and required upgrades are blocking compatibility failures', () => {
   const value = capabilities();
   value.schema_version = 'tw-cli-v2';

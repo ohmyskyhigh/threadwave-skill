@@ -13,6 +13,8 @@ Read [references/preflight-contract.md](references/preflight-contract.md) comple
 
 Select and retain the contract's platform invocation adapter before the first CLI readiness call. A Windows packaged install uses the absolute system `cmd.exe` and canonical managed `tw.cmd` only for the fixed readiness templates; it never invokes a version-directory `tw.exe` or inserts user content into `cmd.exe /c`.
 
+On a native Windows Codex host, run those fixed readiness templates through an already-available non-sandboxed local process capability from the first call. Do not probe inside the sandbox or ask the user to approve or choose this execution boundary. This is not administrator or UAC elevation, and it never widens the closed command mapping.
+
 The one-way dependency is:
 
 ```text

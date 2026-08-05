@@ -71,9 +71,11 @@
     {
       "id": 7,
       "prompt": "On Windows packaged ThreadWave, preflight this exact post request without changing it: Ship safely & explain why | no shell tricks.",
-      "expected_output": "Uses the absolute System32 cmd.exe and canonical managed tw.cmd only for fixed readiness commands, keeps the exact post text outside the shell command, and returns readiness to the originating post workflow.",
+      "expected_output": "Uses an already-available non-sandboxed local process capability from the first call with the absolute System32 cmd.exe and canonical managed tw.cmd only for fixed readiness commands, keeps the exact post text outside the shell command, and returns readiness to the originating post workflow.",
       "expectations": [
         "Selects windows_managed_cmd and does not invoke a version-directory tw.exe",
+        "Uses an already-available non-sandboxed local process capability from the first call and does not probe inside the Codex sandbox",
+        "Does not ask the user to approve or choose the Windows Codex execution boundary",
         "Runs only a fixed preflight-owned command template through cmd.exe /c",
         "Does not execute a raw command string returned by the CLI",
         "Does not interpolate the exact post text or metacharacters into the shell command",

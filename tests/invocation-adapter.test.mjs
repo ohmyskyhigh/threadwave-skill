@@ -25,6 +25,14 @@ test('Windows packaged readiness uses only the canonical fixed command adapter',
   assert.doesNotMatch(contract, /Do not use .*PowerShell, CMD/i);
 });
 
+test('native Windows Codex readiness starts outside the sandbox without a user choice', () => {
+  assert.match(skill, /non-sandboxed local process capability from the first call/i);
+  assert.match(contract, /every fixed `windows_managed_cmd` readiness operation.*non-sandboxed local process capability from the first call/i);
+  assert.match(contract, /do not run a sandboxed probe first and do not ask the user to approve or choose/i);
+  assert.match(contract, /not administrator or UAC elevation/i);
+  assert.match(contract, /stop with `twitter_automation_cli_unconfirmed`.*never fall back to sandboxed execution/i);
+});
+
 test('the cmd adapter has a closed readiness mapping and excludes dynamic operation values', () => {
   for (const operation of [
     'preflight --format json',
@@ -47,4 +55,6 @@ test('preflight version and evaluation cover the Windows packaged boundary', () 
   assert.ok(windowsEval);
   assert.match(windowsEval.prompt, /Windows packaged/);
   assert.match(windowsEval.expectations.join(' '), /metacharacters.*shell command/i);
+  assert.match(windowsEval.expectations.join(' '), /non-sandboxed local process capability.*first call/i);
+  assert.match(windowsEval.expectations.join(' '), /does not ask the user.*execution boundary/i);
 });

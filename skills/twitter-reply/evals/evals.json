@@ -246,6 +246,28 @@
         "Does not reinterpret finance as find",
         "Uses the condensed request for tw task create"
       ]
+    },
+    {
+      "id": 23,
+      "prompt": "I approved all five displayed sources. Four approval envelopes returned draft and review refs; the fifth succeeded but its live warning ends with fastapi_runtime_jobs_terminal:draft_generation_no_safe_drafts.",
+      "expected_output": "Records only the fifth source as skipped, returns the four valid drafts together for content review, and reports 5 requested, 4 valid, and 1 skipped without retrying or approving any reply content.",
+      "expectations": [
+        "Treats only the exact no-safe-draft terminal marker as a per-source skip",
+        "Preserves and presents all four valid artifact and review refs",
+        "Does not retry generation or replay the fifth source approval",
+        "Does not transfer source approval into content approval or X mutation authority"
+      ]
+    },
+    {
+      "id": 24,
+      "prompt": "I approved all five displayed sources. Four generated drafts, but the fifth approval has no continuation refs and reports only generic candidate_invalid.",
+      "expected_output": "Preserves the four known draft refs but stops as CLI contract drift because generic candidate_invalid does not prove a safe-filter skip.",
+      "expectations": [
+        "Does not classify generic candidate_invalid as skipped_no_safe_draft",
+        "Does not retry or replay any successful source approval",
+        "Does not guess the fifth artifact or review ref",
+        "Does not approve, schedule, or send any reply"
+      ]
     }
   ]
 }
