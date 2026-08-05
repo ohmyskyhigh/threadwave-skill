@@ -10,6 +10,7 @@ Make ThreadWave preflight reliable for packaged Windows users while preserving s
 - Bound readiness reuse to the selected adapter, install mode, launcher, version, and capabilities.
 - Added a Windows packaged evaluation and contract regression tests.
 - Fixed release artifact reproducibility by enforcing LF line endings for packaged skill text files.
+- Made the suite package command create its output directory through Node on both Windows and POSIX hosts.
 
 # Final Result
 
