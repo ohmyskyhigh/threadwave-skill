@@ -65,12 +65,10 @@ A new version is complete only when the exact code on `origin/main`, the Git tag
 
 1. During release preparation, update the intended bundle and individual skill versions without changing unrelated skills.
 2. Run `npm run artifacts:index`, then `npm run check`, then `npm run package`. This explicitly stages the candidate `release-index.json`; ordinary `npm run artifacts` writes only `dist/release-index.candidate.json` and must never promote the public index by itself.
-3. Commit the final candidate on a non-public preparation branch and run the local validation commands against that exact SHA before requesting release authorization. If any release input changes afterward, discard the staged release and repeat the local validation.
-4. Create a draft GitHub release named `suite-v<bundle_version>` targeting that exact commit. Upload every roster artifact from `dist/skills/` and the matching suite bundle from `dist/`.
-5. Download the draft assets into a fresh temporary directory. Verify the complete derived asset set, every indexed SHA-256, and the suite bundle against the local build. Do not publish a partial or mismatched draft.
-6. Publish the verified release without marking it Latest, then fast-forward or push that exact tagged commit to `main`, then mark the release Latest. Keep the interval between publication and the `main` update bounded to this release operation so the public index never points forward to missing assets.
-7. During the authorized release, rerun `npm run release:static` and `npm run package`, then perform a final unauthenticated download of every URL in `release-index.json`. Require HTTP success and matching SHA-256, and confirm the public suite bundle matches the local package. Do not rerun functionality tests during release; those belong to the candidate validation in step 3.
-8. Confirm `origin/main`, the release tag target, and the release target commit are identical. Only then report the version release complete.
+3. Commit the final candidate on a non-public preparation branch and run the local validation commands against that exact SHA. If any release input changes afterward, discard the staged release and repeat the local validation.
+4. After an exact `THREADWAVE_RELEASE: skills` authorization, run the deterministic skills candidate preflight once. This is the only pre-publication verification gate.
+5. Create the draft release and upload every roster artifact plus the suite bundle. Publish it without marking it Latest, push the exact candidate commit to `main`, then mark the release Latest. Do not download draft assets or repeat local validation or packaging during this release step.
+6. Run `verify-public --scope skills` once. It must use authenticated GitHub API checks for release, tag, and `main` identity, then anonymously download each indexed asset and the suite bundle exactly once and verify their hashes. On failure, roll back and verify the restored baseline. Do not add a separate manual public verification pass.
 
 If a version commit is already on `main` but its release or assets are missing, treat this as a release-blocking incident. Do not advance versions again or claim setup is healthy. Publish and verify the exact missing release when authorized; otherwise report the mismatch and the required release action.
 
