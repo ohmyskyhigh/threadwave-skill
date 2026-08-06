@@ -16,6 +16,8 @@ tw scheduler list --json
 
 Use context-resume refs to avoid broad duplicate reads. If any pending review exists, show the exact review/artifact and stop for one decision. Never create a second plan to avoid an unresolved plan, review, or recovery route.
 
+If `pending_recovery` is non-empty, present the complete set once per session and stop for a decision as defined by the Pending Recovery section in [SKILL.md](../SKILL.md). Undecided recovery blocks plan creation; user-skipped recovery refs do not.
+
 ## 2. Create Today's Plan
 
 Only when an active strategy exists and no conflicting unresolved work remains:

@@ -28,7 +28,7 @@ Keep commands, JSON keys, refs, review states, and stable error codes in English
 
 ## Mandatory Preflight And Init Flow
 
-Activate `threadwave-preflight` by skill name at the start of each new daily-agent task or agent session and after any readiness invalidation defined by its contract. Pass the originating skill name, the unchanged daily-agent intent, and the required capability families. Reuse that successful result for unchanged pending reviews and workflow continuation in the same session; do not rerun preflight for a review decision alone. Do not invoke any `tw` command without a current or reusable `ready` result with every roster skill version confirmed supported and its latest-version status known.
+Activate `threadwave-preflight` by skill name at the start of each new daily-agent task or agent session and after any readiness invalidation defined by its contract. Pass the originating skill name, the unchanged daily-agent intent, and the required capability families. Reuse that successful result for unchanged pending reviews and workflow continuation in the same session; do not rerun preflight for a review decision alone. Do not invoke any `tw` command without a current or reusable `ready` result with every roster skill version confirmed supported and its latest-version status known or explicitly continued past under the preflight contract's unconfirmed-index choice.
 
 The selected capability gate requires `context`, `strategy`, `plan`, `task`, `draft`, and `scheduler`. If `threadwave-preflight` is unavailable, or it reports a missing, incompatible, or unconfirmed skill, CLI, or extension module, preserve this request and let preflight run `https://www.threadwave.xyz/cli/setup/agent.md` after approval. A supported older skill or CLI follows preflight's non-blocking continue-or-update choice.
 
@@ -42,9 +42,23 @@ Run once:
 tw context resume --format json
 ```
 
-Use the returned selected account binding, active run, open work cycles, pending reviews, pending recovery, and primary next action. If multiple account bindings exist without a selected binding, ask the user to make the intended account visible through setup; never guess an account.
+Use the returned selected account binding, active run, open work cycles, pending reviews, pending recovery, and primary next action. Always present the returned primary next action to the user with the matching `你可以 / You can` options. If multiple account bindings exist without a selected binding, ask the user to make the intended account visible through setup; never guess an account.
 
-Resolve pending recovery before creating new strategy/plan work. Present pending reviews before creating duplicate proposals.
+Present pending recovery through the Pending Recovery section before creating new strategy/plan work. Present pending reviews before creating duplicate proposals.
+
+## Pending Recovery
+
+Pending recovery blocks new strategy/plan work only until the user makes one explicit decision about it. Present the complete `pending_recovery` set once per session as one numbered list with each exact `recovery_ref`, its status, and safe work-cycle context; never expose targets, content, or private refs.
+
+Accept a numbered per-item decision map, or one explicit "skip all" for the exact unchanged displayed set:
+
+- **Investigate**: inspect the linked scheduler ref through `tw scheduler show <scheduled_task_ref> --json` and `tw scheduler evidence <scheduled_task_ref> --json`, then report only what the durable records support.
+- **Skip**: the user acknowledges the item as-is. Record each exact skipped `recovery_ref` for this session; it no longer blocks new work and is not re-presented until a new session. Skip never changes the durable outcome — an inconclusive recovery remains `outcome unknown`, never becomes `not sent` — and authorizes no retry, replacement, or mutation.
+- **Report**: use the Issue Report handoff with sanitized metadata.
+
+Cancel is a separate, narrower action: only when the user explicitly names one exact `scheduled_task_ref` tied to a recovery and asks to cancel it, invoke `tw scheduler cancel <scheduled_task_ref> --json` once, verify the returned status, and follow any returned recheck instruction. Cancelling terminalizes that scheduler record; it does not remove separate `pending_recovery` entries, which still need a decision above.
+
+An undecided pending recovery still blocks new strategy/plan work; a skipped one does not.
 
 ## Strategy Initialization
 
@@ -77,7 +91,7 @@ After an active strategy exists, read [references/daily-run.md](references/daily
 
 The normal order is:
 
-1. pending recovery;
+1. pending recovery (present once per session; user-skipped refs do not block);
 2. pending strategy review;
 3. pending plan review;
 4. pending task/source review;
@@ -97,6 +111,7 @@ Pause before every:
 - plan approve/reject/skip/edit;
 - task/source approve/reject/skip/edit;
 - draft/content approve/reject/skip/edit;
+- pending recovery investigate/skip/report decision, including any recovery skip-all;
 - manual scheduler execution or schedule mutation that the user did not explicitly identify.
 
 An approval applies only to the exact displayed `review_ref`, content hash/scope, target, and text. Changed scope invalidates the old approval.
@@ -126,9 +141,12 @@ Preflight: <suite / CLI / setup / agent capability>
 Review: <full exact proposal or draft plus its scope>
 Problem: <stable code and localized meaning>
 Waiting for you: <one exact decision>
+你可以 / You can: <two to four verbatim-sayable options valid at the current gate>
 Next: <one next workflow step>
 If you approve, I will run: <exact decision command>
 Issue report: <generated for copy/paste; nothing sent>
 ```
+
+The `你可以 / You can:` line lists only options that are real at the current gate — exact numbered decisions, displayed refs, or the returned primary next action — worded so the user can reply verbatim, localized to the selected language; it never offers an action beyond the current gate's authority.
 
 Do not expose raw envelopes, private refs unrelated to the decision, private paths, handles by default, or raw prompts.

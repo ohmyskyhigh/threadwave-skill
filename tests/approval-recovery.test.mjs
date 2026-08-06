@@ -94,7 +94,7 @@ test('reply peer watches every scheduled mutation through a durable outcome', ()
   assert.match(content, /place every draft under exactly one heading: `Sent`, `Not sent yet`, or `Needs attention`/i);
   assert.match(content, /Use `Sent` only for `succeeded` with conclusive evidence and `Not sent yet` only for `scheduled` or `running`/i);
   assert.match(content, /repeat the complete numbered split at least once every 60 seconds/i);
-  assert.match(content, /Continue until every returned ref is terminal or needs user action/i);
+  assert.match(content, /Continue until every returned ref is terminal, user-skipped, or waiting on a user decision/i);
   assert.match(content, /never finish the reply flow merely because all drafts are scheduled/i);
 });
 
@@ -118,6 +118,7 @@ test('reply peer preserves yielded approval sessions and recovers exact blueprin
   assert.match(content, /never project only `output` and discard the continuation handle/i);
   assert.match(content, /blank, partial, or unparseable, treat the result as indeterminate/i);
   assert.match(content, /do not invoke approval again/i);
+  assert.match(content, /`data\.review\.status=pending`.*offer one explicit yes\/no choice to retry the approval/i);
   assert.match(content, /tw task review show <same_review_ref> --json/);
   assert.match(content, /non-empty `refs\.task_blueprint_refs`/);
   assert.match(content, /`records\[\]\.model_type=TaskBlueprint`/);
@@ -132,15 +133,17 @@ test('reply peer keeps outcome, continuation, stage, and return contracts cohere
   assert.match(content, /follow only `data\.automatic_generation\.artifact_refs` and `data\.automatic_generation\.review_refs`/i);
   assert.match(content, /fastapi_runtime_jobs_terminal:draft_generation_no_safe_drafts/);
   assert.match(content, /record that numbered source as `skipped_no_safe_draft`.*do not retry generation, replay approval, redraft, guess refs, or transfer authority/i);
-  assert.match(content, /generic `candidate_invalid`.*missing refs without that exact marker remains CLI contract drift/i);
-  assert.match(content, /one or more valid draft continuations proceed together to content review with requested, valid, and skipped counts/i);
+  assert.match(content, /missing refs without that exact marker, record that numbered source as `error_source`/i);
+  assert.match(content, /no approval envelope parses with the expected shape.*stop the whole workflow as CLI contract drift/i);
+  assert.match(content, /one or more valid draft continuations proceed together to content review with requested, valid, skipped, and errored counts/i);
   assert.match(content, /zero valid drafts stops as blocked with no content review or mutation/i);
-  assert.match(content, /requires the live source-approval envelope and must not be inferred later/i);
+  assert.match(content, /require the live source-approval envelope and must never be inferred later/i);
   assert.match(content, /Issue-report generation sends no reply/i);
   assert.match(content, /report each affected reply as `sent`, `not sent`, or `outcome unknown` exactly as its durable evidence supports/i);
   assert.doesNotMatch(content, /State that nothing was sent|Issue report: .*nothing sent/i);
   assert.match(content, /task proposal is still pending.*tw task review skip <same_review_ref> --json/i);
-  assert.match(content, /source_status=awaiting_selection.*do not create a duplicate task/i);
+  assert.match(content, /source_status=awaiting_selection.*tw task restart <task_blueprint_ref> --json/i);
+  assert.match(content, /never creates a duplicate task/i);
   assert.match(content, /logical_workflow_terminalization\.status=pending.*recheck the exact task within `recheck_after_seconds`/i);
   assert.match(content, /do not describe the immutable scheduler record itself as expiring/i);
   assert.match(content, /wording-only change.*tw draft redraft/i);
@@ -204,13 +207,19 @@ test('same-task review continuations reuse one successful preflight until readin
   }
 });
 
-test('preflight gives one non-blocking update choice and runs the approved guide itself', () => {
+test('preflight gives one update choice and scopes skill and CLI changes independently', () => {
   const preflight = fs.readFileSync(path.join(root, 'skills', 'threadwave-preflight', 'SKILL.md'), 'utf8');
   const contract = fs.readFileSync(path.join(root, 'skills', 'threadwave-preflight', 'references', 'preflight-contract.md'), 'utf8');
   assert.match(preflight, /supported older skill or CLI is non-blocking/i);
-  assert.match(contract, /Combine every supported skill update and `cli_update_available` into one decision/);
+  assert.match(contract, /Keep one user decision while executing each affected component separately/);
   assert.match(contract, /Continue with installed versions/);
   assert.match(contract, /Update now/);
+  assert.match(contract, /`skills_only` when `skills_pending` is true and `cli_pending` is false/);
+  assert.match(contract, /`cli_only` when `cli_pending` is true and `skills_pending` is false/);
+  assert.match(contract, /`skills_and_cli` when both are true/);
+  assert.match(contract, /`skills_only` must not run a CLI installer, `tw update`, `tw setup`, daemon repair, extension repair, or native-host registration/);
+  assert.match(contract, /`cli_only` must not fetch the skill release index or invoke the Agent Skills installer/);
+  assert.match(contract, /Version-only updates never use `full_setup`/);
   assert.match(contract, /curl -fsSL --max-time 30 .*https:\/\/www\.threadwave\.xyz\/cli\/setup\/agent\.md/);
   assert.match(contract, /Invoke-WebRequest -UseBasicParsing -Uri 'https:\/\/www\.threadwave\.xyz\/cli\/setup\/agent\.md'/);
   assert.match(contract, /Do not use Web search, browser navigation, URL-read, a cached copy, or a user-pasted copy/);
