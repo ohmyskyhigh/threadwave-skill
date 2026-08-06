@@ -19,6 +19,26 @@ Select **exact-action mode** only when the user supplies one complete final post
 - For several exact final texts, ask whether the user wants one direction-based task or separate exact actions. Never silently turn exact payloads into generative directions.
 - If exactness versus direction is unclear, ask one concise question before invoking `tw`.
 
+## Task Template
+
+When entering task mode — and whenever the request is too vague to form a direction — offer one localized fill-in template instead of open-ended questions:
+
+```text
+Post task template:
+Topic/direction: <what to write about>, count <1–5>
+Optional: tone, audience, must-include or must-avoid points
+Example: Topic: why small teams should automate release notes, count 3
+```
+
+```text
+发推任务模板：
+主题/方向：<要写什么>，条数 <1–5>
+可选：语气、受众、必须包含/避开的点
+示例：主题：为什么小团队应该自动化 release notes，3 条
+```
+
+Reuse the same template at a shortfall or after a rejected proposal when the user wants to rephrase.
+
 ## Language
 
 Respond in English or Simplified Chinese from explicit preference, latest message, conversation language, then English. Never translate or normalize exact post text. Preserve task direction without adding requirements.
@@ -47,6 +67,8 @@ Inspect only the returned review ref with `tw task review show <review_ref> --js
 
 After approval, invoke `tw task review approve <same_review_ref> --json` once under the reusable same-task preflight result. Reject or skip only after an explicit matching user decision. Never transfer approval to a changed direction, count, ref, or proposal hash.
 
+If the approval output is blank, partial, or unparseable, treat it as indeterminate and do not invoke approval again yet: run `tw task review show <same_review_ref> --json` once as a read-only recovery. Continue only when it returns `ok=true`, `data.review.status=approved`, and the returned `task_blueprint_ref`. When it conclusively returns `data.review.status=pending` for the same unchanged review_ref and scope, the approval never reached the server: tell the user and offer one explicit yes/no choice to retry the approval once for that exact unchanged ref; a second indeterminate outcome stops the flow. When the recovery read itself fails or is inconclusive, stop as CLI contract drift.
+
 Capture every exact `task_blueprint_ref` returned by that approval. Start one fixed 180-second deadline, immediately inspect each with `tw task show <task_blueprint_ref> --json`, and repeat only while its `source_status=awaiting_selection`; before each retry, wait `min(15 seconds, remaining time)` so the deadline receives one final read. Never use `tw task review list`, a global review list, or a latest review to discover this task's source reviews.
 
 When `source_status=source_reviews_created`, follow only `source_review_refs_by_status.pending`. If `pending` is empty but `approved` or `archived` is nonempty, that task has no source decision waiting. If all three buckets are empty, treat the response as CLI contract drift and stop. Handle `no_valid_targets_found` as a shortfall and follow CLI-returned refs directly for any other terminal source status.
@@ -68,7 +90,8 @@ Do not guess the next review, artifact, target, or scheduled task. Do not collap
 - Direction/source/angle change: use one explicit `tw task retask --task` or `--batch` request after showing the exact scope.
 - Same-lineage wording change: use `tw draft redraft` with exact feedback, then require a new content review.
 - Fewer valid outputs than requested: report actual valid count; never invent or duplicate items.
-- Unknown scheduler or mutation evidence: stop without retry and request a sanitized issue report.
+- Approved task stalled at `source_status=awaiting_selection` past the fixed task-show deadline: present the exact `task_blueprint_ref` and offer one explicit user choice — restart via `tw task restart <task_blueprint_ref> --json` once (verify `ok=true` and the returned fresh execution state, then resume the fixed task-show deadline against the same ref; restart is a fresh pre-mutation execution, never a duplicate task or a claim that the old discovery was cancelled), or stop and report the exact blocker. A failed restart invocation or a ref that keeps stalling counts as one failed round; after two failed rounds in the same session, stop and report the blocker.
+- Unknown scheduler or mutation evidence: stop without retry. Present the exact ref and its durable classification and stop for one explicit user decision: keep monitoring, skip (acknowledge `outcome unknown` and end monitoring; authorizes no retry or replacement), cancel that exact user-named `scheduled_task_ref` via `tw scheduler cancel` once with returned-status verification, or request a sanitized issue report.
 
 ## Exact-Action Mode
 
@@ -99,6 +122,9 @@ Mode: <task | exact action>
 Count: <requested / valid / approved / scheduled>
 Review: <one exact current review>
 Waiting for you: <one decision or setup action>
+你可以 / You can: <two to four verbatim-sayable options valid at the current gate>
 Next: <one returned ref/action or stop>
 Issue report: <copy/paste only; nothing sent>
 ```
+
+The `你可以 / You can:` line lists only options that are real at the current gate — exact numbered decisions, displayed refs, or the task template — worded so the user can reply verbatim, localized to the selected language; it never offers an action beyond the current gate's authority.

@@ -44,7 +44,7 @@ The Vault owns substantial skill workflow, public behavior, compatibility-policy
 - Never hardcode the skill roster outside `suite-manifest.json` (repository/CI declaration) and `release-index.json` (public authority); scripts and tests must derive it.
 - Release-index checks must use process execution with `curl` on macOS/Linux or `Invoke-WebRequest` on Windows. Never use Web search, browser search, URL-read, Firecrawl, crawl, or scrape tools for the release index. Installed skill folders still must not bundle runtime scripts; root `scripts/**` are maintainer-only.
 - Treat every bundle or skill version bump as subject to the Release Synchronization Gate below. A commit or push is not a completed version release.
-- Do not commit or push unless the user's immediately preceding message explicitly requests it.
+- Do not commit or push unless the user's immediately preceding message explicitly requests it. Exact `THREADWAVE_RELEASE: skills` authorizes one source commit and candidate-branch push for its reviewed PR; the later same-task merge instruction authorizes merging that unchanged PR and one deterministic local release-metadata commit on `main`.
 
 ## Release Synchronization Gate
 
@@ -63,12 +63,13 @@ A new version is complete only when the exact code on `origin/main`, the Git tag
 
 ### Mandatory Release Order
 
-1. During release preparation, update the intended bundle and individual skill versions without changing unrelated skills.
-2. Run `npm run artifacts:index`, then `npm run check`, then `npm run package`. This explicitly stages the candidate `release-index.json`; ordinary `npm run artifacts` writes only `dist/release-index.candidate.json` and must never promote the public index by itself.
-3. Commit the final candidate on a non-public preparation branch and run the local validation commands against that exact SHA. If any release input changes afterward, discard the staged release and repeat the local validation.
-4. After an exact `THREADWAVE_RELEASE: skills` authorization, run the deterministic skills candidate preflight once. This is the only pre-publication verification gate.
-5. Create the draft release and upload every roster artifact plus the suite bundle. Publish it without marking it Latest, push the exact candidate commit to `main`, then mark the release Latest. Do not download draft assets or repeat local validation or packaging during this release step.
-6. Run `verify-public --scope skills` once. It must use authenticated GitHub API checks for release, tag, and `main` identity, then anonymously download each indexed asset and the suite bundle exactly once and verify their hashes. On failure, roll back and verify the restored baseline. Do not add a separate manual public verification pass.
+1. Start an end-user skill-source release only with exact `THREADWAVE_RELEASE: skills`. Changes limited to maintainer documentation, changelogs, tests, evals, or scripts use a normal PR and do not release the suite.
+2. From the dirty source tree, create a `codex/` branch without changing versions, run `npm run check` once, commit and push the intended source, and open one PR targeting `main`.
+3. Pause for manual review. A later explicit merge instruction in the same task authorizes only that recorded PR. Reject any changed PR head or reviewed tree.
+4. Merge the approved PR, fast-forward local `main`, then run `release-gate.mjs prepare-skills-version --pr <number>`. It patch-bumps the suite and only the changed runtime skills, synchronizes `release-index.json`, and builds the atomic artifacts and suite bundle once.
+5. Create one deterministic local release-metadata commit on `main` without pushing it. Run the candidate preflight once against that clean commit; it verifies the existing build instead of rebuilding it.
+6. Create and upload the complete draft release, publish without Latest, push the exact release-metadata commit to `main`, then mark it Latest.
+7. Run `verify-public --scope skills` once. It uses authenticated GitHub identity checks and anonymously downloads each indexed asset and the suite bundle once. Do not download draft assets, rerun local validation or packaging, or add a manual recheck.
 
 If a version commit is already on `main` but its release or assets are missing, treat this as a release-blocking incident. Do not advance versions again or claim setup is healthy. Publish and verify the exact missing release when authorized; otherwise report the mismatch and the required release action.
 
@@ -79,10 +80,9 @@ GitHub writes still require user authority. A request to edit or plan a version 
 Node.js 22 or newer is required. Use npm.
 
 ```bash
-npm run artifacts
-npm run artifacts:index  # release preparation only
-npm run check
-npm run package
+npm run check  # once before the source PR
+node ~/.agents/skills/threadwave-release/scripts/release-gate.mjs prepare-skills-version --pr <number>  # after merge
+node ~/.agents/skills/threadwave-release/scripts/release-gate.mjs preflight --scope skills
 ```
 
 After edits, run syntax/structure validation and the relevant tests. For a version release, these local commands are necessary but not sufficient; the Release Synchronization Gate must also pass.

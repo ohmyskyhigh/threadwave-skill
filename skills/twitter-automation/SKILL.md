@@ -40,7 +40,7 @@ If a destination peer is unavailable, preserve the request and direct the user t
 
 For setup/readiness requests only, activate `threadwave-preflight` by skill name. Require every release-index roster skill, the supported CLI contract, and Chrome extension setup to be confirmed ready.
 
-If any module is missing, incompatible, or unconfirmed, let preflight run the canonical setup-guide recovery after approval. A supported older skill or CLI is non-blocking: let preflight offer one choice to continue with the installed versions or update automatically. Setup completion grants no approval for strategy, content, posting, replying, or another X mutation.
+If any module is missing or invalid, let preflight run the canonical setup-guide recovery after approval. Version drift (older, below-minimum, or ahead-of-public) and unconfirmed version checks follow preflight's continuation choices instead of blocking. Setup completion grants no approval for strategy, content, posting, replying, or another X mutation.
 
 ## Hard Boundaries
 
