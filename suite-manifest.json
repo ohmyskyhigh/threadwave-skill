@@ -1,7 +1,7 @@
 {
   "schema_version": "threadwave-skill-suite-v2",
   "suite_name": "threadwave-skill",
-  "bundle_version": "0.7.6",
+  "bundle_version": "0.7.7",
   "install_modes": ["flat_peer_skills", "host_plugin_bundle"],
   "required_skills": [
     { "name": "threadwave-preflight", "path": "skills/threadwave-preflight/SKILL.md", "manifest_path": "skills/threadwave-preflight/skill-manifest.json" },
