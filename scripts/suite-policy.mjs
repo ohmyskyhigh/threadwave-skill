@@ -46,7 +46,7 @@ export function parseSkillFrontmatter(content) {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!match) return null;
   const yaml = match[1];
-  return { name: scalar(yaml, 'name'), description: scalar(yaml, 'description') };
+  return { name: scalar(yaml, 'name'), description: scalar(yaml, 'description'), license: scalar(yaml, 'license') };
 }
 
 export function verifySuiteFiles(root, suite, releaseIndex) {
@@ -72,6 +72,7 @@ export function verifySuiteFiles(root, suite, releaseIndex) {
     const release = releaseByName.get(skill.name);
     if (!frontmatter) problems.push(`missing_frontmatter:${skill.name}`);
     if (frontmatter?.name !== skill.name) problems.push(`skill_name_mismatch:${skill.name}`);
+    if (frontmatter?.license !== 'MIT-0') problems.push(`skill_license_mismatch:${skill.name}`);
     if (manifest?.schema_version !== 'threadwave-skill-manifest-v1') problems.push(`skill_manifest_schema_mismatch:${skill.name}`);
     if (manifest?.name !== skill.name) problems.push(`skill_manifest_name_mismatch:${skill.name}`);
     if (!isSemver(manifest?.version)) problems.push(`skill_version_invalid:${skill.name}`);

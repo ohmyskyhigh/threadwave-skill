@@ -1,5 +1,6 @@
 ---
 name: twitter-agent
+license: MIT-0
 description: "Run a review-gated Twitter/X agent for normal daily growth: initialize strategy, create daily plans, present strategy/plan/task/draft reviews, inspect scheduler state, and summarize outcomes through ThreadWave. Use for Twitter agent, X agent, daily Twitter automation, account growth, content planning, tweet scheduling, draft review, or normal daily run requests. 中文：用于推特代理、Twitter/X 智能体、每日推特自动化、账号增长、内容规划、推文排期、策略审核、计划审核、草稿审核和日常运行。"
 ---
 

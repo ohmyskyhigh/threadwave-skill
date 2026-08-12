@@ -1,5 +1,6 @@
 ---
 name: threadwave-update
+license: MIT-0
 description: "Check independently versioned ThreadWave Twitter/X skills against the authoritative GitHub release index without running the CLI or installing code. Use for latest-version checks, outdated or missing Twitter skills, version compatibility, flat skill installation diagnostics, or as the mandatory version authority called by threadwave-preflight. Approved installation belongs to threadwave-preflight. 中文：用于检查 ThreadWave 推特技能的最新版本、缺失或过期状态、版本兼容性和平铺安装；由 threadwave-preflight 调用，获批后的安装由 preflight 执行。"
 ---
 
