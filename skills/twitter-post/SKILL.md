@@ -1,5 +1,6 @@
 ---
 name: twitter-post
+license: MIT-0
 description: "Create and review one-to-five Twitter/X post tasks through ThreadWave, or publish one exact final user-supplied post through a strict dry-run and approval flow. Use for create tweets, write several posts, batch tweet tasks, post about a topic, manual tweet work, post this exact text, send a tweet, or publish on Twitter/X. Do not use for replies or the daily strategy/plan loop. 中文：用于创建并审核 1 到 5 条推文任务、批量发推任务，或在严格 dry-run 和批准后发布一条用户提供的准确原文；不用于回复或日常策略计划。"
 ---
 

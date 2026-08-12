@@ -1,5 +1,6 @@
 ---
 name: twitter-automation
+license: MIT-0
 description: "Route high-level Twitter/X automation setup, readiness, and ambiguous workflow requests to independent flat peer skills after ThreadWave checks. Use for set up Twitter automation, check Twitter agent readiness, repair automation, or choose between daily agent, post, and reply workflows. Do not use when the request already clearly asks to create/post tweets, create/send replies, or run the daily agent; activate twitter-post, twitter-reply, or twitter-agent directly. 中文：用于推特自动化安装、就绪检查、修复和模糊工作流路由；明确的发推、回复或日常代理请求应直接使用对应的平级技能。"
 ---
 

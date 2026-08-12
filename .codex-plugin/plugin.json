@@ -1,21 +1,25 @@
 {
   "name": "threadwave-skill",
   "version": "0.7.7",
-  "description": "A bilingual, review-gated Twitter/X automation and error-support skill suite powered by ThreadWave.",
+  "description": "Bilingual, review-gated X/Twitter growth agent skills for posts, replies, daily planning, setup, updates, and error support.",
   "author": {
     "name": "ThreadWave"
   },
+  "homepage": "https://www.threadwave.xyz",
+  "repository": "https://github.com/ohmyskyhigh/threadwave-skill",
   "keywords": [
-    "twitter",
-    "tweet",
-    "x",
-    "automation",
-    "agent",
-    "cli",
-    "chrome extension",
-    "setup",
-    "error support",
-    "reply",
+    "twitter automation",
+    "x automation",
+    "twitter agent",
+    "x growth agent",
+    "tweet drafting",
+    "tweet scheduling",
+    "reply agent",
+    "social media automation",
+    "agent skills",
+    "codex skill",
+    "openclaw skill",
+    "hermes agent skill",
     "\u4e2d\u6587",
     "\u63a8\u7279"
   ],
@@ -31,6 +35,9 @@
       "Write"
     ],
     "defaultPrompt": "Check my Twitter/X automation setup, then route my request to the correct review-gated workflow. \u7528\u4e2d\u6587\u6216\u82f1\u6587\u5747\u53ef\u3002",
-    "brandColor": "#7CFFB2"
+    "brandColor": "#7CFFB2",
+    "websiteURL": "https://www.threadwave.xyz",
+    "privacyPolicyURL": "https://www.threadwave.xyz/privacy",
+    "termsOfServiceURL": "https://www.threadwave.xyz/terms"
   }
 }

@@ -1,5 +1,6 @@
 ---
 name: threadwave-error-support
+license: MIT-0
 description: "Find and report ThreadWave failures safely. Use this skill whenever a user reports a ThreadWave error, blocker, repeated repair failure, unknown mutation result, asks whether a failure is a bug, asks for a known solution, or wants a Markdown issue report. It classifies report-worthy failures, searches the public ThreadWave error repository without requiring a GitHub account, and renders a sanitized bilingual copy/paste report when needed. 中文：当用户遇到 ThreadWave 错误、阻塞、重复修复失败、未知执行结果，或要求查找解决方案、判断是否应报告、生成问题报告时，使用此技能。"
 ---
 

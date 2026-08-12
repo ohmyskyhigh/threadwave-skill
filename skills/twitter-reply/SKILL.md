@@ -1,5 +1,6 @@
 ---
 name: twitter-reply
+license: MIT-0
 description: "Create, review, and monitor five-to-ten Twitter/X reply tasks with target discovery through ThreadWave, retry one conclusively undispatched reviewed reply through a fresh exact-action flow, or send one exact final reply to one exact target through a strict dry-run and approval flow. Use for create replies, retry failed replies, reply to several posts, batch reply tasks, engage with posts about a topic, manual Twitter replies, or reply to this exact tweet with this exact text. Do not use for original posts or the daily strategy/plan loop. 中文：用于创建、审核并监控 5 到 10 条带目标发现的推特回复任务、通过新的精确操作流程重试一条已确认未发送的已审核回复、批量回复任务，或在严格 dry-run 和批准后向一个准确目标发送一条准确回复；不用于原创推文或日常策略计划。"
 ---
 

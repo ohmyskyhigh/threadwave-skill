@@ -1,5 +1,6 @@
 ---
 name: threadwave-preflight
+license: MIT-0
 description: "Run the mandatory readiness gate for every ThreadWave Twitter/X workflow: require the update skill, confirm every release-index roster skill's individual version through GitHub, offer supported-version continuation, run approved skill and CLI updates as separate component-scoped flows through the canonical setup guide, verify the tw CLI and supported contracts, check the Chrome extension/setup relay, preserve the original request, and route sanitized failures to threadwave-error-support. Use before twitter-automation, twitter-agent, twitter-post, or twitter-reply, and for ThreadWave setup, update, readiness, dependency, or repair requests. 中文：用于所有 ThreadWave 推特工作流的强制预检，检查发布索引中的技能版本、允许继续使用受支持版本、通过官方设置指南按组件分别更新 skill 和 CLI、检查 Chrome 扩展与依赖，并将净化后的故障转交给 threadwave-error-support。"
 ---
 
