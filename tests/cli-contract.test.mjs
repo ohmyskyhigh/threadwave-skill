@@ -18,7 +18,7 @@ function capabilities() {
   return {
     schema_version: 'tw-cli-v1',
     data: {
-      cli_version: '1.0.21',
+      cli_version: '1.0.34',
       cli_schema_versions: ['tw-cli-v1'],
       harness_schema_versions: ['tw-harness-v1'],
       required_upgrades: [],
@@ -38,6 +38,7 @@ function capabilities() {
         { name: 'task', status: 'available', commands: [
           'tw task create --surface <tweet|reply|quote> --direction <text> --count <1|5..10 reply; 1..5 otherwise> --json',
           'tw task show <task_blueprint_ref> --json',
+          'tw task restart <task_blueprint_ref> --json',
           'tw task review show <review_ref> --json',
           'tw task review approve <review_ref> --json',
           'tw task review reject <review_ref> --json',
@@ -68,12 +69,12 @@ test('each workflow accepts the supported CLI contract', () => {
   }
 });
 
-test('missing task review command is detected before workflow creation', () => {
+test('skills that still use historical task review require its command', () => {
   const value = capabilities();
   const task = value.data.command_families.find((family) => family.name === 'task');
   task.commands = task.commands.filter((command) => !command.startsWith('tw task review approve'));
   const taskOwners = operationManifests.filter((manifest) => manifest.cli.required_commands
-    .some((command) => command.startsWith('tw task create --surface')));
+    .some((command) => command.startsWith('tw task review approve')));
   assert.ok(taskOwners.length > 0);
   for (const manifest of taskOwners) {
     assert.ok(evaluateCapabilities(manifest, value).some((failure) => failure.startsWith('required_command_missing:')));
@@ -89,10 +90,10 @@ test('manual task peers require exact task projection lookup', () => {
   }
 });
 
-test('task skills reject the pre-1.0.21 CLI version while the router remains compatible', () => {
+test('operation skills enforce their own minimum CLI versions', () => {
   const value = capabilities();
   value.data.cli_version = '1.0.20';
-  const taskOwners = operationManifests.filter((manifest) => manifest.cli.minimum_version === '1.0.21');
+  const taskOwners = operationManifests.filter((manifest) => manifest.role === 'manual-operation');
   const routers = operationManifests.filter((manifest) => manifest.role === 'operation-router');
   assert.ok(taskOwners.length > 0);
   assert.equal(routers.length, 1);
@@ -100,6 +101,10 @@ test('task skills reject the pre-1.0.21 CLI version while the router remains com
     assert.ok(evaluateCapabilities(manifest, value).includes('cli_version_too_old'));
   }
   assert.deepEqual(evaluateCapabilities(routers[0], value), []);
+
+  value.data.cli_version = '1.0.33';
+  assert.ok(evaluateCapabilities(skillManifest('twitter-reply'), value).includes('cli_version_too_old'));
+  assert.deepEqual(evaluateCapabilities(skillManifest('twitter-post'), value), []);
 });
 
 test('reply discovery defaults to five and accepts only five through ten targets', () => {
@@ -111,15 +116,15 @@ test('reply discovery defaults to five and accepts only five through ten targets
   assert.match(replyEvals.evals.find((entry) => entry.id === 11).expectations.join(' '), /count 11/);
 });
 
-test('reply batches keep safe siblings only for the precise no-safe marker', () => {
+test('reply workflow follows automatic drafts and reports bounded shortfalls', () => {
   const partial = replyEvals.evals.find((entry) => entry.id === 23);
   const generic = replyEvals.evals.find((entry) => entry.id === 24);
   assert.ok(partial);
   assert.ok(generic);
-  assert.match(partial.expected_output, /5 requested, 4 valid, and 1 skipped/i);
-  assert.match(partial.expectations.join(' '), /exact no-safe-draft terminal marker/i);
-  assert.match(generic.expected_output, /generic candidate_invalid does not prove a safe-filter skip/i);
-  assert.match(generic.expectations.join(' '), /does not classify generic candidate_invalid/i);
+  assert.match(partial.expected_output, /five requested and four valid drafts/i);
+  assert.match(partial.expectations.join(' '), /four exact artifact refs/i);
+  assert.match(generic.expected_output, /failed task.*restart eligibility/i);
+  assert.match(generic.expectations.join(' '), /does not create a duplicate task/i);
 });
 
 test('schema drift and required upgrades are blocking compatibility failures', () => {
