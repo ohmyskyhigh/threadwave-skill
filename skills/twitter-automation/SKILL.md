@@ -1,7 +1,7 @@
 ---
 name: twitter-automation
 license: MIT-0
-description: "Route high-level Twitter/X automation setup, readiness, and ambiguous workflow requests to independent flat peer skills after ThreadWave checks. Use for set up Twitter automation, check Twitter agent readiness, repair automation, or choose between daily agent, post, and reply workflows. Do not use when the request already clearly asks to create/post tweets, create/send replies, or run the daily agent; activate twitter-post, twitter-reply, or twitter-agent directly. 中文：用于推特自动化安装、就绪检查、修复和模糊工作流路由；明确的发推、回复或日常代理请求应直接使用对应的平级技能。"
+description: "Route high-level Twitter/X automation setup, readiness, starter-menu, and ambiguous workflow requests to independent flat peer skills after ThreadWave checks. Use for start ThreadWave, open ThreadWave, show the ThreadWave menu, or an exact standalone `threadwave` or `tw` request, plus Twitter automation setup, readiness, repair, and workflow selection. Do not use when the request already clearly asks to create/post tweets, create/send replies, or run the daily agent; activate twitter-post, twitter-reply, or twitter-agent directly. 中文：用于启动 ThreadWave、打开 ThreadWave 菜单、单独输入 `threadwave` 或 `tw`、推特自动化安装、就绪检查、修复和模糊工作流路由；明确的发推、回复或日常代理请求应直接使用对应的平级技能。"
 ---
 
 # Twitter Automation
@@ -23,6 +23,32 @@ Every destination skill can activate directly. None depends on this skill. Route
 ## Language
 
 Respond in English or Simplified Chinese from explicit preference, latest message, conversation language, then English. Preserve the original request and exact user content without translation or normalization.
+
+## Starter Menu
+
+For a request such as `start ThreadWave`, `open ThreadWave`, or `启动 ThreadWave`, or when the entire trimmed request is exactly `threadwave` or `tw` (case-insensitive), show the starter menu and wait. Do not treat `tw` followed by a CLI subcommand or other text as a starter alias. Showing this menu performs no readiness check and authorizes no workflow or X mutation.
+
+Render this approved setup panda exactly once in a preformatted block above the menu. Preserve every space and line break; do not replace it with an image, emoji, or newly invented art.
+
+```text
+        ▄█████▄    ▄█████▄
+       █████████  █████████
+       ▀██████████████████▀
+       ██▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀██
+       ██ ██████  ██████ ██
+       ██ ██████▄▄██████ ██
+       ██▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀██
+         ▀██████████████▀
+```
+
+Present these choices in the user's language:
+
+1. Draft a tweet — route to `twitter-post`.
+2. Generate replies — route to `twitter-reply`.
+3. Run daily growth — route to `twitter-agent`.
+4. Check setup and readiness — remain here and activate `threadwave-preflight`.
+
+Accept a number, label, or clear equivalent as the choice. Preserve any additional direction the user supplies. For choices 1–3, activate the named peer and stop; that destination owns preflight and its complete workflow. Do not run `tw`, preflight, or a destination workflow merely to display the menu.
 
 ## Routing Flow
 
@@ -56,6 +82,8 @@ If any module is missing or invalid, let preflight run the canonical setup-guide
 For a report-worthy setup/readiness failure or explicit report request, activate `threadwave-preflight` in issue-report-only mode with sanitized metadata. State that the copy/paste report was not sent.
 
 ## Return Format
+
+Use the starter menu instead of this status block while waiting for a starter-menu choice. For routing or readiness work, use:
 
 ```text
 State: <routed | ready | waiting for you | blocked>

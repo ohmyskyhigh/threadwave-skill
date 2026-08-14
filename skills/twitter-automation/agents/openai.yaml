@@ -1,4 +1,4 @@
 interface:
   display_name: "Twitter Automation Router / 推特自动化路由"
-  short_description: "Route Twitter setup and workflows / 路由推特设置与流程"
-  default_prompt: "Use $twitter-automation to check setup/readiness or route my unchanged request to the independent twitter-post, twitter-reply, or twitter-agent peer."
+  short_description: "Start ThreadWave or route Twitter workflows / 启动并路由推特流程"
+  default_prompt: "Use $twitter-automation to show the ThreadWave starter menu for start ThreadWave or the exact standalone aliases threadwave and tw, check setup/readiness, or route my unchanged request to the independent twitter-post, twitter-reply, or twitter-agent peer."

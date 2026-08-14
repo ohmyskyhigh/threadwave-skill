@@ -43,32 +43,32 @@ test('reply peer condenses task directions without rewriting exact replies', () 
   assert.match(content, /tw task create --surface reply --direction <condensed_request> --count <5\.\.10> --json/);
 });
 
-test('reply peer shows complete target batches and accepts scoped source approval', () => {
+test('reply peer follows automatic manual drafts and keeps content approval per item', () => {
   const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
   assert.match(content, /## Approval Authority/);
-  assert.match(content, /No wording such as .*approve all.*continue.*retry.* transfers authority between rows/i);
-  assert.match(content, /present the complete pending target list .* together as one numbered set/i);
-  assert.match(content, /numbered decision map/i);
-  assert.match(content, /accept an explicit “approve all” as approval for every still-pending source review in that exact unchanged displayed set/i);
-  assert.match(content, /matching `tw task review approve\|reject\|skip <review_ref> --json` command exactly once for each explicitly decided ref/i);
+  assert.match(content, /creates no task-proposal or source-selection review/i);
+  assert.match(content, /Deterministic source selection is not user approval and never authorizes an X mutation/i);
+  assert.match(content, /draft_status=pending_review.*every exact `artifact_ref`/i);
+  assert.match(content, /tw draft show <artifact_ref> --json/);
+  assert.match(content, /present all valid drafts together for content review/i);
+  assert.match(content, /matching `tw plan review approve\|reject\|skip <review_ref> --json` command exactly once for each explicitly decided content review/i);
   assert.match(content, /leave omitted refs pending/i);
   assert.match(content, /do not replay successful decisions/i);
-  assert.match(content, /Never apply it to a task proposal, generated reply\/content review, scheduled mutation, undisplayed target, or changed ref/i);
-  assert.match(content, /Reviews: <current task, source, or content reviews/i);
+  assert.match(content, /Never collapse multiple replies into “approve all”/i);
+  assert.match(content, /Reviews: <current content reviews/i);
   assert.doesNotMatch(content, /Review: <one exact current review>/i);
-  assert.doesNotMatch(content, /invoke `tw task review approve <review_ref> --json` once per displayed ref/i);
+  assert.doesNotMatch(content, /invoke `tw task review approve/i);
 });
 
-test('reply peer restarts wrong candidate batches without plan-backed retask', () => {
+test('reply peer replaces a wrong automatic batch only after skipping pending drafts', () => {
   const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
   assert.match(content, /Every fresh task below reruns mandatory preflight; same-task review, monitoring, and redraft reuse/i);
-  assert.match(content, /treat .*candidates are wrong.* as a candidate-stage restart/i);
-  assert.match(content, /Do not use `tw task retask` or `tw draft redraft`/i);
-  assert.match(content, /tw task review skip <review_ref> --json/);
-  assert.match(content, /require `data\.review\.status=skipped`/);
-  assert.match(content, /remove it from the active review set without deleting history/i);
-  assert.match(content, /tw task create --surface reply --direction <latest_condensed_request> --count <same_count_unless_user_changed_it> --json/);
-  assert.match(content, /stop for its new approval/i);
+  assert.match(content, /“these candidates are wrong,” or a direction, source, angle, or target change/i);
+  assert.match(content, /show every current content review and ask the user to confirm skipping/i);
+  assert.match(content, /tw plan review skip <review_ref> --json/);
+  assert.match(content, /verify `data\.review\.status=skipped`/);
+  assert.match(content, /create one fresh task with the latest condensed direction and count/i);
+  assert.match(content, /historical task remains recorded; no authority transfers/i);
 });
 
 test('reply peer recreates only conclusively undispatched replies as fresh exact actions', () => {
@@ -98,55 +98,48 @@ test('reply peer watches every scheduled mutation through a durable outcome', ()
   assert.match(content, /never finish the reply flow merely because all drafts are scheduled/i);
 });
 
-test('manual task peers discover source reviews from each approved blueprint', () => {
-  for (const skill of ['twitter-post', 'twitter-reply']) {
-    const content = fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8');
-    assert.match(content, /Capture every exact `task_blueprint_ref` (?:returned by that approval|from either the complete approval envelope or that exact recovery read)/);
-    assert.match(content, /immediately inspect each with `tw task show <task_blueprint_ref> --json`/);
-    assert.match(content, /fixed 180-second deadline/);
-    assert.match(content, /wait `min\(15 seconds, remaining time\)`/);
-    assert.match(content, /source_status=source_reviews_created/);
-    assert.match(content, /only `source_review_refs_by_status\.pending`/);
-    assert.match(content, /all three buckets are empty.*CLI contract drift/i);
-    assert.match(content, /Never use `tw task review list`, a global review list, or a latest review/);
-  }
+test('historical post task flow still follows source reviews', () => {
+  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-post', 'SKILL.md'), 'utf8');
+  assert.match(content, /Capture every exact `task_blueprint_ref` returned by that approval/);
+  assert.match(content, /immediately inspect each with `tw task show <task_blueprint_ref> --json`/);
+  assert.match(content, /fixed 180-second deadline/);
+  assert.match(content, /source_status=source_reviews_created/);
 });
 
-test('reply peer preserves yielded approval sessions and recovers exact blueprint refs without reapproval', () => {
+test('new manual reply task follows its materialized blueprint without task or source review', () => {
+  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+  assert.match(content, /returned `manual_request_ref`, `task_blueprint_proposal_ref`, and `task_blueprint_ref`/);
+  assert.match(content, /intentionally returns no task-proposal `review_ref`/);
+  assert.match(content, /Capture only the exact returned `task_blueprint_ref`/);
+  assert.match(content, /fixed 15-minute deadline/);
+  assert.match(content, /wait `min\(15 seconds, remaining time\)`/);
+  assert.match(content, /source_status=source_reviews_created.*stop as CLI contract drift/i);
+  assert.match(content, /Never use `tw task list`, `tw task review list`, a global\/latest record, or a proposal ref/i);
+});
+
+test('reply peer preserves yielded task-create sessions and follows only the returned blueprint', () => {
   const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
   assert.match(content, /If the execution yields a `session_id`, poll that same session to terminal completion/i);
   assert.match(content, /never project only `output` and discard the continuation handle/i);
-  assert.match(content, /blank, partial, or unparseable, treat the result as indeterminate/i);
-  assert.match(content, /do not invoke approval again/i);
-  assert.match(content, /`data\.review\.status=pending`.*offer one explicit yes\/no choice to retry the approval/i);
-  assert.match(content, /tw task review show <same_review_ref> --json/);
-  assert.match(content, /non-empty `refs\.task_blueprint_refs`/);
-  assert.match(content, /`records\[\]\.model_type=TaskBlueprint`/);
+  assert.match(content, /one complete parseable `tw_cli_harness_v1` envelope before following its refs/i);
   assert.match(content, /A `task_blueprint_proposal_ref` is never a `task_blueprint_ref`/);
-  assert.match(content, /Never substitute the proposal ref, use `tw task review list`, search a global\/latest task, or infer a ref by timestamp/i);
+  assert.match(content, /Never use `tw task list`, `tw task review list`, a global\/latest record, or a proposal ref/i);
 });
 
 test('reply peer keeps outcome, continuation, stage, and return contracts coherent', () => {
   const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
-  assert.match(content, /For `reject` or `skip`, invoke the matching `tw task review reject\|skip <same_review_ref> --json` command once/i);
+  assert.match(content, /current manual task intentionally returns no task-proposal `review_ref`/i);
   assert.match(content, /matching `tw plan review approve\|reject\|skip <review_ref> --json` command exactly once for each explicitly decided content review/i);
-  assert.match(content, /follow only `data\.automatic_generation\.artifact_refs` and `data\.automatic_generation\.review_refs`/i);
-  assert.match(content, /fastapi_runtime_jobs_terminal:draft_generation_no_safe_drafts/);
-  assert.match(content, /record that numbered source as `skipped_no_safe_draft`.*do not retry generation, replay approval, redraft, guess refs, or transfer authority/i);
-  assert.match(content, /missing refs without that exact marker, record that numbered source as `error_source`/i);
-  assert.match(content, /no approval envelope parses with the expected shape.*stop the whole workflow as CLI contract drift/i);
-  assert.match(content, /one or more valid draft continuations proceed together to content review with requested, valid, skipped, and errored counts/i);
-  assert.match(content, /zero valid drafts stops as blocked with no content review or mutation/i);
-  assert.match(content, /require the live source-approval envelope and must never be inferred later/i);
+  assert.match(content, /Fewer returned artifacts than requested.*actual valid count/i);
+  assert.match(content, /Zero artifacts is blocked and authorizes no mutation/i);
   assert.match(content, /Issue-report generation sends no reply/i);
   assert.match(content, /report each affected reply as `sent`, `not sent`, or `outcome unknown` exactly as its durable evidence supports/i);
   assert.doesNotMatch(content, /State that nothing was sent|Issue report: .*nothing sent/i);
-  assert.match(content, /task proposal is still pending.*tw task review skip <same_review_ref> --json/i);
-  assert.match(content, /source_status=awaiting_selection.*tw task restart <task_blueprint_ref> --json/i);
-  assert.match(content, /never creates a duplicate task/i);
+  assert.match(content, /execution_status=failed.*restart_allowed=true/i);
+  assert.match(content, /never creates a duplicate task or claims the old attempt was cancelled/i);
   assert.match(content, /logical_workflow_terminalization\.status=pending.*recheck the exact task within `recheck_after_seconds`/i);
   assert.match(content, /do not describe the immutable scheduler record itself as expiring/i);
-  assert.match(content, /wording-only change.*tw draft redraft/i);
+  assert.match(content, /tw draft redraft.*wording-only change/i);
   assert.match(content, /direction, source, angle, or target change.*tw plan review skip <review_ref> --json/i);
   assert.match(content, /`scheduled`, `running`, `paused`, `waiting_review`, or has unknown evidence, do not restart or create a replacement reply/i);
   assert.match(content, /needs exact-action approval/);

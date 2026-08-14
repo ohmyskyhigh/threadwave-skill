@@ -75,6 +75,21 @@ test('automation routes to external operation peers without owning or containing
   }
 });
 
+test('automation starter menu uses the canonical panda and waits before routing', () => {
+  const skillRoot = path.join(root, 'skills', 'twitter-automation');
+  const content = fs.readFileSync(path.join(skillRoot, 'SKILL.md'), 'utf8');
+  assert.match(content, /For a request such as `start ThreadWave`/);
+  assert.match(content, /entire trimmed request is exactly `threadwave` or `tw`/);
+  assert.match(content, /Do not treat `tw` followed by a CLI subcommand or other text as a starter alias/);
+  assert.match(content, /        ▄█████▄    ▄█████▄/);
+  assert.match(content, /         ▀██████████████▀/);
+  assert.doesNotMatch(content, /assets\/threadwave-mascot\.png/);
+  assert.match(content, /Draft a tweet.*`twitter-post`/);
+  assert.match(content, /Generate replies.*`twitter-reply`/);
+  assert.match(content, /Run daily growth.*`twitter-agent`/);
+  assert.match(content, /Do not run `tw`, preflight, or a destination workflow merely to display the menu/);
+});
+
 test('tweet and reply task surfaces each have one independent owner', () => {
   const operationSkills = operationSkillNames(suite, releaseIndex);
   const contentBySkill = new Map(operationSkills.map((skill) => [

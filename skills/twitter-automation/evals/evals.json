@@ -50,6 +50,46 @@
         "Does not expose a direct extension package URL",
         "Does not emulate a missing operation skill"
       ]
+    },
+    {
+      "id": 6,
+      "prompt": "start ThreadWave",
+      "expected_output": "Shows the exact approved eight-line setup panda above a four-choice starter menu, waits for the user's choice, and runs no preflight, CLI command, workflow, or mutation.",
+      "expectations": [
+        "Preserves the approved panda spacing in one preformatted block",
+        "Offers tweet, reply, daily growth, and setup/readiness choices",
+        "Does not run preflight or a destination workflow before the user chooses"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "启动 ThreadWave",
+      "expected_output": "Uses Simplified Chinese to show the exact approved setup panda and starter menu, then waits without treating menu display as workflow approval.",
+      "expectations": [
+        "Shows all four starter choices in Simplified Chinese",
+        "Accepts a number or clear label as the next choice",
+        "Does not infer content or mutation approval"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "threadwave",
+      "expected_output": "Treats the exact standalone product name as a starter alias and shows the same panda menu without running a workflow.",
+      "expectations": [
+        "Shows the exact approved setup panda",
+        "Shows the four starter choices",
+        "Waits for a choice"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "tw",
+      "expected_output": "Treats the exact standalone short alias as a starter command while keeping normal tw CLI commands outside the menu route.",
+      "expectations": [
+        "Shows the same starter menu as start ThreadWave",
+        "Does not run a CLI command",
+        "Does not classify tw followed by a subcommand as the starter alias"
+      ]
     }
   ]
 }

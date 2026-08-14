@@ -12,7 +12,7 @@ Own ad-hoc reply work as an independent flat peer. Never activate or depend on `
 
 Before preflight or any `tw` command, protect any exact target and final reply text. For every task-mode request, rewrite the remaining user wording as one concise, corrected sentence. Fix obvious typos from the full context and remove filler or repetition, while preserving every explicit count, topic, literal search phrase, account or relationship filter, engagement threshold, and other constraint. Do not add a topic or requirement the user did not state.
 
-Use this condensed request as the task direction for proposal creation and any fresh-task restart. If the wording cannot be condensed without guessing the user's intent, ask one concise question and stop. Never rewrite an exact target/reply pair. For example, `fin 10 let's connect tweets and draft replies` means `Find 10 tweets matching "let's connect" and draft replies`, not a finance task.
+Use this condensed request as the task direction for task creation and any fresh-task restart. If the wording cannot be condensed without guessing the user's intent, ask one concise question and stop. Never rewrite an exact target/reply pair. For example, `fin 10 let's connect tweets and draft replies` means `Find 10 tweets matching "let's connect" and draft replies`, not a finance task.
 
 ## Select One Mode
 
@@ -58,7 +58,7 @@ Respond in English or Simplified Chinese from explicit preference, latest messag
 
 After condensing the request and selecting the mode, activate `threadwave-preflight` by skill name at the start of each new reply task or agent session and after any readiness invalidation defined by its contract. Pass this skill name, selected mode, unchanged original request, and required capability families. Reuse that successful result for unchanged review decisions and workflow continuation in the same session; do not rerun preflight for a review decision alone. Do not invoke `tw` without a current or reusable ready result.
 
-Require CLI `1.0.21` plus `task`, `draft`, `plan`, `scheduler`, and `action` command families. Missing skill, CLI, or extension state routes to `https://www.threadwave.xyz/cli/setup/agent.md` while preserving the request.
+Require CLI `1.0.34` plus `task`, `draft`, `plan`, `scheduler`, and `action` command families. Missing skill, CLI, or extension state routes to `https://www.threadwave.xyz/cli/setup/agent.md` while preserving the request.
 
 ## Approval Authority
 
@@ -66,16 +66,14 @@ Keep each approval inside its own gate:
 
 | Gate | Allowed decision | “Approve all” | Result of approval |
 |---|---|---|---|
-| Task proposal | One exact `approve`, `reject`, or `skip` | Never | Starts discovery or source-free generation; no X mutation. |
-| Source selection | Matching per-item `approve`, `reject`, or `skip` decisions | Only every still-pending source review in the complete unchanged set displayed immediately before the decision | Generates drafts from the approved sources; no X mutation. |
 | Content review | One explicit decision per exact review | Never | Authorizes one exact reply mutation per approved review. |
 | Exact action | One unchanged target/text pair after its dry-run | Never | Dispatches that pair once. |
 
-No wording such as “approve all,” “continue,” or “retry” transfers authority between rows.
+Plan-free manual task creation uses the user's request as discovery and draft-generation authority. It creates no task-proposal or source-selection review. Deterministic source selection is not user approval and never authorizes an X mutation. No wording such as “approve all,” “continue,” or “retry” transfers authority between the remaining gates.
 
 ## Task Mode
 
-### 1. Create One Bounded Proposal
+### 1. Create One Bounded Task
 
 Pass direction as one safe argument; never concatenate user content into shell syntax. Run the semantic equivalent of:
 
@@ -83,37 +81,25 @@ Pass direction as one safe argument; never concatenate user content into shell s
 tw task create --surface reply --direction <condensed_request> --count <5..10> --json
 ```
 
-Require `schema_version=tw_cli_harness_v1`, `ok=true`, and returned `manual_request_ref`, `task_blueprint_proposal_ref`, and `review_ref`. Task creation authorizes no discovery, generation, or X mutation until its exact review gate passes.
+Require `schema_version=tw_cli_harness_v1`, `ok=true`, and returned `manual_request_ref`, `task_blueprint_proposal_ref`, and `task_blueprint_ref`. Ordinary reply discovery also returns one `scheduled_snapshot_ref`. A current manual task intentionally returns no task-proposal `review_ref`; never stop, search for a review, or invoke `tw task review` because that field is absent. The request authorizes bounded read-only discovery, deterministic source selection, and draft generation, but no X mutation.
 
-### 2. Review The Task Proposal
+Retain the complete command-execution result. If the execution yields a `session_id`, poll that same session to terminal completion; never project only `output` and discard the continuation handle. Require one complete parseable `tw_cli_harness_v1` envelope before following its refs. A `task_blueprint_proposal_ref` is never a `task_blueprint_ref`, even though their text prefixes overlap.
 
-Inspect only the returned review ref with `tw task review show <review_ref> --json`. Present the reply surface, direction, requested count, acquisition route, and safe target-selection scope. Stop for one explicit `approve`, `reject`, or `skip` decision. For `reject` or `skip`, invoke the matching `tw task review reject|skip <same_review_ref> --json` command once, verify the matching `data.review.status`, and stop; only approval continues.
+### 2. Follow Automatic Discovery And Draft Generation
 
-After the user explicitly approves the displayed task proposal, invoke `tw task review approve <same_review_ref> --json` exactly once under the reusable same-task preflight result. Never transfer approval to a changed direction, count, ref, proposal hash, or target policy.
+Capture only the exact returned `task_blueprint_ref`. Start one fixed 15-minute deadline, immediately inspect it with `tw task show <task_blueprint_ref> --json`, and repeat while `data.logical_task.execution_status=active` and `data.logical_task.draft_status=not_generated`. Before each retry, wait `min(15 seconds, remaining time)` so the deadline receives one final read. Keep the user updated at least once every 60 seconds. Never use `tw task list`, `tw task review list`, a global/latest record, or a proposal ref to find this task.
 
-Retain the complete command-execution result. If the execution yields a `session_id`, poll that same session to terminal completion; never project only `output` and discard the continuation handle. Require one complete parseable `tw_cli_harness_v1` envelope before using approval refs.
+Handle the exact task projection as follows:
 
-If the terminal approval output is blank, partial, or unparseable, treat the result as indeterminate and do not invoke approval again yet. Run `tw task review show <same_review_ref> --json` once as a read-only recovery. Continue only when it returns `ok=true`, `data.review.status=approved`, a non-empty `refs.task_blueprint_refs`, and one matching `records[].model_type=TaskBlueprint` entry for every returned ref. This recovery contract is required in addition to the general CLI minimum. When the recovery read conclusively returns `ok=true` with `data.review.status=pending` for the same unchanged review_ref and proposal scope, the approval never reached the server: tell the user the approval command was not delivered and the review is still pending, and offer one explicit yes/no choice to retry the approval. On yes, invoke `tw task review approve <same_review_ref> --json` exactly once more, then repeat this same recovery handling; a second indeterminate outcome stops the flow. Never retry approval more than once per review, and never retry against a changed ref, hash, or scope. When the recovery read itself fails, is unparseable, or returns anything other than conclusive `approved` or conclusive `pending`, stop as CLI contract drift instead of falling back. A `task_blueprint_proposal_ref` is never a `task_blueprint_ref`, even though their text prefixes overlap. Never substitute the proposal ref, use `tw task review list`, search a global/latest task, or infer a ref by timestamp.
+- `draft_status=pending_review`: follow every exact `artifact_ref` returned by that task. Inspect each with `tw draft show <artifact_ref> --json`; require its exact target, content, pending `review_ref`, and matching task lineage, then present all valid drafts together for content review.
+- `source_status=no_valid_targets_found`: report the shortfall and offer the task template with a rephrased direction.
+- `source_status=failed` or `execution_status=failed`: report the exact failure code and whether `restart_allowed=true`; do not restart without an explicit user instruction.
+- `source_status=source_reviews_created` or any non-empty `source_review_refs_by_status` on this new manual task: stop as CLI contract drift. Historical task-review commands remain readable, but new manual work must not create or require them.
+- Deadline reached while still active: report the exact task ref and current state as stalled; do not create a duplicate task or claim that the original task was cancelled.
+- Fewer returned artifacts than requested: report the actual valid count and continue with those drafts. Zero artifacts is blocked and authorizes no mutation.
 
-Capture every exact `task_blueprint_ref` from either the complete approval envelope or that exact recovery read. Start one fixed 180-second deadline, immediately inspect each with `tw task show <task_blueprint_ref> --json`, and repeat only while its `source_status=awaiting_selection`; before each retry, wait `min(15 seconds, remaining time)` so the deadline receives one final read. Never use `tw task review list`, a global review list, or a latest review to discover this task's source reviews.
+### 3. Review Drafts And Scheduled Mutations
 
-When `source_status=source_reviews_created`, follow only `source_review_refs_by_status.pending`. If `pending` is empty but `approved` or `archived` is nonempty, that task has no source decision waiting. If all three buckets are empty, treat the response as CLI contract drift and stop. Handle `no_valid_targets_found` as a shortfall: report the exact status and offer the task template for a rephrased direction; follow CLI-returned refs directly for any other terminal source status.
-
-### 3. Review Every Discovered Source
-
-Follow only CLI-returned source-selection refs. Inspect every ref with `tw task review show <review_ref> --json`, then present the complete pending target list from the current discovery batch together as one numbered set. Include each exact `review_ref` and its safe public source context so the user can compare every candidate without asking to reveal them one at a time.
-
-Accept a numbered decision map such as `1 approve, 2 reject, 3 skip`. Reuse the same-task preflight result and invoke the matching `tw task review approve|reject|skip <review_ref> --json` command exactly once for each explicitly decided ref; leave omitted refs pending. After the complete target list has been displayed, also accept an explicit “approve all” as approval for every still-pending source review in that exact unchanged displayed set, invoking approve once per pending ref. If any decision fails partway, do not replay successful decisions: redisplay the exact set with current statuses and ask only for unresolved decisions. If the set is stale, changed, incomplete, or was not displayed in the immediately preceding review gate, display the current complete list and ask again.
-
-Target-list “approve all” authorizes draft generation from those exact sources only. Never apply it to a task proposal, generated reply/content review, scheduled mutation, undisplayed target, or changed ref.
-
-Source approval authorizes draft generation for that exact source only. It never authorizes a reply mutation. From each successful source-approval envelope, follow only `data.automatic_generation.artifact_refs` and `data.automatic_generation.review_refs`; matching non-empty arrays are one valid draft continuation.
-
-If those continuation refs are absent, inspect only that same live approval envelope's warnings. When one contains the exact terminal marker `fastapi_runtime_jobs_terminal:draft_generation_no_safe_drafts`, record that numbered source as `skipped_no_safe_draft`, do not retry generation, replay approval, redraft, guess refs, or transfer authority, and continue the remaining already-authorized source decisions. When that live envelope instead carries a generic `candidate_invalid`, any other error, or missing refs without that exact marker, record that numbered source as `error_source` with its exact failure and continue the remaining already-authorized source decisions — but only while at least one approval envelope in this batch has parsed with the expected shape. When no approval envelope parses with the expected shape, the contract itself has drifted: stop the whole workflow as CLI contract drift. Both classifications require the live source-approval envelope and must never be inferred later from an approved source with no artifact. An `error_source` stays report-worthy as contract drift: offer a sanitized issue report for that exact source without halting the batch. After all authorized decisions, one or more valid draft continuations proceed together to content review with requested, valid, skipped, and errored counts; zero valid drafts stops as blocked with no content review or mutation. When fewer valid sources exist than requested, report the actual count and continue only with the valid reviewed sources.
-
-### 4. Review Drafts And Scheduled Mutations
-
-- Inspect generated artifacts through `tw draft show <artifact_ref> --json`.
 - Inspect each content review through `tw plan review show <review_ref> --json`.
 - Invoke the matching `tw plan review approve|reject|skip <review_ref> --json` command exactly once for each explicitly decided content review and leave omitted refs pending. If one decision fails, do not replay successful decisions; refresh current statuses and ask only for unresolved decisions.
 - Capture every exact returned `scheduled_task_ref`. Scheduling is not completion: while any ref reports `scheduled` or `running`, keep the session active and poll that ref with `tw scheduler show <scheduled_task_ref> --json` at intervals no longer than 15 seconds. Do not invoke `tw scheduler execute` merely to accelerate the daemon-owned reservation.
@@ -125,18 +111,16 @@ When multiple content reviews are pending, present them together as one numbered
 
 Never guess a target or ref.
 
-### 5. Handle Changes And Failures
+### 4. Handle Changes And Failures
 
 Every fresh task below reruns mandatory preflight; same-task review, monitoring, and redraft reuse the current successful result unless readiness was invalidated.
 
-- If the task proposal is still pending, an explicit redo or changed direction authorizes skipping that exact proposal review. Invoke `tw task review skip <same_review_ref> --json` once, verify `data.review.status=skipped`, then create one fresh task and present its new proposal; no old authority transfers.
-- If an approved task still reports `source_status=awaiting_selection` and has no source reviews after the fixed task-show deadline, present the exact `task_blueprint_ref` and its stalled status and offer one explicit user choice: restart the task, or stop and report the exact blocker. On an explicit restart decision, invoke `tw task restart <task_blueprint_ref> --json` exactly once, verify `ok=true` and the returned fresh execution state, and resume the fixed task-show deadline against the same ref. Restart starts one fresh pre-mutation execution; it never creates a duplicate task and never claims the old discovery was cancelled. A failed restart invocation or a ref that keeps stalling through the new deadline counts as one failed restart round, tracked in conversation working memory; after two failed rounds in the same session, stop and report the exact blocker instead of looping.
+- If the exact task reports `execution_status=failed` and `restart_allowed=true`, present its failure code and offer one explicit choice to restart or stop. On restart, invoke `tw task restart <task_blueprint_ref> --json` exactly once, verify `ok=true`, and resume the same automatic-discovery polling contract against the same logical task. Restart creates one fresh pre-mutation execution; it never creates a duplicate task or claims the old attempt was cancelled. After two failed restart rounds in the same session, stop and report the exact blocker.
 - Whenever `tw scheduler cancel` returns `logical_workflow_terminalization.status=pending`, tell the user that linked workflow cleanup is pending, recheck the exact task within `recheck_after_seconds` (currently 60), and do not describe the immutable scheduler record itself as expiring.
-- When `source_status=source_reviews_created` and no source is approved, treat “redo,” “redraft,” “start over,” “these candidates are wrong,” or a direction/source/angle change as a candidate-stage restart. Do not use `tw task retask` or `tw draft redraft`. The explicit restart instruction authorizes skipping every still-pending source review returned by that task. Invoke `tw task review skip <review_ref> --json` once per pending ref, inspect each with `tw task review show <review_ref> --json`, require `data.review.status=skipped`, and remove it from the active review set without deleting history. Then create one fresh task with `tw task create --surface reply --direction <latest_condensed_request> --count <same_count_unless_user_changed_it> --json` and stop for its new approval.
-- If any source is approved and no reply mutation is `scheduled`, `running`, `paused`, `waiting_review`, or has unknown evidence, never use source-review skips to claim the task was cancelled. For a wording-only change to the same approved source, use `tw draft redraft` and require a new content review. For a direction, source, angle, or target change, show every current content review and ask the user to confirm skipping the still-pending old drafts. After confirmation, invoke `tw plan review skip <review_ref> --json` once per confirmed ref, verify `data.review.status=skipped`, then create a fresh task; the historical task remains recorded.
+- Once drafts exist and no reply mutation is `scheduled`, `running`, `paused`, `waiting_review`, or has unknown evidence, use `tw draft redraft` for a wording-only change to one unchanged source and require a new content review. For “start over,” “these candidates are wrong,” or a direction, source, angle, or target change, show every current content review and ask the user to confirm skipping the still-pending drafts. After confirmation, invoke `tw plan review skip <review_ref> --json` once per confirmed ref, verify `data.review.status=skipped`, then create one fresh task with the latest condensed direction and count. The historical task remains recorded; no authority transfers.
 - If any reply mutation is `scheduled`, `running`, `paused`, `waiting_review`, or has unknown evidence, do not restart or create a replacement reply. Continue monitoring the exact scheduled ref until the user makes an explicit decision for it under the recovery decision below.
 - For a `recovery_required` or otherwise inconclusive scheduled ref, present the exact `scheduled_task_ref` with its durable evidence classification and stop for one explicit user decision: keep monitoring, skip, cancel, or report. `skip` acknowledges the inconclusive outcome: record the exact ref as user-skipped, end its monitoring, and keep it listed under `Needs attention` as skipped; the durable outcome stays `outcome unknown` and skip authorizes no retry, redraft, replacement, or mutation. `cancel` only when the user explicitly names that exact ref: invoke `tw scheduler cancel <scheduled_task_ref> --json` once, verify the returned status, and follow the terminalization recheck rule above. A skipped ref no longer blocks completing the reply flow with the remaining refs.
-- A rejected source creates no draft or mutation.
+- A rejected or skipped content review creates no mutation.
 - Treat `relay_unavailable` with no dispatch `ActionRecord`, and `action_preparation_failed` with `reply:blocked_before_dispatch`, no `dispatched_at`, and `confirmation_state=not_required`, as conclusively not sent. An `ActionRecord` or `EvidenceRecord` count alone is audit evidence and does not prove dispatch.
 - A retry accepts one exact unchanged draft only. Resolve its exact target/text pair from the current task's returned refs or from exact refs lineage-matched through Inspect Previous Work, rerun mandatory preflight because exact-action mode is a new readiness scope, and start one fresh exact-action dry-run. Show that pair and require fresh explicit approval before dispatching it once. For multiple retry requests, ask the user to choose one; each later pair requires a separate exact-action flow and approval. Never execute or reschedule the old scheduled-task ref or transfer its task/content approval.
 - If the numbered draft mapping is stale, the target/text changed, or neither the current task nor a lineage-matched previous-work ref contains conclusive pre-dispatch evidence, ask for the exact current draft/ref or stop as unknown. Unknown, post-dispatch, `unknown_confirmation`, confirmed, or otherwise inconclusive outcomes never enter this retry flow; they require either a sanitized issue report that preserves `outcome unknown` or an explicit user skip decision under the recovery decision above.
@@ -164,7 +148,7 @@ Require exactly one target accepted by the CLI contract and one exact final repl
 
 ## Boundaries
 
-- Task mode creates one proposal with `5..10` independent possible reply items; it does not grant batch mutation approval.
+- Task mode creates one materialized manual task with `5..10` possible reply drafts; it does not create task/source reviews or grant batch mutation approval.
 - Exact-action mode controls one target/text pair only and remains outside task/plan lineage.
 - Do not create original posts, quote, like, save, follow, or operate the browser UI directly.
 - Do not expose reply text, targets, raw payloads, private refs, or local paths in diagnostics.
@@ -176,15 +160,15 @@ For explicit report requests, CLI drift, repeated unresolved setup, or unknown e
 ## Return Format
 
 ```text
-State: <needs task approval | needs source approval | needs content approval | needs exact-action approval | monitoring | complete | blocked | unknown>
+State: <discovering | generating | needs content approval | needs exact-action approval | monitoring | complete | blocked | unknown>
 Mode: <task | exact-action>
-Count: <requested / valid sources / source-approved / content-approved / scheduled, or n/a for exact-action>
-Reviews: <current task, source, or content reviews with exact review_ref; none for exact-action>
-Waiting for you: <matching per-item decisions; approve all for the exact displayed source set only; approve this exact target/text pair; or none>
+Count: <requested / valid drafts / content-approved / scheduled, or n/a for exact-action>
+Reviews: <current content reviews with exact review_ref; none before drafts or for exact-action>
+Waiting for you: <matching per-item content decisions; approve this exact target/text pair; or none>
 你可以 / You can: <two to four verbatim-sayable options valid at the current gate>
 Next: <one returned ref/action or stop>
 Outcome: <sent | not sent | not sent yet | outcome unknown, per reply>
 Issue report: <copy/paste only; preserves the durable outcome>
 ```
 
-The `你可以 / You can:` line lists only options that are real at the current gate — exact numbered decisions, the displayed source set's "approve all", displayed refs, or the task template — worded so the user can reply verbatim, localized to the selected language; it never offers an action beyond the current gate's authority.
+The `你可以 / You can:` line lists only options that are real at the current gate — exact numbered content decisions, the displayed exact-action pair, displayed refs, or the task template — worded so the user can reply verbatim, localized to the selected language; it never offers an action beyond the current gate's authority.
