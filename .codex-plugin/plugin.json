@@ -1,6 +1,6 @@
 {
   "name": "threadwave-skill",
-  "version": "0.7.8",
+  "version": "0.7.9",
   "description": "Bilingual, review-gated X/Twitter growth agent skills for posts, replies, daily planning, setup, updates, and error support.",
   "author": {
     "name": "ThreadWave"
