@@ -16,7 +16,7 @@
     "setup_url": "https://www.threadwave.xyz/cli/setup/agent.md"
   },
   "cli": {
-    "minimum_version": "1.0.21",
+    "minimum_version": "1.0.35",
     "required_command_families": [
       "task",
       "draft",
@@ -25,14 +25,14 @@
       "action"
     ],
     "required_commands": [
-      "tw task create --surface <tweet|reply|quote> --direction <text> --count <1|5..10 reply; 1..5 otherwise> --json",
+      "tw task create --surface <tweet|reply|quote> --direction-file <path> --count <1|5..10 reply; 1..5 otherwise> --json",
       "tw task show <task_blueprint_ref> --json",
       "tw task review show <review_ref> --json",
       "tw task review approve <review_ref> --json",
       "tw task review reject <review_ref> --json",
       "tw task review skip <review_ref> --json",
-      "tw task retask --task <task_blueprint_ref> --direction <text> --json",
-      "tw task retask --batch <batch_ref> --direction <text> --json",
+      "tw task retask --task <task_blueprint_ref> --direction-file <path> --json",
+      "tw task retask --batch <batch_ref> --direction-file <path> --json",
       "tw draft show <artifact_ref> --json",
       "tw draft redraft <artifact_ref> --feedback <text> --json",
       "tw plan review show <review_ref> --json",

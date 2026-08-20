@@ -12,13 +12,14 @@ const skillManifest = (name) => JSON.parse(fs.readFileSync(path.join(root, 'skil
 const operationSkills = operationSkillNames(suite, releaseIndex);
 const operationManifests = operationSkills.map(skillManifest);
 const replySkill = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+const postSkill = fs.readFileSync(path.join(root, 'skills', 'twitter-post', 'SKILL.md'), 'utf8');
 const replyEvals = JSON.parse(fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'evals', 'evals.json'), 'utf8'));
 
 function capabilities() {
   return {
     schema_version: 'tw-cli-v1',
     data: {
-      cli_version: '1.0.34',
+      cli_version: '1.0.35',
       cli_schema_versions: ['tw-cli-v1'],
       harness_schema_versions: ['tw-harness-v1'],
       required_upgrades: [],
@@ -37,6 +38,7 @@ function capabilities() {
         ] },
         { name: 'task', status: 'available', commands: [
           'tw task create --surface <tweet|reply|quote> --direction <text> --count <1|5..10 reply; 1..5 otherwise> --json',
+          'tw task create --surface <tweet|reply|quote> --direction-file <path> --count <1|5..10 reply; 1..5 otherwise> --json',
           'tw task show <task_blueprint_ref> --json',
           'tw task restart <task_blueprint_ref> --json',
           'tw task review show <review_ref> --json',
@@ -44,7 +46,9 @@ function capabilities() {
           'tw task review reject <review_ref> --json',
           'tw task review skip <review_ref> --json',
           'tw task retask --task <task_blueprint_ref> --direction <text> --json',
-          'tw task retask --batch <batch_ref> --direction <text> --json'
+          'tw task retask --task <task_blueprint_ref> --direction-file <path> --json',
+          'tw task retask --batch <batch_ref> --direction <text> --json',
+          'tw task retask --batch <batch_ref> --direction-file <path> --json'
         ] },
         { name: 'draft', status: 'available', commands: [
           'tw draft show <artifact_ref> --json',
@@ -90,6 +94,15 @@ test('manual task peers require exact task projection lookup', () => {
   }
 });
 
+test('manual task peers trust accepted CLI results and returned continuations', () => {
+  for (const content of [postSkill, replySkill]) {
+    assert.match(content, /For `ok=true`.*`next` as authoritative/i);
+    assert.match(content, /Execute returned read-only `next` commands/i);
+    assert.match(content, /For `ok=false`.*`error\.code`.*`error\.message`.*`error\.retryable`/i);
+    assert.doesNotMatch(content, /stop as CLI contract drift/i);
+  }
+});
+
 test('operation skills enforce their own minimum CLI versions', () => {
   const value = capabilities();
   value.data.cli_version = '1.0.20';
@@ -104,7 +117,11 @@ test('operation skills enforce their own minimum CLI versions', () => {
 
   value.data.cli_version = '1.0.33';
   assert.ok(evaluateCapabilities(skillManifest('twitter-reply'), value).includes('cli_version_too_old'));
-  assert.deepEqual(evaluateCapabilities(skillManifest('twitter-post'), value), []);
+  assert.ok(evaluateCapabilities(skillManifest('twitter-post'), value).includes('cli_version_too_old'));
+
+  value.data.cli_version = '1.0.34';
+  assert.ok(evaluateCapabilities(skillManifest('twitter-reply'), value).includes('cli_version_too_old'));
+  assert.ok(evaluateCapabilities(skillManifest('twitter-post'), value).includes('cli_version_too_old'));
 });
 
 test('reply discovery defaults to five and accepts only five through ten targets', () => {
@@ -119,12 +136,16 @@ test('reply discovery defaults to five and accepts only five through ten targets
 test('reply workflow follows automatic drafts and reports bounded shortfalls', () => {
   const partial = replyEvals.evals.find((entry) => entry.id === 23);
   const generic = replyEvals.evals.find((entry) => entry.id === 24);
+  const childLineage = replyEvals.evals.find((entry) => entry.id === 26);
   assert.ok(partial);
   assert.ok(generic);
+  assert.ok(childLineage);
   assert.match(partial.expected_output, /five requested and four valid drafts/i);
   assert.match(partial.expectations.join(' '), /four exact artifact refs/i);
   assert.match(generic.expected_output, /failed task.*restart eligibility/i);
   assert.match(generic.expectations.join(' '), /does not create a duplicate task/i);
+  assert.match(childLineage.expected_output, /parent task's artifact_refs.*distinct child task refs/i);
+  assert.match(childLineage.expectations.join(' '), /child task_blueprint_ref to differ from the parent/i);
 });
 
 test('schema drift and required upgrades are blocking compatibility failures', () => {

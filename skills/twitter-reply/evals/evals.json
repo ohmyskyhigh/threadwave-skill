@@ -268,6 +268,52 @@
         "Does not create a duplicate task",
         "Does not approve, schedule, or send any reply"
       ]
+    },
+    {
+      "id": 25,
+      "prompt": "On packaged Windows, find five tweets containing a quoted multiword phrase and draft replies.",
+      "expected_output": "After successful preflight, invokes one reply task through the structured Windows downstream adapter, preserving the complete direction as one argument without direct PowerShell invocation of the managed cmd launcher.",
+      "expectations": [
+        "Uses ProcessStartInfo.ArgumentList or an equivalent true per-argument child-process API",
+        "Adds the complete condensed direction exactly once as one argument",
+        "Does not use PowerShell call-operator splatting, Start-Process -ArgumentList, ProcessStartInfo.Arguments, or a composed cmd.exe /c string",
+        "Stops with twitter_automation_cli_unconfirmed instead of falling back to string-based invocation"
+      ]
+    },
+    {
+      "id": 26,
+      "prompt": "The exact parent reply task is pending_review and returned five artifact refs. Each exact draft show response repeats its artifact ref and has a pending review, but each draft task_blueprint_ref is a different per-target child blueprint.",
+      "expected_output": "Treats membership in the exact parent task's artifact_refs as lineage authority, accepts the five distinct child task refs, and presents all five drafts together for content review.",
+      "expectations": [
+        "Uses only the five exact artifact refs returned by the parent task",
+        "Requires every draft show response to repeat its requested artifact ref",
+        "Allows each child task_blueprint_ref to differ from the parent task_blueprint_ref",
+        "Does not stop with artifact_task_lineage_mismatch or search a global task list",
+        "Presents all five valid pending content reviews together without authorizing mutation"
+      ]
+    },
+    {
+      "id": 27,
+      "prompt": "The exact reply task returned execution_status failed, source_status selected, failure_code provider_result_unknown, and no failure_stage.",
+      "expected_output": "Reports the selected source state and exact failure code without claiming that discovery, selection, or generation was the failure stage.",
+      "expectations": [
+        "Reports source_status selected exactly",
+        "Reports provider_result_unknown exactly",
+        "Does not invent a discovery, selection, generation, or dispatch stage",
+        "Does not create, restart, approve, schedule, or send anything without a returned choice and explicit authorization"
+      ]
+    },
+    {
+      "id": 28,
+      "prompt": "A reply task returns ok=true with a non-empty warnings array and one draft has customer-facing generation_warnings from the humanizer. A later redraft returns ok=false with a customer-facing humanizer error message.",
+      "expected_output": "Shows every returned warning beside the affected reply and reports the returned error message before any next choices, without exposing or inventing internal humanizer rules.",
+      "expectations": [
+        "Shows every top-level warning returned by the CLI",
+        "Shows every generation warning beside its affected draft",
+        "Shows the returned error code, message, and retryable state",
+        "Does not replace the messages with a generic blocked or humanizer-failed statement",
+        "Does not expose or invent internal rule IDs, prompt text, or gate context"
+      ]
     }
   ]
 }
