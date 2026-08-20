@@ -48,41 +48,48 @@ Respond in English or Simplified Chinese from explicit preference, latest messag
 
 Activate `threadwave-preflight` by skill name at the start of each new post task or agent session and after any readiness invalidation defined by its contract. Pass this skill name, selected mode, unchanged request, and required capability families. Reuse that successful result for unchanged review decisions and workflow continuation in the same session; do not rerun preflight for a review decision alone. Do not invoke `tw` without a current or reusable ready result.
 
-Require CLI `1.0.21` plus `task`, `draft`, `plan`, `scheduler`, and `action` command families. Missing skill, CLI, or extension state routes to `https://www.threadwave.xyz/cli/setup/agent.md` while preserving the request.
+Require CLI `1.0.35` plus `task`, `draft`, `plan`, `scheduler`, and `action` command families. Missing skill, CLI, or extension state routes to `https://www.threadwave.xyz/cli/setup/agent.md` while preserving the request.
+
+## CLI Result Authority
+
+The skill owns UX: choose the documented command for the user's situation, preserve safe argument transport, present returned content and choices, and collect approval. The CLI owns workflow execution, task/draft lineage, validation, recovery truth, and exact continuations.
+
+- Require one complete parseable `tw_cli_harness_v1` envelope. A process/session handle is transport state, not a result.
+- For `ok=true`, treat `data`, `refs`, status fields, warnings, and `next` as authoritative. Never compare parent and child task refs, rebuild lineage, repeat CLI invariant checks, or reinterpret the accepted result as contract drift.
+- Execute returned read-only `next` commands to continue the workflow. Present review, restart, cancel, or X-mutation commands as choices and run only the exact command the user authorizes.
+- For `ok=false`, report the returned `error.code`, `error.message`, and `error.retryable`; present only safe returned `next` choices. Do not replace a CLI error with a model-invented diagnosis.
+- Report a workflow failure stage only when the CLI returns `failure_stage`. Never infer a stage from `source_status`, `draft_status`, timing, or an error code; if the field is absent, report only the returned failure facts.
+- If the command exits without a complete envelope, stop with `task_dispatch_unconfirmed`. This transport failure is the only host-side result check and never authorizes a duplicate task.
 
 ## Task Mode
 
-### 1. Create One Bounded Proposal
+### 1. Create One Bounded Task
 
-Pass direction as one safe argument; never concatenate user content into shell syntax. Run the semantic equivalent of:
+Treat direction as data, never shell syntax:
+
+- A host with a true argument-array child-process API may pass the unchanged direction once through `--direction`.
+- Codex and any host that exposes only a shell/PTY command string must create one private temporary directory, write the unchanged direction as UTF-8 through a filesystem tool rather than shell interpolation, and pass only its safe file path through `--direction-file`. Restrict the temporary directory/file to the current user where the host supports permissions.
+- Keep that file until the command reaches a terminal result, including when the executor yields a `session_id`, then remove the temporary directory. Never place the direction in a heredoc, shell variable, manually quoted command, or PTY `write_stdin` sequence.
+
+Run the semantic equivalent of:
 
 ```text
-tw task create --surface tweet --direction <exact_user_direction> --count <1..5> --json
+tw task create --surface tweet --direction-file <private_utf8_path> --count <1..5> --json
 ```
 
-Require `schema_version=tw_cli_harness_v1`, `ok=true`, and returned `manual_request_ref`, `task_blueprint_proposal_ref`, and `review_ref`. Task creation authorizes no X mutation and must not claim that drafts or scheduled posts already exist.
+`--direction` and `--direction-file` are mutually exclusive and normalize to the same trimmed `1..4000` character value. On `task_direction_input_invalid`, surface the returned reason immediately: no daemon/backend task was accepted, so do not retry by switching to inline shell text.
 
-### 2. Review The Task Proposal
+Retain the complete command-execution result. If execution yields a `session_id`, poll that same session to terminal completion; keep state `invoking` until its complete CLI envelope arrives and never project only `output` while discarding the continuation handle.
 
-Inspect only the returned review ref with `tw task review show <review_ref> --json`. Present the surface, direction, count, acquisition route, and safe scope. Stop for explicit approval.
+### 2. Follow Automatic Source Acquisition And Draft Generation
 
-After approval, invoke `tw task review approve <same_review_ref> --json` once under the reusable same-task preflight result. Reject or skip only after an explicit matching user decision. Never transfer approval to a changed direction, count, ref, or proposal hash.
+Follow the accepted envelope's exact `next` commands. Run read-only task and draft inspection commands directly. For a repeated task-show continuation, use one fixed 15-minute deadline, wait `min(15 seconds, remaining time)` between reads, and never substitute a global list or latest record.
 
-If the approval output is blank, partial, or unparseable, treat it as indeterminate and do not invoke approval again yet: run `tw task review show <same_review_ref> --json` once as a read-only recovery. Continue only when it returns `ok=true`, `data.review.status=approved`, and the returned `task_blueprint_ref`. When it conclusively returns `data.review.status=pending` for the same unchanged review_ref and scope, the approval never reached the server: tell the user and offer one explicit yes/no choice to retry the approval once for that exact unchanged ref; a second indeterminate outcome stops the flow. When the recovery read itself fails or is inconclusive, stop as CLI contract drift.
+When the CLI returns drafts and review choices, present the returned content together and wait for per-item decisions. When it returns a shortfall, failure, stalled state, or fewer drafts than requested, render that state exactly and show only its returned choices. Never create replacement work automatically.
 
-Capture every exact `task_blueprint_ref` returned by that approval. Start one fixed 180-second deadline, immediately inspect each with `tw task show <task_blueprint_ref> --json`, and repeat only while its `source_status=awaiting_selection`; before each retry, wait `min(15 seconds, remaining time)` so the deadline receives one final read. Never use `tw task review list`, a global review list, or a latest review to discover this task's source reviews.
+### 3. Review Drafts And Scheduled Mutations
 
-When `source_status=source_reviews_created`, follow only `source_review_refs_by_status.pending`. If `pending` is empty but `approved` or `archived` is nonempty, that task has no source decision waiting. If all three buckets are empty, treat the response as CLI contract drift and stop. Handle `no_valid_targets_found` as a shortfall and follow CLI-returned refs directly for any other terminal source status.
-
-### 3. Follow Returned Workflow Refs
-
-Use only refs and next actions returned by the CLI:
-
-- inspect and decide any manual `task_proposal` or `source_selection` review through `tw task review`;
-- inspect generated artifacts through `tw draft show <artifact_ref> --json`;
-- inspect each content review through `tw plan review show <review_ref> --json`;
-- approve, reject, or skip each content review independently;
-- inspect each returned scheduled mutation through `tw scheduler show` and `tw scheduler evidence`.
+Use only commands from the accepted CLI envelope's `next`. Run read-only inspection continuations directly. Present approve, reject, skip, restart, cancel, and X-mutation commands as choices; after an explicit decision, invoke the matching exact command once and leave omitted reviews pending.
 
 Do not guess the next review, artifact, target, or scheduled task. Do not collapse multiple draft reviews into “approve all.” Each content approval can authorize only one exact scheduled X mutation.
 
@@ -91,7 +98,7 @@ Do not guess the next review, artifact, target, or scheduled task. Do not collap
 - Direction/source/angle change: use one explicit `tw task retask --task` or `--batch` request after showing the exact scope.
 - Same-lineage wording change: use `tw draft redraft` with exact feedback, then require a new content review.
 - Fewer valid outputs than requested: report actual valid count; never invent or duplicate items.
-- Approved task stalled at `source_status=awaiting_selection` past the fixed task-show deadline: present the exact `task_blueprint_ref` and offer one explicit user choice — restart via `tw task restart <task_blueprint_ref> --json` once (verify `ok=true` and the returned fresh execution state, then resume the fixed task-show deadline against the same ref; restart is a fresh pre-mutation execution, never a duplicate task or a claim that the old discovery was cancelled), or stop and report the exact blocker. A failed restart invocation or a ref that keeps stalling counts as one failed round; after two failed rounds in the same session, stop and report the blocker.
+- Task stalled past the fixed task-show deadline: present the exact `task_blueprint_ref` and offer one explicit user choice — restart via `tw task restart <task_blueprint_ref> --json` once (verify `ok=true` and the returned fresh execution state, then resume the fixed task-show deadline against the same ref; restart is a fresh pre-mutation execution, never a duplicate task or a claim that the old discovery was cancelled), or stop and report the exact blocker. A failed restart invocation or a ref that keeps stalling counts as one failed round; after two failed rounds in the same session, stop and report the blocker.
 - Unknown scheduler or mutation evidence: stop without retry. Present the exact ref and its durable classification and stop for one explicit user decision: keep monitoring, skip (acknowledge `outcome unknown` and end monitoring; authorizes no retry or replacement), cancel that exact user-named `scheduled_task_ref` via `tw scheduler cancel` once with returned-status verification, or request a sanitized issue report.
 
 ## Exact-Action Mode
@@ -102,27 +109,27 @@ Require one exact final post. Do not improve, translate, shorten, expand, normal
 2. Show the exact text in full, the dry-run result, and the semantic operation; ask for explicit approval.
 3. Treat any character change as a new payload requiring a new dry-run and approval.
 4. After approval, reuse the same-task preflight result and dispatch `tw action tweet --text <same_exact_text> --json` once.
-5. Require `ok=true`, an `action_ref`, and conclusive evidence before reporting complete. Never retry an unknown result or send a second post as verification.
+5. Treat the accepted CLI outcome as authoritative. Report complete only when it returns complete; otherwise render its state, error, and safe choices. Never retry an unknown result or send a second post as verification.
 
 ## Boundaries
 
-- Task mode creates one proposal with `1..5` independent possible draft items; it does not grant batch mutation approval.
+- Task mode creates one materialized manual task with `1..5` possible post drafts; it creates no task-proposal or source-selection review and grants no batch mutation approval.
 - Exact-action mode controls one post only and remains outside task/plan lineage.
 - Do not reply, quote, like, save, follow, or operate the browser UI directly.
 - Do not expose user content, raw payloads, private refs, or local paths in diagnostics.
 
 ## Issue Report
 
-For explicit report requests, CLI drift, repeated unresolved setup, or unknown evidence, activate `threadwave-preflight` in issue-report-only mode with sanitized metadata. Exclude post text and task direction. State that nothing was sent.
+For explicit report requests, a returned CLI error, repeated unresolved setup, or unknown evidence, activate `threadwave-preflight` in issue-report-only mode with sanitized metadata. Exclude post text and task direction. State that nothing was sent.
 
 ## Return Format
 
 ```text
-State: <needs task approval | needs source approval | needs content approval | scheduled | complete | blocked | unknown>
+State: <invoking | discovering | generating | needs content approval | scheduled | complete | blocked | unknown>
 Mode: <task | exact action>
 Count: <requested / valid / approved / scheduled>
-Review: <one exact current review>
-Waiting for you: <one decision or setup action>
+Reviews: <current content reviews with exact review_ref; none before drafts or for exact action>
+Waiting for you: <matching per-item content decisions; one exact-action approval; or setup action>
 你可以 / You can: <two to four verbatim-sayable options valid at the current gate>
 Next: <one returned ref/action or stop>
 Issue report: <copy/paste only; nothing sent>

@@ -138,7 +138,11 @@ A retry starts one fresh round through the same adapter: run the returned action
 
 Setup recovery must preserve the CLI agent session returned by the initial setup result. Follow its validated resume action through the same adapter without reconstructing it through a different executable or browser binding.
 
-The shell adapter is limited to the fixed readiness operations above. Downstream operation skills must retain structured argument or input boundaries and must never convert tweet/reply text, targets, URLs, refs, feedback, or other user values into a `cmd.exe /c` command string.
+The shell adapter is limited to the fixed readiness operations above. Downstream operation skills must retain structured argument or input boundaries and must never convert tweet/reply text, targets, URLs, refs, feedback, or other user values into a manually composed `cmd.exe /c` command string.
+
+For a packaged Windows downstream operation, reuse the resolved absolute System32 `cmd.exe` and canonical managed `tw.cmd`, but do not reuse the fixed readiness command strings. On a PowerShell/.NET host, create `ProcessStartInfo` with the absolute `cmd.exe` as `FileName` and `UseShellExecute=false`, then call `ArgumentList.Add(...)` once for each value in this exact order: `/d`, `/v:off`, `/s`, `/c`, the absolute managed-launcher path, and each logical CLI token. Materialize every dynamic value as data in a variable and add it exactly once; do not add quote or escape characters yourself. The user direction, post/reply text, target, ref, or feedback must remain one `ArgumentList` entry even when it contains whitespace, quotation marks, or shell metacharacters.
+
+Do not invoke the managed launcher with the PowerShell call operator and splatting such as `& $launcherPath @args`. Do not use `Start-Process -ArgumentList`, `ProcessStartInfo.Arguments`, `Invoke-Expression`, a manually joined argument string, or a version-directory `tw.exe`. Those forms reconstruct shell text and can split or reinterpret a dynamic value. If the host lacks `ProcessStartInfo.ArgumentList` or an equivalent true per-argument child-process API, stop with `twitter_automation_cli_unconfirmed`; never fall back to a string-based invocation.
 
 ## 5. Check CLI Compatibility
 

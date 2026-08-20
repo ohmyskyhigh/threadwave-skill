@@ -28,7 +28,7 @@ test('post and reply peers support bounded tasks plus exact single-action safety
     assert.match(content, /explicit approval/i);
     assert.match(content, /dispatch .* once/i);
     assert.match(content, /Never retry an unknown|stop without retry/i);
-    assert.match(content, /schema_version=tw_cli_harness_v1/);
+    assert.match(content, /complete parseable `tw_cli_harness_v1` envelope/);
   }
 });
 
@@ -48,11 +48,11 @@ test('reply peer follows automatic manual drafts and keeps content approval per 
   assert.match(content, /## Approval Authority/);
   assert.match(content, /creates no task-proposal or source-selection review/i);
   assert.match(content, /Deterministic source selection is not user approval and never authorizes an X mutation/i);
-  assert.match(content, /draft_status=pending_review.*every exact `artifact_ref`/i);
-  assert.match(content, /tw draft show <artifact_ref> --json/);
-  assert.match(content, /present all valid drafts together for content review/i);
-  assert.match(content, /matching `tw plan review approve\|reject\|skip <review_ref> --json` command exactly once for each explicitly decided content review/i);
-  assert.match(content, /leave omitted refs pending/i);
+  assert.match(content, /Follow the accepted envelope's exact `next` commands/i);
+  assert.match(content, /present the returned target\/content pairs together and wait for per-item decisions/i);
+  assert.match(content, /Present approve, reject, skip, restart, cancel, and X-mutation commands as choices/i);
+  assert.match(content, /invoke the matching exact command once/i);
+  assert.match(content, /leave omitted reviews pending/i);
   assert.match(content, /do not replay successful decisions/i);
   assert.match(content, /Never collapse multiple replies into “approve all”/i);
   assert.match(content, /Reviews: <current content reviews/i);
@@ -91,6 +91,7 @@ test('reply peer watches every scheduled mutation through a durable outcome', ()
   assert.match(content, /poll that ref with `tw scheduler show <scheduled_task_ref> --json` at intervals no longer than 15 seconds/i);
   assert.match(content, /Do not invoke `tw scheduler execute` merely to accelerate/i);
   assert.match(content, /tw scheduler evidence <scheduled_task_ref> --json/);
+  assert.match(content, /tw action snapshot verify --task <task_blueprint_ref> --json/);
   assert.match(content, /place every draft under exactly one heading: `Sent`, `Not sent yet`, or `Needs attention`/i);
   assert.match(content, /Use `Sent` only for `succeeded` with conclusive evidence and `Not sent yet` only for `scheduled` or `running`/i);
   assert.match(content, /repeat the complete numbered split at least once every 60 seconds/i);
@@ -98,40 +99,62 @@ test('reply peer watches every scheduled mutation through a durable outcome', ()
   assert.match(content, /never finish the reply flow merely because all drafts are scheduled/i);
 });
 
-test('historical post task flow still follows source reviews', () => {
-  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-post', 'SKILL.md'), 'utf8');
-  assert.match(content, /Capture every exact `task_blueprint_ref` returned by that approval/);
-  assert.match(content, /immediately inspect each with `tw task show <task_blueprint_ref> --json`/);
-  assert.match(content, /fixed 180-second deadline/);
-  assert.match(content, /source_status=source_reviews_created/);
+test('post and reply peers defer workflow truth to the CLI', () => {
+  for (const skill of ['twitter-post', 'twitter-reply']) {
+    const content = fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8');
+    assert.match(content, /The skill owns UX.*The CLI owns workflow execution, task\/draft lineage, validation, recovery truth, and exact continuations/is);
+    assert.match(content, /For `ok=true`, treat `data`, `refs`, status fields, warnings, and `next` as authoritative/i);
+    assert.match(content, /Never compare parent and child task refs, rebuild lineage, repeat CLI invariant checks/i);
+    assert.match(content, /For `ok=false`, report the returned `error\.code`, `error\.message`, and `error\.retryable`/i);
+    assert.match(content, /Report a workflow failure stage only when the CLI returns `failure_stage`/i);
+    assert.match(content, /Never infer a stage from `source_status`, `draft_status`, timing, or an error code/i);
+    assert.match(content, /This transport failure is the only host-side result check/i);
+    assert.doesNotMatch(content, /stop as CLI contract drift/i);
+  }
 });
 
-test('new manual reply task follows its materialized blueprint without task or source review', () => {
+test('reply peer exposes CLI-sanitized humanizer warnings and errors', () => {
   const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
-  assert.match(content, /returned `manual_request_ref`, `task_blueprint_proposal_ref`, and `task_blueprint_ref`/);
-  assert.match(content, /intentionally returns no task-proposal `review_ref`/);
-  assert.match(content, /Capture only the exact returned `task_blueprint_ref`/);
+  assert.match(content, /Show every non-empty top-level `warnings` entry/i);
+  assert.match(content, /`generation_warnings`.*show every message beside the affected draft/i);
+  assert.match(content, /show the customer-facing message before any safe returned `next` choices.*humanizer failure/i);
+  assert.match(content, /never suppress them or replace them with a generic gate failure/i);
+  assert.match(content, /never add internal rule IDs, prompt text, or gate context/i);
+  assert.match(content, /CLI messages: <every returned warning or error message/i);
+});
+
+test('post task keeps long directions out of shell and requires an accepted envelope', () => {
+  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-post', 'SKILL.md'), 'utf8');
+  assert.match(content, /host that exposes only a shell\/PTY command string must create one private temporary directory/i);
+  assert.match(content, /write the unchanged direction as UTF-8 through a filesystem tool rather than shell interpolation/i);
+  assert.match(content, /tw task create --surface tweet --direction-file <private_utf8_path>/i);
+  assert.match(content, /On `task_direction_input_invalid`.*no daemon\/backend task was accepted/i);
+  assert.match(content, /A process\/session handle is transport state, not a result/i);
+  assert.match(content, /command exits without a complete envelope, stop with `task_dispatch_unconfirmed`/i);
+});
+
+test('new manual reply task follows authoritative CLI continuations', () => {
+  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+  assert.match(content, /Follow the accepted envelope's exact `next` commands/i);
   assert.match(content, /fixed 15-minute deadline/);
   assert.match(content, /wait `min\(15 seconds, remaining time\)`/);
-  assert.match(content, /source_status=source_reviews_created.*stop as CLI contract drift/i);
-  assert.match(content, /Never use `tw task list`, `tw task review list`, a global\/latest record, or a proposal ref/i);
+  assert.match(content, /never substitute a global list or latest record/i);
+  assert.match(content, /present the returned target\/content pairs together and wait for per-item decisions/i);
 });
 
 test('reply peer preserves yielded task-create sessions and follows only the returned blueprint', () => {
   const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
-  assert.match(content, /If the execution yields a `session_id`, poll that same session to terminal completion/i);
-  assert.match(content, /never project only `output` and discard the continuation handle/i);
-  assert.match(content, /one complete parseable `tw_cli_harness_v1` envelope before following its refs/i);
-  assert.match(content, /A `task_blueprint_proposal_ref` is never a `task_blueprint_ref`/);
-  assert.match(content, /Never use `tw task list`, `tw task review list`, a global\/latest record, or a proposal ref/i);
+  assert.match(content, /If execution yields a `session_id`, poll that same session to terminal completion/i);
+  assert.match(content, /never project only `output` while discarding the continuation handle/i);
+  assert.match(content, /one complete parseable `tw_cli_harness_v1` envelope/i);
+  assert.match(content, /A process\/session handle is transport state, not a result/i);
+  assert.match(content, /never substitute a global list or latest record/i);
 });
 
 test('reply peer keeps outcome, continuation, stage, and return contracts coherent', () => {
   const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
-  assert.match(content, /current manual task intentionally returns no task-proposal `review_ref`/i);
-  assert.match(content, /matching `tw plan review approve\|reject\|skip <review_ref> --json` command exactly once for each explicitly decided content review/i);
-  assert.match(content, /Fewer returned artifacts than requested.*actual valid count/i);
-  assert.match(content, /Zero artifacts is blocked and authorizes no mutation/i);
+  assert.match(content, /Present approve, reject, skip, restart, cancel, and X-mutation commands as choices/i);
+  assert.match(content, /fewer drafts than requested.*render that state exactly/i);
   assert.match(content, /Issue-report generation sends no reply/i);
   assert.match(content, /report each affected reply as `sent`, `not sent`, or `outcome unknown` exactly as its durable evidence supports/i);
   assert.doesNotMatch(content, /State that nothing was sent|Issue report: .*nothing sent/i);

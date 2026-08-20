@@ -4,17 +4,18 @@
     {
       "id": 1,
       "prompt": "Create 5 tweets about mistakes teams make during product launches.",
-      "expected_output": "Selects task mode, runs preflight, creates one tweet task proposal with count 5, shows the exact proposal review, and stops before approval.",
+      "expected_output": "Selects task mode, runs preflight, creates one materialized tweet task with count 5, follows its automatic generation, presents all valid drafts for independent content review, and stops before any approval.",
       "expectations": [
         "Uses tw task create with surface tweet and count 5",
         "Does not invoke twitter-automation",
-        "Does not claim drafts or posts exist at proposal creation"
+        "Does not require a task-proposal review_ref",
+        "Follows plural artifact_refs and review_refs returned by the exact task"
       ]
     },
     {
       "id": 2,
       "prompt": "帮我创建 3 条关于 AI agent 产品设计的推文。",
-      "expected_output": "Uses Simplified Chinese interface text, preserves the direction, creates one count-3 tweet task proposal, and waits for task approval.",
+      "expected_output": "Uses Simplified Chinese interface text, preserves the direction, creates one count-3 materialized tweet task, and waits only for per-draft content approval after automatic generation.",
       "expectations": [
         "Uses task mode and count 3",
         "Keeps commands and refs in English",
@@ -73,13 +74,36 @@
     },
     {
       "id": 8,
-      "prompt": "I approved the post task proposal. Its exact task reads still say awaiting_selection after 105 seconds, then return source_reviews_created before 180 seconds. Check whether this task has source reviews waiting.",
-      "expected_output": "Keeps polling every exact task blueprint ref returned by approval within one fixed deadline, does not report a false block after 105 seconds, and follows only pending source-review refs when source_reviews_created appears.",
+      "prompt": "The post task returned its exact task_blueprint_ref but no singular review_ref. It is still generating after 105 seconds and later returns pending_review with artifact_refs and review_refs. Continue it safely.",
+      "expected_output": "Treats the missing singular review_ref as expected, keeps polling the exact returned task within one fixed deadline, then follows every returned artifact and content-review ref without searching global or task-review lists.",
       "expectations": [
-        "Runs tw task show with each exact returned task_blueprint_ref",
-        "Uses only source_review_refs_by_status.pending when source reviews are created",
-        "Never searches a global review list or guesses the latest review",
-        "Treats approved or archived-only buckets as having no source decision waiting"
+        "Runs tw task show with the exact returned task_blueprint_ref",
+        "Does not classify missing task-proposal review_ref as CLI drift",
+        "Follows plural artifact_refs and review_refs as content review lineage",
+        "Never searches a global review list or guesses the latest review"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Create one tweet from a long product brief containing several paragraphs, quotation marks, shell metacharacters, and must-include details. You are running in Codex with only a shell/PTY command surface.",
+      "expected_output": "Keeps the complete brief out of shell syntax, writes it unchanged through a filesystem tool to a private temporary UTF-8 file, invokes task create with --direction-file, retains any yielded session handle without claiming backend acceptance, and removes the file only after terminal completion.",
+      "expectations": [
+        "Never places the brief in a shell command, heredoc, shell variable, or PTY write sequence",
+        "Uses --direction-file with a private temporary UTF-8 file",
+        "Treats session_id as local transport state rather than task acceptance",
+        "Requires a complete tw_cli_harness_v1 envelope with durable refs before reporting discovery or generation",
+        "Stops on task_direction_input_invalid or task_dispatch_unconfirmed without creating a duplicate"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "The exact tweet task returned execution_status failed, source_status selected, failure_code provider_result_unknown, and no failure_stage.",
+      "expected_output": "Reports the selected source state and exact failure code without claiming that discovery, selection, or generation was the failure stage.",
+      "expectations": [
+        "Reports source_status selected exactly",
+        "Reports provider_result_unknown exactly",
+        "Does not invent a discovery, selection, generation, or dispatch stage",
+        "Does not create, restart, approve, schedule, or send anything without a returned choice and explicit authorization"
       ]
     }
   ]

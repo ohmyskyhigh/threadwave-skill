@@ -11,6 +11,8 @@ const contract = fs.readFileSync(path.join(skillRoot, 'references', 'preflight-c
 const manifest = JSON.parse(fs.readFileSync(path.join(skillRoot, 'skill-manifest.json'), 'utf8'));
 const suite = JSON.parse(fs.readFileSync(path.join(root, 'suite-manifest.json'), 'utf8'));
 const evals = JSON.parse(fs.readFileSync(path.join(skillRoot, 'evals', 'evals.json'), 'utf8'));
+const replySkill = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+const replyEvals = JSON.parse(fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'evals', 'evals.json'), 'utf8'));
 
 test('Windows packaged readiness uses only the canonical fixed command adapter', () => {
   assert.match(skill, /platform invocation adapter/i);
@@ -45,7 +47,22 @@ test('the cmd adapter has a closed readiness mapping and excludes dynamic operat
     assert.match(contract, new RegExp(`%THREADWAVE_MANAGED_LAUNCHER%\" ${operation.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
   }
   assert.match(contract, /Never interpolate user-authored content, model output, targets, URLs, refs/);
-  assert.match(contract, /must never convert tweet\/reply text, targets, URLs, refs, feedback, or other user values into a `cmd\.exe \/c` command string/);
+  assert.match(contract, /must never convert tweet\/reply text, targets, URLs, refs, feedback, or other user values into a manually composed `cmd\.exe \/c` command string/);
+});
+
+test('packaged Windows downstream operations preserve true argument boundaries', () => {
+  assert.match(skill, /`ProcessStartInfo\.ArgumentList`/);
+  assert.match(contract, /call `ArgumentList\.Add\(\.\.\.\)` once for each value/);
+  assert.match(contract, /direction, post\/reply text, target, ref, or feedback must remain one `ArgumentList` entry/);
+  assert.match(contract, /Do not invoke the managed launcher with the PowerShell call operator and splatting/);
+  assert.match(contract, /Do not use `Start-Process -ArgumentList`, `ProcessStartInfo\.Arguments`, `Invoke-Expression`/);
+  assert.match(contract, /stop with `twitter_automation_cli_unconfirmed`/);
+  assert.match(replySkill, /add each CLI token and the complete condensed direction separately through `ProcessStartInfo\.ArgumentList`/);
+
+  const windowsReplyEval = replyEvals.evals.find((entry) => entry.id === 25);
+  assert.ok(windowsReplyEval);
+  assert.match(windowsReplyEval.expectations.join(' '), /complete condensed direction exactly once as one argument/i);
+  assert.match(windowsReplyEval.expectations.join(' '), /call-operator splatting.*composed cmd\.exe \/c string/i);
 });
 
 test('preflight version and evaluation cover the Windows packaged boundary', () => {
