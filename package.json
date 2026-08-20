@@ -1,6 +1,6 @@
 {
   "name": "threadwave-skill",
-  "version": "0.7.9",
+  "version": "0.7.10",
   "private": true,
   "type": "module",
   "description": "Bilingual Twitter/X automation skill suite powered by ThreadWave",
