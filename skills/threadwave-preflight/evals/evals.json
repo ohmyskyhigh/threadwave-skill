@@ -35,13 +35,13 @@
     },
     {
       "id": 4,
-      "prompt": "Preflight already returned ready in this agent session, and you just showed me strategy review review_abc for this same task. I approve that exact unchanged review.",
-      "expected_output": "Reuses the same-task ready result from conversation working memory and returns to the exact pending approval without rerunning threadwave-update, tw preflight, or tw capabilities.",
+      "prompt": "A full preflight passed 11 hours ago. Start a new reply task now.",
+      "expected_output": "Runs the per-task skill update check, invokes regular CLI preflight, accepts its fresh rolling receipt and cached capability projection, and starts the reply task without a full readiness or capability probe.",
       "expectations": [
-        "Treats the exact unchanged approval as a review gate rather than a readiness gate",
-        "Does not rerun the skill update or CLI preflight",
-        "Does not persist a readiness receipt or reuse it in another agent session",
-        "Invalidates reuse if the task, capability scope, or readiness state changed"
+        "Runs the skill update check for the new task",
+        "Does not force a full preflight merely because this is a new task or agent session",
+        "Does not invoke tw capabilities separately",
+        "Requires the cached capability projection to satisfy the reply manifest"
       ]
     },
     {
@@ -60,7 +60,7 @@
     {
       "id": 6,
       "prompt": "Updates are available. Update ThreadWave now, then continue my original task.",
-      "expected_output": "Treats the request as update approval, fetches the fixed setup guide through the platform process command, follows its current-host CLI and skill update flow, reruns full preflight once, and resumes the preserved task.",
+      "expected_output": "Treats the request as update approval, fetches the fixed setup guide through the platform process command, follows its current-host CLI and skill update flow, runs forced preflight once, and resumes the preserved task.",
       "expectations": [
         "Does not ask for a second update approval",
         "Does not use browser navigation or Web search to retrieve agent.md",
@@ -79,7 +79,28 @@
         "Runs only a fixed preflight-owned command template through cmd.exe /c",
         "Does not execute a raw command string returned by the CLI",
         "Does not interpolate the exact post text or metacharacters into the shell command",
-        "Requires CLI 1.0.32 or newer and verifies capabilities through the same adapter"
+        "Requires CLI 1.0.32 or newer and verifies the returned capability projection"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "ThreadWave was last used exactly 12 hours ago. Start a new post task.",
+      "expected_output": "Runs the per-task skill update check, treats the readiness receipt as stale, performs one full preflight, refreshes the receipt and capability projection, and then resumes the post task.",
+      "expectations": [
+        "Treats exactly 12 hours of inactivity as stale",
+        "Runs one full readiness flow after the update check",
+        "Refreshes the rolling last-used timestamp only from the CLI-owned receipt",
+        "Does not use calendar-day boundaries"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Use greeting-balance mode before showing the ThreadWave starter menu.",
+      "expected_output": "Runs only the fixed tw credits --format json command, returns the nonnegative remaining balance or unavailable, and skips update, readiness, setup, recovery, and issue reporting.",
+      "expectations": [
+        "Does not invoke threadwave-update or tw preflight",
+        "Validates threadwave-credits-v1 and credits_remaining",
+        "Does not ask the user to log in or pay when the lookup is unavailable"
       ]
     }
   ]

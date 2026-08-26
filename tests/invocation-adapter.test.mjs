@@ -39,6 +39,7 @@ test('the cmd adapter has a closed readiness mapping and excludes dynamic operat
   for (const operation of [
     'preflight --format json',
     'capabilities --format json',
+    'credits --format json',
     'login',
     'subscribe',
     'setup --format json',

@@ -44,11 +44,23 @@
     {
       "id": 5,
       "prompt": "The daily-agent preflight passed earlier in this session. Approve the exact unchanged strategy review you just showed me.",
-      "expected_output": "Reuses the successful same-task preflight, approves only the exact displayed strategy review, and activates it only after matching approval proof.",
+      "expected_output": "Reuses the current ready result, approves only the exact displayed strategy review, and activates it only after matching approval proof.",
       "expectations": [
         "Does not rerun preflight for the approval response alone",
         "Keeps approval scoped to the exact review ref and content hash",
-        "Reruns full preflight if readiness was invalidated or this is a new task"
+        "Runs forced preflight only if readiness was invalidated"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "These pending recoveries are all still unknown. Skip all of the exact items you showed me and continue today's plan.",
+      "expected_output": "Resolves each displayed recovery to one recovery-required scheduled task, durably skips each exact task once, verifies every acknowledgment, and continues without changing any unknown outcome.",
+      "expectations": [
+        "Matches every displayed recovery_ref to exactly one scheduled_task_ref",
+        "Runs tw scheduler skip once per exact resolved task",
+        "Requires data.outcome_acknowledged true for every successful skip",
+        "Does not replay successful skips if another item fails",
+        "Preserves outcome unknown and authorizes no retry, replacement, cancellation, or mutation"
       ]
     }
   ]

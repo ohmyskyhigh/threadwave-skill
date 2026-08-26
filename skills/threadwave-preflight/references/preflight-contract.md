@@ -1,6 +1,10 @@
 # Mandatory Preflight Contract
 
-Run this full flow before the first `tw` command of each new ThreadWave task or agent session and after any readiness invalidation. The originating operation skill and request must survive the handoff unchanged. A successful result may be reused only for the same unchanged task in the same agent session under the rules below.
+Run the skill update check at the start of each new ThreadWave task, then invoke CLI preflight through the selected adapter. CLI preflight always checks local integrity and current CLI release compatibility. It runs the full readiness flow only when its durable receipt has been idle for 12 hours or readiness was invalidated; otherwise it reuses the receipt. The originating operation skill and request must survive the handoff unchanged.
+
+## Greeting Balance Mode
+
+When `twitter-automation` explicitly invokes `greeting-balance`, skip the update authority and every readiness, capability, setup, recovery, and issue-report step below. Select the platform adapter from section 4, invoke only the fixed logical arguments `credits --format json`, and never request login or payment. Require `schema_version=tw-cli-v1`, `command=credits`, `status=ok`, `data.contract_version=threadwave-credits-v1`, and a nonnegative integer `data.credits_remaining`. Return only that number to the router. If the command is missing, authentication is absent or expired, the network fails, or the response is invalid, return balance unavailable and stop without another command. This lookup neither reads nor refreshes the readiness receipt.
 
 ## 1. Preserve Intent And Select The Operation
 
@@ -15,32 +19,30 @@ Unless the user requested preflight directly, require the originating skill to b
 
 Choose `en` or `zh-CN` from explicit preference, latest message, conversation language, then English.
 
-## 2. Reuse Same-Task Readiness Or Run A Full Check
+## 2. Reuse The Rolling 12-Hour Readiness Receipt
 
-Keep a successful preflight result in conversation working memory only. Do not write a cache file, persist a receipt, or reuse it in another agent session.
+The CLI owns one mode-`0600` readiness receipt. Skills and agent hosts never read, write, copy, or interpret that file directly. A successful full check records only the sanitized readiness and capability projection, a hashed local-identity binding, bound CLI version/install mode, full-check time, and rolling `last_used_at`. Each regular preflight invocation for the same identity updates `last_used_at`. The receipt is fresh while less than 12 hours have elapsed since that timestamp; exactly 12 hours is stale. This is a rolling inactivity timeout, not a calendar-day cache.
 
-Keep a skipped update offer separately in conversation working memory. It applies across ThreadWave tasks for the rest of the same agent session only while the exact offered skill and CLI local/latest version map is unchanged. Never persist it. Clear it when the agent session ends, any offered version changes, or an install/update occurs. Keep an unconfirmed-index continuation choice the same way: conversation working memory only, applied across ThreadWave tasks for the rest of the same agent session, and re-asked in a new agent session while the index stays unconfirmed. Keep a required-update continuation choice under the same rules: conversation working memory only, rest of the same agent session, re-asked in a new agent session. A new task still runs full preflight and its own capability gate; a required capability or minimum-version failure makes updating mandatory even when the same optional offer was skipped earlier.
+Keep a skipped update offer separately in conversation working memory. It applies across ThreadWave tasks for the rest of the same agent session only while the exact offered skill and CLI local/latest version map is unchanged. Never persist it. Clear it when the agent session ends, any offered version changes, or an install/update occurs. Keep an unconfirmed-index continuation choice and required-update continuation choice under the same rules. A new task always runs section 3's update check, but it does not force a full readiness or capability probe. A required capability or minimum-version failure still makes updating mandatory even when the same optional offer was skipped earlier.
 
-Reuse that result and skip sections 3 through 7 only when all of these remain true:
+After section 3, invoke regular preflight. Accept `data.readiness_reuse.source=reused` only when all of these remain true:
 
-- this is the same agent session, originating skill, selected mode, and user-initiated task;
-- the originating skill's required command families and exact commands are unchanged;
-- the current message is an approval, rejection, skip, edit, redisplay, or continuation of the same active workflow and its exact refs/scopes;
+- `data.readiness_reuse.idle_timeout_seconds=43200` and the returned last-use timestamp is less than 12 hours old;
+- the bound CLI version and install mode match the current invocation;
+- the hashed local-identity binding matches the current local identity;
+- the returned capability projection satisfies the current originating skill's manifest;
 - no readiness invalidation listed below occurred after the successful result.
 
-An ordinary strategy, plan, task, source, draft, or exact-action review decision is a review gate, not a readiness gate. Do not rerun `threadwave-update`, `tw preflight`, or `tw capabilities` for that decision alone.
+An ordinary strategy, plan, task, source, draft, or exact-action review decision is a review gate, not a new task or readiness gate. Do not rerun `threadwave-update` or `tw preflight` for that decision alone.
 
-Discard the reusable result and run the full check when any of these occurs:
+Invoke `tw preflight --force --format json`, which invalidates the receipt before checking, when any of these occurs:
 
-- a new ThreadWave task or agent session starts;
-- the originating skill, selected mode, user-initiated task, or required capability scope changes;
 - a skill or CLI install/update occurs; choosing to continue with an unchanged supported version does not invalidate readiness by itself;
 - the selected CLI invocation adapter, install mode, canonical launcher path, active CLI version, or capabilities result changes;
 - setup, login, subscription/payment, Chrome extension/relay, X sign-in/session, or another readiness action occurs;
-- any `tw` command reports readiness, compatibility, install, auth, subscription, relay, or X-session failure;
-- the agent cannot confirm that the pending refs/scopes belong to the same unchanged task.
+- any `tw` command reports readiness, compatibility, install, auth, subscription, relay, or X-session failure.
 
-If reuse is allowed, return the prior `ready` result to the originating skill and continue the exact pending workflow without invoking another preflight command.
+A new task, originating skill, mode, capability scope, or agent session alone does not invalidate the receipt. Apply the new manifest's gate to the returned capability projection. If a requirement is absent, return `twitter_automation_capability_unavailable`; do not force a full probe in the hope that the same CLI advertises a different result.
 
 ## 3. Invoke The Update Authority
 
@@ -89,7 +91,9 @@ For `windows_managed_cmd`, add only `THREADWAVE_MANAGED_LAUNCHER=<canonical abso
 | Operation | Fixed command after `/c` |
 | --- | --- |
 | recurring preflight | `call "%THREADWAVE_MANAGED_LAUNCHER%" preflight --format json` |
+| forced preflight after invalidation | `call "%THREADWAVE_MANAGED_LAUNCHER%" preflight --force --format json` |
 | capabilities | `call "%THREADWAVE_MANAGED_LAUNCHER%" capabilities --format json` |
+| greeting balance | `call "%THREADWAVE_MANAGED_LAUNCHER%" credits --format json` |
 | login | `call "%THREADWAVE_MANAGED_LAUNCHER%" login` |
 | subscription | `call "%THREADWAVE_MANAGED_LAUNCHER%" subscribe` |
 | setup | `call "%THREADWAVE_MANAGED_LAUNCHER%" setup --format json` |
@@ -97,9 +101,9 @@ For `windows_managed_cmd`, add only `THREADWAVE_MANAGED_LAUNCHER=<canonical abso
 
 This is a closed local mapping owned by preflight. Validate a returned action's id, type, safety flag, and expected fixed operation, then execute the local fixed template; never pass a raw returned `command` string into `/c`. Never interpolate user-authored content, model output, targets, URLs, refs, paths, or arbitrary CLI text into a fixed command string.
 
-Invoke recurring preflight through the selected adapter using the logical arguments `preflight --format json`.
+Invoke recurring preflight through the selected adapter using the logical arguments `preflight --format json`. Use `preflight --force --format json` only for an invalidation in section 2 or after install, access, or setup changes.
 
-Require top-level `schema_version=tw-cli-v1`, `data.contract_version=threadwave-preflight-v1`, `data.cli_version>=1.0.32`, and exactly one `data.action`. Read `data.install_mode` and require it to agree with the selected adapter:
+Require top-level `schema_version=tw-cli-v1`, `data.contract_version=threadwave-preflight-v1`, `data.cli_version>=1.0.32`, and exactly one `data.action`. For a receipt-aware result, require `data.readiness_reuse.idle_timeout_seconds=43200` and its capability projection. A supported older CLI may omit both fields; treat that invocation as a legacy full check, never claim durable reuse, and use the compatibility fallback in section 5. Read `data.install_mode` and require it to agree with the selected adapter:
 
 - Windows `packaged` requires `windows_managed_cmd` and does not run a worktree command.
 - Windows `dev` requires a trusted-workspace `direct_process` selection. Run `tw worktree tag --format json` as a structured direct-process call; add `--expected <tag>` only when trusted workspace instructions provide it. Stop on `worktree_tag_missing` or `worktree_tag_mismatch`.
@@ -111,12 +115,12 @@ Follow only the one returned action:
 - `continue`: proceed to compatibility checks.
 - `reinstall`: record `cli_reinstall_required`, preserve the request, skip the remaining CLI compatibility checks, and use the required scoped update in section 5; continuation follows the required-update failure escape in section 5.
 - `update`: record `cli_update_available`, do not run the command yet, and proceed to compatibility checks so the user can make one informed update decision.
-- `login`: run the adapter's fixed `login` operation in a persistent process call. Wait until it opens ThreadWave sign-in, keep it running, and only then pause for the user's sign-in. Rerun preflight after the command completes.
-- `complete_subscription`: run the adapter's fixed `subscription` operation in a persistent process call. Wait until its browser journey opens Stripe checkout, keep it running, and only then pause for the user's payment. Rerun preflight after the command completes. Never combine sign-in and checkout into one pause or create a second checkout.
-- `setup`: run the adapter's fixed `setup` operation once and follow only its returned action. Automatically run only a validated action with `safe_to_run=true` that maps to a fixed local readiness operation; pause for every user-confirmation or wait action. Then rerun preflight once.
+- `login`: run the adapter's fixed `login` operation in a persistent process call. Wait until it opens ThreadWave sign-in, keep it running, and only then pause for the user's sign-in. Run forced preflight after the command completes.
+- `complete_subscription`: run the adapter's fixed `subscription` operation in a persistent process call. Wait until its browser journey opens Stripe checkout, keep it running, and only then pause for the user's payment. Run forced preflight after the command completes. Never combine sign-in and checkout into one pause or create a second checkout.
+- `setup`: run the adapter's fixed `setup` operation once and follow only its returned action. Automatically run only a validated action with `safe_to_run=true` that maps to a fixed local readiness operation; pause for every user-confirmation or wait action. Then run forced preflight once.
 - `retry_later`: network/backend verification is unavailable. Never report this as authentication failure; retry once later, then stop.
 
-After one login, subscription, or setup action, rerun preflight once through the same adapter. If the same unresolved state repeats, run the adapter's fixed `doctor` operation once and require `schemaVersion=threadwave-doctor-v1`; never expose doctor paths in output or handoffs. Then follow the setup retry rounds below instead of stopping immediately.
+After one login, subscription, or setup action, run forced preflight once through the same adapter. If the same unresolved state repeats, run the adapter's fixed `doctor` operation once and require `schemaVersion=threadwave-doctor-v1`; never expose doctor paths in output or handoffs. Then follow the setup retry rounds below instead of stopping immediately.
 
 ### Setup Retry Rounds
 
@@ -134,7 +138,7 @@ Setup is still incomplete after diagnosis. Choose:
 2. 停止并生成报告
 ```
 
-A retry starts one fresh round through the same adapter: run the returned action's fixed operation once, rerun preflight once, and if the same unresolved state repeats, run `doctor` once more and present this choice again with the updated round count. After three completed rounds, or immediately when the user chooses stop, stop with `twitter_automation_setup_unresolved` and route a sanitized support handoff. A new agent session starts the round count fresh.
+A retry starts one fresh round through the same adapter: run the returned action's fixed operation once, run forced preflight once, and if the same unresolved state repeats, run `doctor` once more and present this choice again with the updated round count. After three completed rounds, or immediately when the user chooses stop, stop with `twitter_automation_setup_unresolved` and route a sanitized support handoff. A new agent session starts the round count fresh.
 
 Setup recovery must preserve the CLI agent session returned by the initial setup result. Follow its validated resume action through the same adapter without reconstructing it through a different executable or browser binding.
 
@@ -144,15 +148,9 @@ For a packaged Windows downstream operation, reuse the resolved absolute System3
 
 Do not invoke the managed launcher with the PowerShell call operator and splatting such as `& $launcherPath @args`. Do not use `Start-Process -ArgumentList`, `ProcessStartInfo.Arguments`, `Invoke-Expression`, a manually joined argument string, or a version-directory `tw.exe`. Those forms reconstruct shell text and can split or reinterpret a dynamic value. If the host lacks `ProcessStartInfo.ArgumentList` or an equivalent true per-argument child-process API, stop with `twitter_automation_cli_unconfirmed`; never fall back to a string-based invocation.
 
-## 5. Check CLI Compatibility
+## 5. Check CLI Compatibility From The Preflight Projection
 
-Invoke capabilities through the same selected adapter using the logical arguments:
-
-```text
-capabilities --format json
-```
-
-Read the originating skill's local `skill-manifest.json` as a sibling skill manifest, not through a hard-coded path. Require:
+Do not invoke `tw capabilities` separately when preflight returns `data.capabilities`. If a supported older CLI omits that projection, or an update result has no fresh receipt projection, invoke capabilities once through the same adapter; this is a compatibility fallback, not a second full preflight. Read the originating skill's local `skill-manifest.json` as a sibling skill manifest, not through a hard-coded path, and apply it to that projection. Require:
 
 - top-level `schema_version=tw-cli-v1`;
 - advertised CLI schemas include `tw-cli-v1`;
@@ -206,7 +204,7 @@ Require the response to identify `Guide ID: twitter-cli-setup` and `Canonical pa
 
 Use the locale already selected in section 1 as the guide's setup language; do not add a redundant language-choice pause.
 
-After the selected scoped update succeeds, discard the prior readiness result, rerun the full preflight once, and resume the exact preserved originating request without asking the user to repeat it.
+After the selected scoped update succeeds, run forced preflight once and resume the exact preserved originating request without asking the user to repeat it.
 
 ### Required Update Failure Escape
 
@@ -230,7 +228,7 @@ Continue waives the update or reinstall requirement for the rest of the same age
 
 Normally step 4 must finish with `data.state=ready` and `data.action.id=continue`. The only version exception is `data.state=update_required` with `data.action.id=update`: when the installed CLI passes section 5 and the user skipped that exact offered version map in the current agent session, treat only the update notice as waived. A required update or reinstall stays mandatory until its guide flow succeeds or the user chooses continuation under the required-update failure escape in section 5. Any other preflight action remains mandatory, and any later readiness, auth, subscription, relay, setup, or X-session error invalidates the current readiness result. At every browser gate, the agent launches the returned safe command or URL first and pauses only after the corresponding page is open. Treat Chrome permission, ThreadWave sign-in, subscription/payment, and X sign-in as normal user gates; never automate the user's interaction or bypass installer, signature, notarization, publisher, or Web Store trust failures.
 
-Run the full preflight after install, after access, after setup, and at the start of each later ThreadWave task or agent session. Within the same unchanged task, reuse the successful result across review decisions and workflow continuation until a readiness invalidation in section 2 occurs.
+Run forced preflight after install, after access, after setup, and after a readiness invalidation in section 2. At the start of each new ThreadWave task, run the skill update check and regular preflight; regular preflight reuses readiness until 12 hours of inactivity and performs a full check when the receipt is stale. Review decisions and workflow continuation are not new task boundaries.
 
 ## 7. Apply The Originating Capability Gate
 

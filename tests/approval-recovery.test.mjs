@@ -62,7 +62,7 @@ test('reply peer follows automatic manual drafts and keeps content approval per 
 
 test('reply peer replaces a wrong automatic batch only after skipping pending drafts', () => {
   const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
-  assert.match(content, /Every fresh task below reruns mandatory preflight; same-task review, monitoring, and redraft reuse/i);
+  assert.match(content, /Every fresh task below runs the update check and regular preflight; a new task alone reuses fresh readiness/i);
   assert.match(content, /“these candidates are wrong,” or a direction, source, angle, or target change/i);
   assert.match(content, /show every current content review and ask the user to confirm skipping/i);
   assert.match(content, /tw plan review skip <review_ref> --json/);
@@ -97,6 +97,9 @@ test('reply peer watches every scheduled mutation through a durable outcome', ()
   assert.match(content, /repeat the complete numbered split at least once every 60 seconds/i);
   assert.match(content, /Continue until every returned ref is terminal, user-skipped, or waiting on a user decision/i);
   assert.match(content, /never finish the reply flow merely because all drafts are scheduled/i);
+  assert.match(content, /tw scheduler skip <scheduled_task_ref> --json/);
+  assert.match(content, /require `data\.outcome_acknowledged=true`/i);
+  assert.match(content, /acknowledgment survives later sessions/i);
 });
 
 test('post and reply peers defer workflow truth to the CLI', () => {
@@ -136,8 +139,9 @@ test('post task keeps long directions out of shell and requires an accepted enve
 test('new manual reply task follows authoritative CLI continuations', () => {
   const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
   assert.match(content, /Follow the accepted envelope's exact `next` commands/i);
-  assert.match(content, /fixed 15-minute deadline/);
-  assert.match(content, /wait `min\(15 seconds, remaining time\)`/);
+  assert.match(content, /tw task wait <task_blueprint_ref> --timeout 900 --include-drafts --json/);
+  assert.match(content, /do not model-poll task show or invoke separate draft-show commands/i);
+  assert.match(content, /If task wait returns `task_wait_timeout`/);
   assert.match(content, /never substitute a global list or latest record/i);
   assert.match(content, /present the returned target\/content pairs together and wait for per-item decisions/i);
 });
@@ -187,10 +191,14 @@ test('daily agent checks existing work before creating a plan', () => {
   const dailyAgent = operationSkillNames(suite, releaseIndex)
     .find((skill) => manifests.get(skill)?.role === 'daily-operation');
   assert.ok(dailyAgent);
+  const content = fs.readFileSync(path.join(root, 'skills', dailyAgent, 'SKILL.md'), 'utf8');
   const procedure = fs.readFileSync(path.join(root, 'skills', dailyAgent, 'references', 'daily-run.md'), 'utf8');
   assert.ok(procedure.indexOf('tw plan review list --json') < procedure.indexOf('tw plan create --json'));
   assert.match(procedure, /Never create a second plan/);
   assert.match(procedure, /exact `scheduled_task_ref`/);
+  assert.match(content, /tw scheduler skip <scheduled_task_ref> --json/);
+  assert.match(content, /require `data\.outcome_acknowledged=true`/i);
+  assert.match(procedure, /successful durable scheduler skip does not/i);
 });
 
 test('every operation peer uses preflight and its error-support compatibility handoff', () => {
@@ -205,19 +213,24 @@ test('every operation peer uses preflight and its error-support compatibility ha
   assert.match(preflight, /pasteable handoff/i);
 });
 
-test('same-task review continuations reuse one successful preflight until readiness invalidation', () => {
+test('new tasks reuse one rolling 12-hour readiness receipt while still checking updates', () => {
   const preflight = fs.readFileSync(path.join(root, 'skills', 'threadwave-preflight', 'SKILL.md'), 'utf8');
   const contract = fs.readFileSync(path.join(root, 'skills', 'threadwave-preflight', 'references', 'preflight-contract.md'), 'utf8');
-  assert.match(preflight, /start of each new ThreadWave task or agent session/i);
-  assert.match(preflight, /review decision alone is not a new preflight boundary/i);
+  assert.match(preflight, /start of each new ThreadWave task, run its skill update check and regular CLI preflight/i);
+  assert.match(preflight, /rolling inactivity is under 12 hours/i);
   assert.match(contract, /conversation working memory only/i);
-  assert.match(contract, /Do not write a cache file, persist a receipt, or reuse it in another agent session/i);
-  assert.match(contract, /Do not rerun `threadwave-update`, `tw preflight`, or `tw capabilities` for that decision alone/i);
+  assert.match(contract, /CLI owns one mode-`0600` readiness receipt/i);
+  assert.match(contract, /exactly 12 hours is stale/i);
+  assert.match(contract, /rolling inactivity timeout, not a calendar-day cache/i);
+  assert.match(contract, /A new task always runs section 3's update check, but it does not force a full readiness or capability probe/i);
+  assert.match(contract, /Do not invoke `tw capabilities` separately when preflight returns `data\.capabilities`/i);
+  assert.match(contract, /tw preflight --force --format json/);
   assert.match(contract, /setup, login, subscription\/payment, Chrome extension\/relay, X sign-in\/session/i);
 
   for (const skill of ['twitter-agent', 'twitter-post', 'twitter-reply']) {
     const content = fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8');
-    assert.match(content, /start of each new .* task or agent session/i);
+    assert.match(content, /start of each new .* task/i);
+    assert.match(content, /reuses readiness until 12 hours of inactivity/i);
     assert.match(content, /do not rerun preflight for a review decision alone/i);
     assert.doesNotMatch(content, /After approval, rerun preflight/i);
   }
@@ -239,8 +252,8 @@ test('preflight gives one update choice and scopes skill and CLI changes indepen
   assert.match(contract, /curl -fsSL --max-time 30 .*https:\/\/www\.threadwave\.xyz\/cli\/setup\/agent\.md/);
   assert.match(contract, /Invoke-WebRequest -UseBasicParsing -Uri 'https:\/\/www\.threadwave\.xyz\/cli\/setup\/agent\.md'/);
   assert.match(contract, /Do not use Web search, browser navigation, URL-read, a cached copy, or a user-pasted copy/);
-  assert.match(contract, /rerun the full preflight once, and resume the exact preserved originating request/);
+  assert.match(contract, /run forced preflight once and resume the exact preserved originating request/);
   assert.match(contract, /applies across ThreadWave tasks for the rest of the same agent session only while the exact offered skill and CLI local\/latest version map is unchanged/);
   assert.match(contract, /Remind again in the next agent session or immediately if the offered version map changes/);
-  assert.match(contract, /A new task still runs full preflight and its own capability gate/);
+  assert.match(contract, /new task always runs section 3's update check, but it does not force a full readiness or capability probe/i);
 });
