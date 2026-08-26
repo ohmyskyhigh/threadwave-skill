@@ -8,9 +8,11 @@ description: "Run the mandatory readiness gate for every ThreadWave Twitter/X wo
 
 Own the single mandatory preflight, setup, and recovery contract. Every operation skill in the release-index roster calls this peer by name before any `tw` command. `threadwave-error-support` owns post-failure classification, solution search, and report generation.
 
+`greeting-balance` mode is the sole lightweight exception. It runs only the contract's fixed `tw credits --format json` lookup for the starter menu, skips update and readiness checks, and returns the balance or unavailable without repair.
+
 ## Mandatory Flow
 
-Read [references/preflight-contract.md](references/preflight-contract.md) completely. Run its full flow at the start of each new ThreadWave task or agent session and after any readiness invalidation. Reuse its successful result for an unchanged review or workflow continuation in the same session; a review decision alone is not a new preflight boundary.
+Read [references/preflight-contract.md](references/preflight-contract.md) completely. Unless the caller selected `greeting-balance` or issue-report-only mode, at the start of each new ThreadWave task, run its skill update check and regular CLI preflight. CLI preflight always checks integrity and release compatibility, reuses its durable readiness/capability receipt while rolling inactivity is under 12 hours, and performs the full check only when stale or invalidated. A review decision alone is not a new task boundary.
 
 Select and retain the contract's platform invocation adapter before the first CLI readiness call. A Windows packaged install uses the absolute system `cmd.exe` and canonical managed `tw.cmd` only for the fixed readiness templates; it never invokes a version-directory `tw.exe` or inserts user content into `cmd.exe /c`.
 
@@ -37,7 +39,7 @@ A supported older skill or CLI is non-blocking. Offer one localized choice only 
 
 Scope the guide to the affected component. A missing, incompatible, or approved skill update uses `skills_only` and never runs a CLI installer, `tw update`, `tw setup`, daemon repair, or native-host registration. A CLI-only update uses `cli_only` and never fetches or installs skills. When both are pending, use `skills_and_cli` and complete the CLI path before the skill path. Reserve `full_setup` for initial setup or missing/unknown core runtime readiness.
 
-When the user approves the update, fetch the fixed guide through process execution, follow only the selected current-host scope yourself, rerun full preflight once, and resume the preserved request. Do not send the user to a browser, ask them to paste the guide, or ask them to type terminal commands. Pause only for the guide's user-owned Chrome, sign-in, payment, or X gates. Setup or update success is not approval for strategy, content, posting, replying, or another X mutation.
+When the user approves the update, fetch the fixed guide through process execution, follow only the selected current-host scope yourself, run forced preflight once, and resume the preserved request. Do not send the user to a browser, ask them to paste the guide, or ask them to type terminal commands. Pause only for the guide's user-owned Chrome, sign-in, payment, or X gates. Setup or update success is not approval for strategy, content, posting, replying, or another X mutation.
 
 ## Language
 

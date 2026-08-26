@@ -16,7 +16,7 @@
     "setup_url": "https://www.threadwave.xyz/cli/setup/agent.md"
   },
   "cli": {
-    "minimum_version": "1.0.35",
+    "minimum_version": "1.0.38",
     "required_command_families": [
       "task",
       "draft",
@@ -27,6 +27,7 @@
     "required_commands": [
       "tw task create --surface <tweet|reply|quote> --direction <text> --count <1|5..10 reply; 1..5 otherwise> --json",
       "tw task show <task_blueprint_ref> --json",
+      "tw task wait <task_blueprint_ref> [--timeout <seconds>] [--include-drafts] --json",
       "tw task restart <task_blueprint_ref> --json",
       "tw draft show <artifact_ref> --json",
       "tw draft redraft <artifact_ref> --feedback <text> --json",

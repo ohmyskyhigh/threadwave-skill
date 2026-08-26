@@ -19,7 +19,7 @@ function capabilities() {
   return {
     schema_version: 'tw-cli-v1',
     data: {
-      cli_version: '1.0.35',
+      cli_version: '1.0.38',
       cli_schema_versions: ['tw-cli-v1'],
       harness_schema_versions: ['tw-harness-v1'],
       required_upgrades: [],
@@ -40,6 +40,7 @@ function capabilities() {
           'tw task create --surface <tweet|reply|quote> --direction <text> --count <1|5..10 reply; 1..5 otherwise> --json',
           'tw task create --surface <tweet|reply|quote> --direction-file <path> --count <1|5..10 reply; 1..5 otherwise> --json',
           'tw task show <task_blueprint_ref> --json',
+          'tw task wait <task_blueprint_ref> [--timeout <seconds>] [--include-drafts] --json',
           'tw task restart <task_blueprint_ref> --json',
           'tw task review show <review_ref> --json',
           'tw task review approve <review_ref> --json',
@@ -94,6 +95,14 @@ test('manual task peers require exact task projection lookup', () => {
   }
 });
 
+test('reply workflow requires one blocking exact-task wait command', () => {
+  const value = capabilities();
+  const task = value.data.command_families.find((family) => family.name === 'task');
+  task.commands = task.commands.filter((command) => !command.startsWith('tw task wait'));
+  assert.ok(evaluateCapabilities(skillManifest('twitter-reply'), value)
+    .some((failure) => failure.startsWith('required_command_missing:')));
+});
+
 test('manual task peers trust accepted CLI results and returned continuations', () => {
   for (const content of [postSkill, replySkill]) {
     assert.match(content, /For `ok=true`.*`next` as authoritative/i);
@@ -122,6 +131,10 @@ test('operation skills enforce their own minimum CLI versions', () => {
   value.data.cli_version = '1.0.34';
   assert.ok(evaluateCapabilities(skillManifest('twitter-reply'), value).includes('cli_version_too_old'));
   assert.ok(evaluateCapabilities(skillManifest('twitter-post'), value).includes('cli_version_too_old'));
+
+  value.data.cli_version = '1.0.37';
+  assert.ok(evaluateCapabilities(skillManifest('twitter-reply'), value).includes('cli_version_too_old'));
+  assert.deepEqual(evaluateCapabilities(skillManifest('twitter-post'), value), []);
 });
 
 test('reply discovery defaults to five and accepts only five through ten targets', () => {

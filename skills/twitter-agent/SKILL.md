@@ -29,7 +29,7 @@ Keep commands, JSON keys, refs, review states, and stable error codes in English
 
 ## Mandatory Preflight And Init Flow
 
-Activate `threadwave-preflight` by skill name at the start of each new daily-agent task or agent session and after any readiness invalidation defined by its contract. Pass the originating skill name, the unchanged daily-agent intent, and the required capability families. Reuse that successful result for unchanged pending reviews and workflow continuation in the same session; do not rerun preflight for a review decision alone. Do not invoke any `tw` command without a current or reusable `ready` result with every roster skill version confirmed supported and its latest-version status known or explicitly continued past under the preflight contract's unconfirmed-index choice.
+Activate `threadwave-preflight` by skill name at the start of each new daily-agent task. Pass the originating skill name, the unchanged daily-agent intent, and the required capability families. It checks skill updates for this task, then uses regular CLI preflight, which reuses readiness until 12 hours of inactivity and runs the full check only when stale or invalidated. Do not rerun preflight for a review decision alone. Do not invoke any `tw` command without a current `ready` result with every roster skill version confirmed supported and its latest-version status known or explicitly continued past under the preflight contract's unconfirmed-index choice.
 
 The selected capability gate requires `context`, `strategy`, `plan`, `task`, `draft`, and `scheduler`. If `threadwave-preflight` is unavailable, or it reports a missing, incompatible, or unconfirmed skill, CLI, or extension module, preserve this request and let preflight run `https://www.threadwave.xyz/cli/setup/agent.md` after approval. A supported older skill or CLI follows preflight's non-blocking continue-or-update choice.
 
@@ -54,7 +54,7 @@ Pending recovery blocks new strategy/plan work only until the user makes one exp
 Accept a numbered per-item decision map, or one explicit "skip all" for the exact unchanged displayed set:
 
 - **Investigate**: inspect the linked scheduler ref through `tw scheduler show <scheduled_task_ref> --json` and `tw scheduler evidence <scheduled_task_ref> --json`, then report only what the durable records support.
-- **Skip**: the user acknowledges the item as-is. Record each exact skipped `recovery_ref` for this session; it no longer blocks new work and is not re-presented until a new session. Skip never changes the durable outcome — an inconclusive recovery remains `outcome unknown`, never becomes `not sent` — and authorizes no retry, replacement, or mutation.
+- **Skip**: resolve each exact displayed `recovery_ref` to exactly one `recovery_required` scheduled task by listing that scheduler status and matching the ref in `tw scheduler show <scheduled_task_ref> --json`. Then invoke `tw scheduler skip <scheduled_task_ref> --json` once and require `data.outcome_acknowledged=true`. For explicit skip-all, do this once per exact unchanged displayed item; if any ref does not resolve uniquely, stop for that item without replaying successful skips. The acknowledgment is durable and removes the recovery from future pending sets. The outcome remains `outcome unknown`, never becomes `not sent`, and skip authorizes no retry, replacement, cancellation, or mutation.
 - **Report**: use the Issue Report handoff with sanitized metadata.
 
 Cancel is a separate, narrower action: only when the user explicitly names one exact `scheduled_task_ref` tied to a recovery and asks to cancel it, invoke `tw scheduler cancel <scheduled_task_ref> --json` once, verify the returned status, and follow any returned recheck instruction. Cancelling terminalizes that scheduler record; it does not remove separate `pending_recovery` entries, which still need a decision above.
@@ -92,7 +92,7 @@ After an active strategy exists, read [references/daily-run.md](references/daily
 
 The normal order is:
 
-1. pending recovery (present once per session; user-skipped refs do not block);
+1. pending recovery (durably acknowledged refs do not block);
 2. pending strategy review;
 3. pending plan review;
 4. pending task/source review;

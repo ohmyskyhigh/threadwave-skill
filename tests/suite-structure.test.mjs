@@ -87,7 +87,9 @@ test('automation starter menu uses the canonical panda and waits before routing'
   assert.match(content, /Draft a tweet.*`twitter-post`/);
   assert.match(content, /Generate replies.*`twitter-reply`/);
   assert.match(content, /Run daily growth.*`twitter-agent`/);
-  assert.match(content, /Do not run `tw`, preflight, or a destination workflow merely to display the menu/);
+  assert.match(content, /`threadwave-preflight` once in `greeting-balance` mode/);
+  assert.match(content, /Credits: <number> remaining/);
+  assert.match(content, /Apart from the one greeting-balance lookup, do not run regular preflight/);
 });
 
 test('tweet and reply task surfaces each have one independent owner', () => {

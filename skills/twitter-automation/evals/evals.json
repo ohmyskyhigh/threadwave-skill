@@ -54,17 +54,18 @@
     {
       "id": 6,
       "prompt": "start ThreadWave",
-      "expected_output": "Shows the exact approved eight-line setup panda above a four-choice starter menu, waits for the user's choice, and runs no preflight, CLI command, workflow, or mutation.",
+      "expected_output": "Runs one lightweight greeting-balance lookup, then shows the exact approved eight-line setup panda, the remaining CLI credit balance, and a four-choice starter menu before waiting for the user's choice.",
       "expectations": [
         "Preserves the approved panda spacing in one preformatted block",
         "Offers tweet, reply, daily growth, and setup/readiness choices",
-        "Does not run preflight or a destination workflow before the user chooses"
+        "Runs only tw credits --format json before the menu",
+        "Does not run regular preflight or a destination workflow before the user chooses"
       ]
     },
     {
       "id": 7,
       "prompt": "启动 ThreadWave",
-      "expected_output": "Uses Simplified Chinese to show the exact approved setup panda and starter menu, then waits without treating menu display as workflow approval.",
+      "expected_output": "Uses Simplified Chinese to show the exact approved setup panda, the lightweight credit balance, and starter menu, then waits without treating menu display as workflow approval.",
       "expectations": [
         "Shows all four starter choices in Simplified Chinese",
         "Accepts a number or clear label as the next choice",
@@ -74,7 +75,7 @@
     {
       "id": 8,
       "prompt": "threadwave",
-      "expected_output": "Treats the exact standalone product name as a starter alias and shows the same panda menu without running a workflow.",
+      "expected_output": "Treats the exact standalone product name as a starter alias, reads the balance once, and shows the same panda menu without running a workflow.",
       "expectations": [
         "Shows the exact approved setup panda",
         "Shows the four starter choices",
@@ -84,10 +85,10 @@
     {
       "id": 9,
       "prompt": "tw",
-      "expected_output": "Treats the exact standalone short alias as a starter command while keeping normal tw CLI commands outside the menu route.",
+      "expected_output": "Treats the exact standalone short alias as a starter command, reads the balance once, and keeps normal tw CLI commands outside the menu route.",
       "expectations": [
         "Shows the same starter menu as start ThreadWave",
-        "Does not run a CLI command",
+        "Runs only the fixed tw credits --format json lookup",
         "Does not classify tw followed by a subcommand as the starter alias"
       ]
     }

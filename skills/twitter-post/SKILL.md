@@ -46,7 +46,7 @@ Respond in English or Simplified Chinese from explicit preference, latest messag
 
 ## Mandatory Preflight
 
-Activate `threadwave-preflight` by skill name at the start of each new post task or agent session and after any readiness invalidation defined by its contract. Pass this skill name, selected mode, unchanged request, and required capability families. Reuse that successful result for unchanged review decisions and workflow continuation in the same session; do not rerun preflight for a review decision alone. Do not invoke `tw` without a current or reusable ready result.
+Activate `threadwave-preflight` by skill name at the start of each new post task. Pass this skill name, selected mode, unchanged request, and required capability families. It checks skill updates for this task, then uses regular CLI preflight, which reuses readiness until 12 hours of inactivity and runs the full check only when stale or invalidated. Do not rerun preflight for a review decision alone. Do not invoke `tw` without a current ready result.
 
 Require CLI `1.0.35` plus `task`, `draft`, `plan`, `scheduler`, and `action` command families. Missing skill, CLI, or extension state routes to `https://www.threadwave.xyz/cli/setup/agent.md` while preserving the request.
 
@@ -108,7 +108,7 @@ Require one exact final post. Do not improve, translate, shorten, expand, normal
 1. Run `tw action tweet --text <exact_text> --dry-run --json` through safe argv/stdin handling.
 2. Show the exact text in full, the dry-run result, and the semantic operation; ask for explicit approval.
 3. Treat any character change as a new payload requiring a new dry-run and approval.
-4. After approval, reuse the same-task preflight result and dispatch `tw action tweet --text <same_exact_text> --json` once.
+4. After approval, reuse the current ready result and dispatch `tw action tweet --text <same_exact_text> --json` once.
 5. Treat the accepted CLI outcome as authoritative. Report complete only when it returns complete; otherwise render its state, error, and safe choices. Never retry an unknown result or send a second post as verification.
 
 ## Boundaries

@@ -26,7 +26,7 @@ Respond in English or Simplified Chinese from explicit preference, latest messag
 
 ## Starter Menu
 
-For a request such as `start ThreadWave`, `open ThreadWave`, or `启动 ThreadWave`, or when the entire trimmed request is exactly `threadwave` or `tw` (case-insensitive), show the starter menu and wait. Do not treat `tw` followed by a CLI subcommand or other text as a starter alias. Showing this menu performs no readiness check and authorizes no workflow or X mutation.
+For a request such as `start ThreadWave`, `open ThreadWave`, or `启动 ThreadWave`, or when the entire trimmed request is exactly `threadwave` or `tw` (case-insensitive), activate `threadwave-preflight` once in `greeting-balance` mode, then show the starter menu and wait. Do not treat `tw` followed by a CLI subcommand or other text as a starter alias. Greeting-balance is a read-only balance lookup, not a readiness check, and authorizes no workflow or X mutation.
 
 Render this approved setup panda exactly once in a preformatted block above the menu. Preserve every space and line break; do not replace it with an image, emoji, or newly invented art.
 
@@ -41,6 +41,8 @@ Render this approved setup panda exactly once in a preformatted block above the 
          ▀██████████████▀
 ```
 
+Below the panda, show the returned balance as `Credits: <number> remaining.` / `积分：剩余 <number>。` When the lightweight lookup is unavailable, show `Credits: unavailable.` / `积分：暂时无法查询。` and continue to the menu without login, setup, repair, or another command.
+
 Present these choices in the user's language:
 
 1. Draft a tweet — route to `twitter-post`.
@@ -48,7 +50,7 @@ Present these choices in the user's language:
 3. Run daily growth — route to `twitter-agent`.
 4. Check setup and readiness — remain here and activate `threadwave-preflight`.
 
-Accept a number, label, or clear equivalent as the choice. Preserve any additional direction the user supplies. For choices 1–3, activate the named peer and stop; that destination owns preflight and its complete workflow. Do not run `tw`, preflight, or a destination workflow merely to display the menu.
+Accept a number, label, or clear equivalent as the choice. Preserve any additional direction the user supplies. For choices 1–3, activate the named peer and stop; that destination owns preflight and its complete workflow. Apart from the one greeting-balance lookup, do not run regular preflight or a destination workflow before the user chooses.
 
 ## Routing Flow
 
