@@ -12,7 +12,7 @@ Own the single mandatory preflight, setup, and recovery contract. Every operatio
 
 ## Mandatory Flow
 
-Read [references/preflight-contract.md](references/preflight-contract.md) completely. Unless the caller selected `greeting-balance` or issue-report-only mode, at the start of each new ThreadWave task, run its skill update check and regular CLI preflight. CLI preflight always checks integrity and release compatibility, reuses its durable readiness/capability receipt while rolling inactivity is under 12 hours, and performs the full check only when stale or invalidated. A review decision alone is not a new task boundary.
+Read [references/preflight-contract.md](references/preflight-contract.md) completely. Unless the caller selected `greeting-balance` or issue-report-only mode, at the start of each new ThreadWave task, run its skill update check and regular CLI preflight. A receipt-aware CLI reuses its durable readiness/capability receipt while rolling inactivity is under 12 hours and performs the full check when stale or invalidated. A supported CLI result that omits `data.readiness_reuse` selects legacy full-check mode: regular preflight is already a full check, so never invoke `--force` in that mode. A review decision alone is not a new task boundary.
 
 Select and retain the contract's platform invocation adapter before the first CLI readiness call. A Windows packaged install uses the absolute system `cmd.exe` and canonical managed `tw.cmd` only for the fixed readiness templates; it never invokes a version-directory `tw.exe` or inserts user content into `cmd.exe /c`.
 
@@ -39,7 +39,7 @@ A supported older skill or CLI is non-blocking. Offer one localized choice only 
 
 Scope the guide to the affected component. A missing, incompatible, or approved skill update uses `skills_only` and never runs a CLI installer, `tw update`, `tw setup`, daemon repair, or native-host registration. A CLI-only update uses `cli_only` and never fetches or installs skills. When both are pending, use `skills_and_cli` and complete the CLI path before the skill path. Reserve `full_setup` for initial setup or missing/unknown core runtime readiness.
 
-When the user approves the update, fetch the fixed guide through process execution, follow only the selected current-host scope yourself, run forced preflight once, and resume the preserved request. Do not send the user to a browser, ask them to paste the guide, or ask them to type terminal commands. Pause only for the guide's user-owned Chrome, sign-in, payment, or X gates. Setup or update success is not approval for strategy, content, posting, replying, or another X mutation.
+When the user approves the update, fetch the fixed guide through process execution, follow only the selected current-host scope yourself, run one post-update preflight selected by the contract, and resume the preserved request. Use regular preflight for legacy mode or a changed CLI version, install mode, adapter, or launcher; use forced preflight only for the same confirmed receipt-aware CLI. Do not send the user to a browser, ask them to paste the guide, or ask them to type terminal commands. Pause only for the guide's user-owned Chrome, sign-in, payment, or X gates. Setup or update success is not approval for strategy, content, posting, replying, or another X mutation.
 
 ## Language
 

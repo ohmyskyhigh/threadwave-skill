@@ -48,7 +48,7 @@
       "expectations": [
         "Does not rerun preflight for the approval response alone",
         "Keeps approval scoped to the exact review ref and content hash",
-        "Runs forced preflight only if readiness was invalidated"
+        "If readiness was invalidated, uses force only for the same confirmed receipt-aware CLI and regular preflight for legacy mode"
       ]
     },
     {
@@ -61,6 +61,17 @@
         "Requires data.outcome_acknowledged true for every successful skip",
         "Does not replay successful skips if another item fails",
         "Preserves outcome unknown and authorizes no retry, replacement, cancellation, or mutation"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "The skill suite just updated on packaged CLI 1.0.39. Preflight omits data.readiness_reuse; continue today's daily plan.",
+      "expected_output": "Delegates to threadwave-preflight, which uses one ordinary full preflight without --force for the legacy CLI, then resumes daily recovery and review checks and presents at most one plan review.",
+      "expectations": [
+        "Does not invoke preflight --force",
+        "Preserves the daily-plan request across the update handoff",
+        "Checks existing recovery and reviews before creating new work",
+        "Does not self-approve a plan or execute an X mutation"
       ]
     }
   ]

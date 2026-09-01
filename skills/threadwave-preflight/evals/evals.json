@@ -60,11 +60,12 @@
     {
       "id": 6,
       "prompt": "Updates are available. Update ThreadWave now, then continue my original task.",
-      "expected_output": "Treats the request as update approval, fetches the fixed setup guide through the platform process command, follows its current-host CLI and skill update flow, runs forced preflight once, and resumes the preserved task.",
+      "expected_output": "Treats the request as update approval, fetches the fixed setup guide through the platform process command, follows its current-host CLI and skill update flow, runs one post-update preflight selected by compatibility mode, and resumes the preserved task.",
       "expectations": [
         "Does not ask for a second update approval",
         "Does not use browser navigation or Web search to retrieve agent.md",
         "Runs setup-guide terminal commands itself and pauses only for user-owned browser gates",
+        "Uses regular preflight for legacy mode or a changed CLI, and force only for the same confirmed receipt-aware CLI",
         "Does not treat update success as X mutation approval"
       ]
     },
@@ -101,6 +102,17 @@
         "Does not invoke threadwave-update or tw preflight",
         "Validates threadwave-credits-v1 and credits_remaining",
         "Does not ask the user to log in or pay when the lookup is unavailable"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "After updating the skills, packaged CLI 1.0.39 returns a valid preflight result without data.readiness_reuse. Continue my preserved daily plan.",
+      "expected_output": "Treats the supported CLI result as legacy full-check mode, invokes regular tw preflight --format json once through the selected adapter, never calls --force, and resumes the preserved twitter-agent request after readiness and capability checks pass.",
+      "expectations": [
+        "Treats regular legacy preflight as the full check",
+        "Does not invoke --force when data.readiness_reuse is absent",
+        "Does not change the CLI minimum version or ask for another update approval",
+        "Resumes the original request without approving a plan or X mutation"
       ]
     }
   ]
