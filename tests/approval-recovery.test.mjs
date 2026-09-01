@@ -225,6 +225,9 @@ test('new tasks reuse one rolling 12-hour readiness receipt while still checking
   assert.match(contract, /A new task always runs section 3's update check, but it does not force a full readiness or capability probe/i);
   assert.match(contract, /Do not invoke `tw capabilities` separately when preflight returns `data\.capabilities`/i);
   assert.match(contract, /tw preflight --force --format json/);
+  assert.match(contract, /supported CLI may omit both fields; treat that invocation as legacy full-check mode/i);
+  assert.match(contract, /Never invoke `--force` in legacy full-check mode/i);
+  assert.match(contract, /same confirmed receipt-aware CLI/i);
   assert.match(contract, /setup, login, subscription\/payment, Chrome extension\/relay, X sign-in\/session/i);
 
   for (const skill of ['twitter-agent', 'twitter-post', 'twitter-reply']) {
@@ -252,8 +255,20 @@ test('preflight gives one update choice and scopes skill and CLI changes indepen
   assert.match(contract, /curl -fsSL --max-time 30 .*https:\/\/www\.threadwave\.xyz\/cli\/setup\/agent\.md/);
   assert.match(contract, /Invoke-WebRequest -UseBasicParsing -Uri 'https:\/\/www\.threadwave\.xyz\/cli\/setup\/agent\.md'/);
   assert.match(contract, /Do not use Web search, browser navigation, URL-read, a cached copy, or a user-pasted copy/);
-  assert.match(contract, /run forced preflight once and resume the exact preserved originating request/);
+  assert.match(contract, /run one post-update preflight selected by section 2 and resume the exact preserved originating request/);
   assert.match(contract, /applies across ThreadWave tasks for the rest of the same agent session only while the exact offered skill and CLI local\/latest version map is unchanged/);
   assert.match(contract, /Remind again in the next agent session or immediately if the offered version map changes/);
   assert.match(contract, /new task always runs section 3's update check, but it does not force a full readiness or capability probe/i);
+});
+
+test('legacy preflight falls back to the ordinary full check after updates', () => {
+  const preflightEvals = JSON.parse(fs.readFileSync(path.join(root, 'skills', 'threadwave-preflight', 'evals', 'evals.json'), 'utf8'));
+  const agentEvals = JSON.parse(fs.readFileSync(path.join(root, 'skills', 'twitter-agent', 'evals', 'evals.json'), 'utf8'));
+  const preflightRegression = preflightEvals.evals.find((entry) => entry.id === 10);
+  const dailyPlanRegression = agentEvals.evals.find((entry) => entry.id === 7);
+
+  assert.match(preflightRegression.expected_output, /legacy full-check mode/i);
+  assert.match(preflightRegression.expected_output, /never calls --force/i);
+  assert.match(dailyPlanRegression.expected_output, /ordinary full preflight without --force/i);
+  assert.match(dailyPlanRegression.expected_output, /resumes daily recovery and review checks/i);
 });
