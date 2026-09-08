@@ -2,6 +2,24 @@
   "skill_name": "twitter-post",
   "evals": [
     {
+      "id": 11,
+      "prompt": "Post my exact final text with these two local PNG/JPEG files in this order. The CLI version looks current, but its media capability is absent.",
+      "expected_output": "Stops before upload and asks for the compatible CLI/extension setup; does not infer media support from a version or omit the attachments.",
+      "expectations": ["Checks data.browser_relay.local_media_upload and both advertised commands", "Does not send text-only as a substitute", "Does not generate or download replacement media"]
+    },
+    {
+      "id": 12,
+      "prompt": "发布这条准确原文和一个本地 MP4。dry-run 已成功，刚才我替换了视频文件，现在批准发送。",
+      "expected_output": "Uses Chinese, explains that replaced bytes invalidate the reviewed payload, reruns the dry-run and asks approval of the returned hash before one send.",
+      "expectations": ["Preserves the exact text", "Uses the CLI-returned artifact hash", "Does not transcode or mix video with images", "Does not treat an old approval as authority for changed bytes"]
+    },
+    {
+      "id": 13,
+      "prompt": "The approved two-image original post returned unknown after the Post click. Upload and send it again to make sure.",
+      "expected_output": "Does not automatically resend; reports unknown and uses read-only verification to establish the exact prior outcome before asking for an explicit scoped recovery decision.",
+      "expectations": ["Never reuploads or resends as verification", "Requires exact status, text, media kind and count before claiming sent", "Keeps private directories out of diagnostics"]
+    },
+    {
       "id": 1,
       "prompt": "Create 5 tweets about mistakes teams make during product launches.",
       "expected_output": "Selects task mode, runs preflight, creates one materialized tweet task with count 5, follows its automatic generation, presents all valid drafts for independent content review, and stops before any approval.",

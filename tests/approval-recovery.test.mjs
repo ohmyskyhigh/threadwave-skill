@@ -32,6 +32,14 @@ test('post and reply peers support bounded tasks plus exact single-action safety
   }
 });
 
+test('media review binds exact ordered bytes and unknown does not authorize another upload', () => {
+  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-post', 'SKILL.md'), 'utf8');
+  assert.match(content, /Changes to text, bytes, image order, mode or count require a new dry-run and approval/);
+  assert.match(content, /Use the CLI-returned hash unchanged/);
+  assert.match(content, /Unknown proof or a missing terminal envelope never authorizes a second upload or send/);
+  assert.match(content, /A URL or filename is not evidence that you inspected the media/);
+});
+
 test('reply peer condenses task directions without rewriting exact replies', () => {
   const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
   assert.match(content, /## Condense The Request First/);
