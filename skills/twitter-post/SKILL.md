@@ -113,6 +113,20 @@ Require one exact final post. Do not improve, translate, shorten, expand, normal
 
 ## Boundaries
 
+### Local Media In Exact-Action Mode
+
+Local media is supported only for one manual original post: exact non-empty text plus 1–4 ordered PNG/JPEG files (up to 5 MiB each) or one MP4 (up to 512 MiB). Files must be readable, absolute local regular files, not symlinks. Do not put media into task/draft/scheduler payloads, reply or quote actions. Do not download URLs, generate, edit, mix images/video, transcode, or substitute unsupported GIF/MOV files in this flow.
+
+1. After the normal preflight, inspect `tw capabilities --format json`. Require `data.browser_relay.local_media_upload=true` and both media commands in the `action` family; otherwise stop and present setup/update as the next choice. Do not infer media support from the CLI version alone.
+2. Pass text and paths as separate argv values. Run `tw action tweet --text <exact_text> --media <absolute_paths...> --dry-run --json`. This validates files without opening X or writing action records.
+3. Show the exact text, ordered media previews when the host can display them, and the returned `data.media_manifest` (basenames, type, size, SHA-256) plus `data.artifact_hash`. A URL or filename is not evidence that you inspected the media. If previews are unavailable, say so and have the user verify the files. Ask for explicit approval of that exact text and those exact ordered files.
+4. After approval, dispatch `tw action tweet --text <same_exact_text> --media <same_absolute_paths...> --expected-artifact-hash <reviewed_artifact_hash> --json` once. Use the CLI-returned hash unchanged; never compute, infer, or replace it yourself. Changes to text, bytes, image order, mode or count require a new dry-run and approval. Renaming identical bytes alone does not change identity.
+5. Report sent only for `data.status=confirmed`, with the returned `data.status_url` and matching expected/observed media kind/count. Unknown proof or a missing terminal envelope never authorizes a second upload or send. Use only read-only verification choices until the user makes an explicit recovery decision.
+
+中文：本流程仅支持一条手动原创推文：准确原文加 1–4 张有序 PNG/JPEG（每张最多 5 MiB），或一个 MP4（最多 512 MiB）。先检查媒体能力，再 dry-run；展示原文、可用预览、文件顺序和返回的哈希，获得明确批准后带同一哈希发送一次。文字、文件内容、顺序或数量变化须重新审核；结果未知时不得重传或重发。任务、定时、回复、引用、远程链接和转码不在本流程内。
+
+### Shared Boundaries
+
 - Task mode creates one materialized manual task with `1..5` possible post drafts; it creates no task-proposal or source-selection review and grants no batch mutation approval.
 - Exact-action mode controls one post only and remains outside task/plan lineage.
 - Do not reply, quote, like, save, follow, or operate the browser UI directly.

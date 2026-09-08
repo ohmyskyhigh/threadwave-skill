@@ -74,6 +74,17 @@ test('each workflow accepts the supported CLI contract', () => {
   }
 });
 
+test('media is a conditional exact-post capability, not a global task dependency', () => {
+  assert.deepEqual(evaluateCapabilities(skillManifest('twitter-post'), capabilities()), []);
+  assert.equal(skillManifest('twitter-post').cli.required_commands.some((command) => command.includes('--media')), false);
+  const mediaFlow = postSkill.split('### Local Media In Exact-Action Mode')[1]?.split('### Shared Boundaries')[0];
+  assert.ok(mediaFlow);
+  assert.match(mediaFlow, /data\.browser_relay\.local_media_upload=true/);
+  assert.match(mediaFlow, /--media <absolute_paths\.\.\.> --dry-run --json/);
+  assert.match(mediaFlow, /--expected-artifact-hash <reviewed_artifact_hash> --json/);
+  assert.doesNotMatch(mediaFlow, /tw (?:task|draft|scheduler).*--media/);
+});
+
 test('skills that still use historical task review require its command', () => {
   const value = capabilities();
   const task = value.data.command_families.find((family) => family.name === 'task');
