@@ -59,12 +59,12 @@
     },
     {
       "id": 6,
-      "prompt": "Updates are available. Update ThreadWave now, then continue my original task.",
-      "expected_output": "Treats the request as update approval, fetches the fixed setup guide through the platform process command, follows its current-host CLI and skill update flow, runs one post-update preflight selected by compatibility mode, and resumes the preserved task.",
+      "prompt": "Updates are available. Update ThreadWave now, then continue my original task. The browser reader cannot open the Markdown setup guide, but the official HTML page is accessible.",
+      "expected_output": "Treats the request as update approval, uses the available official HTML download reference or another working reader, chooses an appropriate installation approach for the approved components and current host, runs one post-update preflight selected by compatibility mode, and resumes the preserved task.",
       "expectations": [
         "Does not ask for a second update approval",
-        "Does not use browser navigation or Web search to retrieve agent.md",
-        "Runs setup-guide terminal commands itself and pauses only for user-owned browser gates",
+        "Uses the accessible official HTML page or another working reader without treating Markdown access failure as installation failure",
+        "Installs the approved components using the official download options and involves the user when needed",
         "Uses regular preflight for legacy mode or a changed CLI, and force only for the same confirmed receipt-aware CLI",
         "Does not treat update success as X mutation approval"
       ]
