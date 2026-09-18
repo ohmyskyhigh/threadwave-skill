@@ -191,9 +191,9 @@ For an approved or required update, select exactly one guide mode from the prese
 - `cli_only` when `cli_pending` is true and `skills_pending` is false;
 - `skills_and_cli` when both are true.
 
-Never widen a scoped update. `skills_only` must not run a CLI installer, `tw update`, `tw setup`, daemon repair, extension repair, or native-host registration. `cli_only` must not fetch the skill release index or invoke the Agent Skills installer. `skills_and_cli` runs the CLI path first and the skill path second; if the CLI path fails, stop before touching skills. Version-only updates never use `full_setup`; that mode is reserved for initial setup or missing/unknown core runtime readiness.
+Never widen a scoped update. `skills_only` must not run a CLI installer, `tw update`, `tw setup`, daemon repair, extension repair, or native-host registration. `cli_only` must not fetch the skill release index or invoke the Agent Skills installer. `skills_and_cli` covers both components, in the order appropriate for the environment. Version-only updates never use `full_setup`; that mode is reserved for initial setup or missing/unknown core runtime readiness.
 
-For an approved or required update, retrieve the guide itself through process execution. Choose the one fixed command for the current OS and run it yourself:
+For an approved or required update, use the current official guide as a download reference. Read it with an available tool; if that reader cannot access Markdown, use the equivalent HTML page at `https://www.threadwave.xyz/cli/setup` or another reader. Direct HTTP examples:
 
 ```bash
 # macOS or Linux
@@ -205,7 +205,7 @@ curl -fsSL --max-time 30 -H 'Cache-Control: no-cache' https://www.threadwave.xyz
 (Invoke-WebRequest -UseBasicParsing -Uri 'https://www.threadwave.xyz/cli/setup/agent.md' -Headers @{"Cache-Control"="no-cache"} -TimeoutSec 30).Content
 ```
 
-Require the response to identify `Guide ID: twitter-cli-setup` and `Canonical page: https://www.threadwave.xyz/cli/setup`. Do not use Web search, browser navigation, URL-read, a cached copy, or a user-pasted copy to retrieve the guide. Follow only the selected mode for the current agent host: `skills_only` runs the skill prerequisites in §3 and §8 only; `cli_only` runs the CLI prerequisites in §3 and §4 through §7, then stops before §8; `skills_and_cli` completes the CLI path before §8. Run the guide's terminal commands yourself and pause only for its user-owned Chrome, sign-in, payment, or X gates. If retrieval, validation, trust, or installation fails, record the failure in conversation working memory and follow the required-update failure escape below; never invent a fallback.
+Use the official `twitter-cli-setup` reference at the URLs above; Markdown also identifies its guide ID and canonical HTML page. Choose the relevant download options for the current host and approved components, with tools, order, and ordinary troubleshooting suited to the environment. Handle installation yourself where tools permit and involve the user when their action is needed. Keep official-source, artifact-integrity, and compatibility checks intact; the release-index retrieval contract remains separate. If the scoped update remains unsuccessful, record the unresolved failure in conversation working memory and use the required-update failure escape below.
 
 Use the locale already selected in section 1 as the guide's setup language; do not add a redundant language-choice pause.
 

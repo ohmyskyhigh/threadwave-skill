@@ -262,7 +262,6 @@ test('preflight gives one update choice and scopes skill and CLI changes indepen
   assert.match(contract, /Version-only updates never use `full_setup`/);
   assert.match(contract, /curl -fsSL --max-time 30 .*https:\/\/www\.threadwave\.xyz\/cli\/setup\/agent\.md/);
   assert.match(contract, /Invoke-WebRequest -UseBasicParsing -Uri 'https:\/\/www\.threadwave\.xyz\/cli\/setup\/agent\.md'/);
-  assert.match(contract, /Do not use Web search, browser navigation, URL-read, a cached copy, or a user-pasted copy/);
   assert.match(contract, /run one post-update preflight selected by section 2 and resume the exact preserved originating request/);
   assert.match(contract, /applies across ThreadWave tasks for the rest of the same agent session only while the exact offered skill and CLI local\/latest version map is unchanged/);
   assert.match(contract, /Remind again in the next agent session or immediately if the offered version map changes/);
