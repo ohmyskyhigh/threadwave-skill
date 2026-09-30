@@ -11,9 +11,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
+import { validateSuite } from './validate-suite.mjs';
 
 const REPOSITORY = 'ohmyskyhigh/threadwave-skill';
-const INDEX_SCHEMA = 'threadwave-skill-release-index-v2';
+const INDEX_SCHEMA = 'threadwave-skill-release-index-v3';
 const SETUP_URL = 'https://www.threadwave.xyz/cli/setup/agent.md';
 
 export function buildReleaseArtifacts(
@@ -57,30 +58,43 @@ export function buildReleaseArtifacts(
     }
   }
 
-  if (!roles.preflight || !roles.update || !roles.support) {
-    throw new Error('suite must declare one preflight, update, and support skill via manifest roles');
-  }
+  const single = suite.schema_version === 'threadwave-skill-suite-v3';
+  if (!single && (!roles.preflight || !roles.update || !roles.support)) throw new Error('missing_legacy_roles');
 
   const index = {
-    schema_version: INDEX_SCHEMA,
+    schema_version: single ? INDEX_SCHEMA : 'threadwave-skill-release-index-v2',
     repository: REPOSITORY,
     bundle_version: suite.bundle_version,
     agent_skills_installer: suite.agent_skills_installer,
     setup_url: SETUP_URL,
-    roles: { preflight: roles.preflight, update: roles.update, support: roles.support },
+    ...(single ? {} : { roles }),
     required_skills: requiredSkills
   };
+  if (single) {
+    const errors = validateSuite(root, index);
+    if (errors.length) throw new Error(errors.join(', '));
+  }
   const candidateIndexPath = path.join(root, 'dist', 'release-index.candidate.json');
   fs.writeFileSync(candidateIndexPath, `${JSON.stringify(index, null, 2)}\n`);
   if (options.writeIndex === true) {
     fs.writeFileSync(path.join(root, 'release-index.json'), `${JSON.stringify(index, null, 2)}\n`);
   }
 
+  if (single) {
+    const packageRoot = path.join(root, 'dist', 'plugin-candidate');
+    fs.rmSync(packageRoot, { recursive: true, force: true });
+    fs.mkdirSync(packageRoot, { recursive: true });
+    for (const name of ['.codex-plugin', 'skills', 'schemas', 'scripts', 'suite-manifest.json', 'package.json']) {
+      fs.cpSync(path.join(root, name), path.join(packageRoot, name), { recursive: true });
+    }
+    fs.writeFileSync(path.join(packageRoot, 'release-index.json'), `${JSON.stringify(index, null, 2)}\n`);
+  }
   return {
-    schema_version: INDEX_SCHEMA,
+    schema_version: single ? INDEX_SCHEMA : 'threadwave-skill-release-index-v2',
     bundle_version: suite.bundle_version,
     artifact_base: artifactBase,
     candidate_index: path.relative(root, candidateIndexPath),
+    index,
     wrote_public_index: options.writeIndex === true,
     artifacts: requiredSkills.map((entry) => path.join('dist', 'skills', path.basename(entry.artifact_url))),
     note: options.writeIndex === true

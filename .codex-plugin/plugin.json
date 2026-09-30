@@ -1,7 +1,7 @@
 {
   "name": "threadwave-skill",
   "version": "0.7.14",
-  "description": "Bilingual, review-gated X/Twitter growth agent skills for posts, replies, daily planning, setup, updates, and error support.",
+  "description": "ThreadWave tweet and reply drafts, read-only snapshots, updates and support.",
   "author": {
     "name": "ThreadWave"
   },
@@ -20,21 +20,21 @@
     "codex skill",
     "openclaw skill",
     "hermes agent skill",
-    "\u4e2d\u6587",
-    "\u63a8\u7279"
+    "中文",
+    "推特"
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "ThreadWave Twitter Automation Suite",
-    "shortDescription": "Bilingual, independently versioned Twitter/X peer skills.",
-    "longDescription": "Install an optional Twitter automation router plus independent post, reply, daily-agent, preflight, update, and error-support peers. Every roster skill works in a flat skills directory without Node.js or shell-specific runtime dependencies, and uses one GitHub release index. Missing modules route to /cli/setup/agent.md.",
+    "displayName": "ThreadWave",
+    "shortDescription": "Tweet and reply drafts, X snapshots · 推文、回复与快照",
+    "longDescription": "One ThreadWave entry with on-demand internal workflows for tweets, replies, snapshots, notifications and support. CLI-owned readiness; no daily planning.",
     "developerName": "ThreadWave",
     "category": "Productivity",
     "capabilities": [
       "Interactive",
       "Write"
     ],
-    "defaultPrompt": "Check my Twitter/X automation setup, then route my request to the correct review-gated workflow. \u7528\u4e2d\u6587\u6216\u82f1\u6587\u5747\u53ef\u3002",
+    "defaultPrompt": "Use $threadwave to show the ThreadWave home screen. 打开 ThreadWave 首页。",
     "brandColor": "#7CFFB2",
     "websiteURL": "https://www.threadwave.xyz",
     "privacyPolicyURL": "https://www.threadwave.xyz/privacy",

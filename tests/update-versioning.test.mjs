@@ -4,6 +4,8 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { buildReleaseArtifacts } from '../scripts/build-release-artifacts.mjs';
 import { setSkillVersion } from '../scripts/set-skill-version.mjs';
 
@@ -65,77 +67,54 @@ function readFixtureJson(fixture, relative) {
   return JSON.parse(fs.readFileSync(path.join(fixture, relative), 'utf8'));
 }
 
-test('the v2 release index is the complete runtime roster and independent version authority', () => {
-  assert.equal(releaseIndex.schema_version, 'threadwave-skill-release-index-v2');
-  assert.equal(releaseIndex.bundle_version, suite.bundle_version);
-  assert.deepEqual(releaseIndex.agent_skills_installer, suite.agent_skills_installer);
-  assert.equal(releaseIndex.agent_skills_installer.package, 'skills');
-  assert.match(releaseIndex.agent_skills_installer.version, /^\d+\.\d+\.\d+$/);
-  assert.equal(releaseIndex.agent_skills_installer.registry, 'https://registry.npmjs.org');
-  assert.deepEqual(roster, suite.required_skills.map((entry) => entry.name));
-  assert.ok(roster.includes(releaseIndex.roles.preflight));
-  assert.ok(roster.includes(releaseIndex.roles.update));
-  assert.ok(roster.includes(releaseIndex.roles.support));
-
-  for (const entry of releaseIndex.required_skills) {
-    const declaration = suite.required_skills.find((skill) => skill.name === entry.name);
-    const manifest = readJson(declaration.manifest_path);
-    assert.equal(manifest.version, entry.latest_version);
-    assert.match(entry.minimum_supported_version, /^\d+\.\d+\.\d+$/);
-    assert.match(entry.artifact_url, new RegExp(`/suite-v${suite.bundle_version}/${entry.name}-${entry.latest_version}\\.tgz$`));
-    assert.match(entry.sha256, /^[0-9a-f]{64}$/);
-  }
+test('v3 candidate is atomic and leaves the published legacy roster intact', (t) => {
+  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'tw-candidate-'));
+  t.after(() => fs.rmSync(fixture, { recursive: true, force: true }));
+  for (const name of ['skills', '.codex-plugin', 'package.json', 'suite-manifest.json', 'schemas', 'scripts', 'release-index.json']) fs.cpSync(path.join(root, name), path.join(fixture, name), { recursive: true });
+  const before = fs.readFileSync(path.join(fixture, 'release-index.json'));
+  const result = buildReleaseArtifacts(fixture);
+  assert.equal(result.index.schema_version, 'threadwave-skill-release-index-v3');
+  assert.equal(result.index.roles, undefined);
+  assert.deepEqual(result.index.required_skills.map((entry) => entry.name), ['threadwave']);
+  assert.equal(result.index.required_skills[0].latest_version, suite.bundle_version);
+  assert.deepEqual(readFixtureJson(fixture, 'dist/plugin-candidate/release-index.json'), result.index);
+  assert.deepEqual(fs.readFileSync(path.join(fixture, 'release-index.json')), before);
+  const bytes = fs.readFileSync(path.join(fixture, result.artifacts[0]));
+  buildReleaseArtifacts(fixture);
+  assert.deepEqual(fs.readFileSync(path.join(fixture, result.artifacts[0])), bytes);
+  setSkillVersion(fixture, 'threadwave', '0.8.0');
+  for (const name of ['skills/threadwave/skill-manifest.json', 'package.json', '.codex-plugin/plugin.json']) assert.equal(readFixtureJson(fixture, name).version, '0.8.0');
+  assert.equal(readFixtureJson(fixture, 'suite-manifest.json').bundle_version, '0.8.0');
+  assert.deepEqual(fs.readFileSync(path.join(fixture, 'release-index.json')), before);
+  assert.throws(() => setSkillVersion(fixture, 'twitter-agent', '0.9.0'), /only_threadwave/);
 });
 
-test('the installed update skill is agent-native and has no bundled runtime checker', () => {
-  const updateRoot = path.join(root, 'skills', releaseIndex.roles.update);
-  const skill = fs.readFileSync(path.join(updateRoot, 'SKILL.md'), 'utf8');
-  assert.match(skill, /curl -fsSL --max-time 30/);
-  assert.match(skill, /Invoke-WebRequest -UseBasicParsing/);
-  assert.match(skill, /skill catalog and file-read capability/);
-  assert.match(skill, /cache_bust=\$\(date -u \+%s\)000/);
-  assert.match(skill, /\[DateTimeOffset\]'1970-01-01T00:00:00Z'/);
-  assert.doesNotMatch(skill, /ToUnixTimeMilliseconds/);
-  assert.match(skill, /Web search, browser search, URL-read, Firecrawl, crawl, scrape/);
-  assert.match(skill, /Never fetch the unversioned base URL/);
-  assert.match(skill, /twitter_skill_update_unconfirmed/);
-  assert.equal(fs.existsSync(path.join(updateRoot, 'scripts')), false);
+test('notification handler is advisory and scopes installation to explicit authorization', () => {
+  const text = fs.readFileSync(path.join(root, 'skills/threadwave/references/notifications/update-available.md'), 'utf8');
+  assert.match(text, /once|one short localized reminder/);
+  assert.match(text, /No prompt, forced choice, installation, network lookup/);
+  assert.match(text, /skills_only, cli_only or skills_and_cli/);
+  assert.match(text, /No installation backups/);
+  assert.match(text, /Unlink symlinks without deleting their targets/);
+  assert.match(text, /Do not rerun mutation commands or replay approvals/);
 });
 
-test('the update contract refuses to guess when remote or local reads are unavailable', () => {
-  const skill = fs.readFileSync(path.join(root, 'skills', releaseIndex.roles.update, 'SKILL.md'), 'utf8');
-  assert.match(skill, /If process execution, `curl` on macOS\/Linux, `Invoke-WebRequest` on Windows, or local skill\/file-read capability is unavailable/);
-  assert.match(skill, /Never substitute a guessed command, runtime, path, web tool, or cached memory of the roster/);
-  assert.match(skill, /Release index unavailable or invalid after the retry above: return `twitter_skill_update_unconfirmed`/);
-});
-
-test('supported older skills are updateable without blocking the operation', () => {
-  const skill = fs.readFileSync(path.join(root, 'skills', releaseIndex.roles.update, 'SKILL.md'), 'utf8');
-  assert.match(skill, /`update_available`: local is at least `minimum_supported_version` and lower than `latest_version`/);
-  assert.match(skill, /Set `ok=true` and `state=ready` whenever every roster skill is present and valid/);
-  assert.match(skill, /Supported older skill:.*non-blocking `twitter_skill_update_available`/s);
-  assert.match(skill, /nonempty `updates` array/);
-  assert.match(skill, /Missing or invalid skill: return `state=blocked`/);
-  assert.match(skill, /Unsupported \(below-minimum\) or unrecognized \(ahead-of-public\) skill: return `ok=true`, `state=ready`/);
-});
-
-test('the version command updates only the selected local manifest and release index', () => {
-  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'threadwave-version-bump-'));
-  fs.mkdirSync(path.join(temporaryRoot, 'skills', 'twitter-agent'), { recursive: true });
-  fs.copyFileSync(path.join(root, 'release-index.json'), path.join(temporaryRoot, 'release-index.json'));
-  fs.copyFileSync(
-    path.join(root, 'skills', 'twitter-agent', 'skill-manifest.json'),
-    path.join(temporaryRoot, 'skills', 'twitter-agent', 'skill-manifest.json')
-  );
-  const agent = releaseIndex.required_skills.find((skill) => skill.name === 'twitter-agent');
-  const post = releaseIndex.required_skills.find((skill) => skill.name === 'twitter-post');
-  const [major, minor, patch] = agent.latest_version.split('.').map(Number);
-  const nextVersion = `${major}.${minor}.${patch + 1}`;
-  const result = setSkillVersion(temporaryRoot, 'twitter-agent', nextVersion);
-  const manifest = JSON.parse(fs.readFileSync(path.join(temporaryRoot, 'skills', 'twitter-agent', 'skill-manifest.json'), 'utf8'));
-  const index = JSON.parse(fs.readFileSync(path.join(temporaryRoot, 'release-index.json'), 'utf8'));
-  assert.equal(result.version, nextVersion);
-  assert.equal(manifest.version, nextVersion);
-  assert.equal(index.required_skills.find((skill) => skill.name === 'twitter-agent').latest_version, nextVersion);
-  assert.equal(index.required_skills.find((skill) => skill.name === 'twitter-post').latest_version, post.latest_version);
+// Inspect actual archive contents; matching source filenames alone is insufficient.
+test('individual and complete plugin archives expose only the single entry and matching index', (t) => {
+  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'tw-archive-check-'));
+  t.after(() => fs.rmSync(fixture, { recursive: true, force: true }));
+  for (const name of ['skills', '.codex-plugin', 'package.json', 'suite-manifest.json', 'schemas', 'scripts', 'release-index.json']) fs.cpSync(path.join(root, name), path.join(fixture, name), { recursive: true });
+  const result = buildReleaseArtifacts(fixture);
+  const archive = path.join(fixture, result.artifacts[0]);
+  const hash = createHash('sha256').update(fs.readFileSync(archive)).digest('hex');
+  assert.equal(hash, result.index.required_skills[0].sha256);
+  const individual = execFileSync('tar', ['-tzf', archive], { encoding: 'utf8' }).trim().split('\n');
+  assert.deepEqual(individual.filter((name) => name.endsWith('/SKILL.md')), ['threadwave/SKILL.md']);
+  assert.equal(individual.some((name) => name.includes('daily-run') || name.includes('twitter-agent')), false);
+  const packed = JSON.parse(execFileSync('npm', ['pack', './dist/plugin-candidate', '--pack-destination', 'dist', '--json', '--ignore-scripts'], { cwd: fixture, encoding: 'utf8' }))[0];
+  const bundle = path.join(fixture, 'dist', packed.filename);
+  const complete = execFileSync('tar', ['-tzf', bundle], { encoding: 'utf8' }).trim().split('\n');
+  assert.deepEqual(complete.filter((name) => name.endsWith('/SKILL.md')), ['package/skills/threadwave/SKILL.md']);
+  const index = JSON.parse(execFileSync('tar', ['-xOzf', bundle, 'package/release-index.json'], { encoding: 'utf8' }));
+  assert.deepEqual(index, result.index);
 });

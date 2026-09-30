@@ -25,17 +25,55 @@
     "submission"
   ],
   "properties": {
-    "schema_version": { "const": "threadwave-issue-report-v2" },
-    "report_id": { "type": "string", "pattern": "^twir_[a-f0-9]{16}$" },
-    "created_at": { "type": "string", "format": "date-time" },
-    "locale": { "enum": ["en", "zh-CN"] },
-    "skill": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-    "installed_skill_versions": { "$ref": "#/$defs/versionMap" },
-    "latest_skill_versions": { "$ref": "#/$defs/versionMap" },
-    "update_state": { "enum": ["confirmed", "update_required", "unconfirmed"] },
-    "cli_version": { "type": "string", "maxLength": 32 },
-    "install_mode": { "enum": ["packaged", "dev", "unknown"] },
-    "platform": { "type": "string", "maxLength": 32 },
+    "schema_version": {
+      "const": "threadwave-issue-report-v2"
+    },
+    "report_id": {
+      "type": "string",
+      "pattern": "^twir_[a-f0-9]{16}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "locale": {
+      "enum": [
+        "en",
+        "zh-CN"
+      ]
+    },
+    "skill": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "installed_skill_versions": {
+      "$ref": "#/$defs/versionMap"
+    },
+    "latest_skill_versions": {
+      "$ref": "#/$defs/versionMap"
+    },
+    "update_state": {
+      "enum": [
+        "confirmed",
+        "update_required",
+        "unconfirmed"
+      ]
+    },
+    "cli_version": {
+      "type": "string",
+      "maxLength": 32
+    },
+    "install_mode": {
+      "enum": [
+        "packaged",
+        "dev",
+        "unknown"
+      ]
+    },
+    "platform": {
+      "type": "string",
+      "maxLength": 32
+    },
     "category": {
       "enum": [
         "skill_set_incomplete",
@@ -63,11 +101,18 @@
         "evidence"
       ]
     },
-    "summary": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
     "error_codes": {
       "type": "array",
       "maxItems": 12,
-      "items": { "type": "string", "pattern": "^[a-z0-9_:-]{1,80}$" }
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_:-]{1,80}$"
+      }
     },
     "checks": {
       "type": "array",
@@ -75,11 +120,28 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "state"],
+        "required": [
+          "id",
+          "state"
+        ],
         "properties": {
-          "id": { "type": "string", "pattern": "^[a-z0-9_-]{1,80}$" },
-          "state": { "enum": ["passed", "failed", "blocked", "unknown", "not_run"] },
-          "code": { "type": "string", "pattern": "^[a-z0-9_:-]{1,80}$" }
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_-]{1,80}$"
+          },
+          "state": {
+            "enum": [
+              "passed",
+              "failed",
+              "blocked",
+              "unknown",
+              "not_run"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^[a-z0-9_:-]{1,80}$"
+          }
         }
       }
     },
@@ -89,41 +151,500 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["command", "status"],
+        "required": [
+          "command",
+          "status"
+        ],
         "properties": {
-          "command": { "type": "string", "maxLength": 160 },
-          "status": { "enum": ["passed", "failed", "blocked", "unknown", "not_run"] },
-          "exit_code": { "type": "integer", "minimum": 0, "maximum": 255 }
+          "command": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "failed",
+              "blocked",
+              "unknown",
+              "not_run"
+            ]
+          },
+          "exit_code": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
         }
       }
     },
-    "next_step": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "next_step": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
     "privacy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["redacted", "excluded_fields"],
+      "required": [
+        "redacted",
+        "excluded_fields"
+      ],
       "properties": {
-        "redacted": { "const": true },
-        "excluded_fields": { "type": "array", "items": { "type": "string" } }
+        "redacted": {
+          "const": true
+        },
+        "excluded_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "submission": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mode", "sent", "user_consent_required"],
+      "required": [
+        "mode",
+        "sent",
+        "user_consent_required"
+      ],
       "properties": {
-        "mode": { "const": "copy_paste" },
-        "sent": { "const": false },
-        "user_consent_required": { "const": true }
+        "mode": {
+          "const": "copy_paste"
+        },
+        "sent": {
+          "const": false
+        },
+        "user_consent_required": {
+          "const": true
+        }
       }
     }
   },
   "$defs": {
     "versionMap": {
       "type": "object",
-      "propertyNames": { "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-      "additionalProperties": { "$ref": "#/$defs/version" }
+      "propertyNames": {
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/version"
+      }
     },
-    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" }
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "ReportAgent": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version"
+        },
+        "provenance": {
+          "enum": [
+            "detected",
+            "supplied",
+            "unavailable"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "provenance"
+      ],
+      "title": "ReportAgent",
+      "type": "object"
+    },
+    "ReportAttachment": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "enum": [
+            "cli",
+            "setup",
+            "unavailable"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "title": "ReportAttachment",
+      "type": "object"
+    },
+    "ReportContext": {
+      "additionalProperties": false,
+      "properties": {
+        "phase": {
+          "enum": [
+            "install",
+            "setup",
+            "tweet_draft",
+            "reply_draft",
+            "workflow",
+            "other"
+          ],
+          "title": "Phase",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 2048,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "requested_action": {
+          "maxLength": 2048,
+          "minLength": 1,
+          "title": "Requested Action",
+          "type": "string"
+        },
+        "invoked_command": {
+          "anyOf": [
+            {
+              "maxLength": 2048,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Invoked Command"
+        },
+        "received_input": {
+          "anyOf": [
+            {
+              "maxLength": 2048,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Received Input"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9_:-]{1,80}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "error_message": {
+          "anyOf": [
+            {
+              "maxLength": 2048,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Message"
+        },
+        "exit_code": {
+          "anyOf": [
+            {
+              "maximum": 2147483647,
+              "minimum": -2147483648,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Exit Code"
+        },
+        "output": {
+          "anyOf": [
+            {
+              "maxLength": 2048,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output"
+        }
+      },
+      "required": [
+        "phase",
+        "description",
+        "requested_action"
+      ],
+      "title": "ReportContext",
+      "type": "object"
+    },
+    "ReportEnvironment": {
+      "additionalProperties": false,
+      "properties": {
+        "os": {
+          "enum": [
+            "Linux",
+            "Windows",
+            "macOS",
+            "unknown"
+          ],
+          "title": "Os",
+          "type": "string"
+        },
+        "release": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Release"
+        },
+        "architecture": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Architecture"
+        },
+        "cli_version": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cli Version"
+        }
+      },
+      "required": [
+        "os"
+      ],
+      "title": "ReportEnvironment",
+      "type": "object"
+    },
+    "supportReport": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "threadwave-support-report-v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "report_id": {
+          "format": "uuid",
+          "title": "Report Id",
+          "type": "string"
+        },
+        "occurred_at": {
+          "format": "date-time",
+          "title": "Occurred At",
+          "type": "string"
+        },
+        "environment": {
+          "$ref": "#/$defs/ReportEnvironment"
+        },
+        "agent": {
+          "$ref": "#/$defs/ReportAgent"
+        },
+        "context": {
+          "$ref": "#/$defs/ReportContext"
+        },
+        "contact": {
+          "anyOf": [
+            {
+              "maxLength": 254,
+              "pattern": "^[^\\s@<>]+@[^\\s@<>]+\\.[^\\s@<>]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Contact"
+        },
+        "attachment": {
+          "$ref": "#/$defs/ReportAttachment"
+        }
+      },
+      "required": [
+        "schema_version",
+        "report_id",
+        "occurred_at",
+        "environment",
+        "agent",
+        "context",
+        "attachment"
+      ],
+      "title": "SupportReport",
+      "type": "object"
+    },
+    "supportReceipt": {
+      "additionalProperties": false,
+      "properties": {
+        "report_id": {
+          "title": "Report Id",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "submitted",
+            "stored"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "issue_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Issue Url"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "report_id",
+        "state"
+      ],
+      "title": "SupportReceipt",
+      "type": "object"
+    },
+    "supportReportInput": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "threadwave-support-report-v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "report_id": {
+          "format": "uuid",
+          "title": "Report Id",
+          "type": "string"
+        },
+        "occurred_at": {
+          "format": "date-time",
+          "title": "Occurred At",
+          "type": "string"
+        },
+        "environment": {
+          "$ref": "#/$defs/ReportEnvironment"
+        },
+        "agent": {
+          "$ref": "#/$defs/ReportAgent"
+        },
+        "context": {
+          "$ref": "#/$defs/ReportContext"
+        },
+        "contact": {
+          "anyOf": [
+            {
+              "maxLength": 254,
+              "pattern": "^[^\\s@<>]+@[^\\s@<>]+\\.[^\\s@<>]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Contact"
+        },
+        "attachment": {
+          "$ref": "#/$defs/ReportAttachment"
+        }
+      },
+      "required": [
+        "agent",
+        "context"
+      ],
+      "title": "Support report CLI input",
+      "type": "object"
+    }
   }
 }

@@ -8,12 +8,13 @@ import { evaluateCapabilities, operationSkillNames } from '../scripts/suite-poli
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const suite = JSON.parse(fs.readFileSync(path.join(root, 'suite-manifest.json'), 'utf8'));
 const releaseIndex = JSON.parse(fs.readFileSync(path.join(root, 'release-index.json'), 'utf8'));
-const skillManifest = (name) => JSON.parse(fs.readFileSync(path.join(root, 'skills', name, 'skill-manifest.json'), 'utf8'));
-const operationSkills = operationSkillNames(suite, releaseIndex);
+const mainManifest = JSON.parse(fs.readFileSync(path.join(root, 'skills/threadwave/skill-manifest.json'), 'utf8'));
+const skillManifest = (name) => ({ ...mainManifest, role: 'manual-operation', cli: mainManifest.workflows[name === 'twitter-post' ? 'post' : 'reply'] });
+const operationSkills = ['twitter-post', 'twitter-reply'];
 const operationManifests = operationSkills.map(skillManifest);
-const replySkill = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
-const postSkill = fs.readFileSync(path.join(root, 'skills', 'twitter-post', 'SKILL.md'), 'utf8');
-const replyEvals = JSON.parse(fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'evals', 'evals.json'), 'utf8'));
+const replySkill = fs.readFileSync(path.join(root, 'skills/threadwave/references/reply.md'), 'utf8');
+const postSkill = fs.readFileSync(path.join(root, 'skills/threadwave/references/post.md'), 'utf8');
+const replyEvals = JSON.parse(fs.readFileSync(path.join(root, 'skills/threadwave/evals/evals.json'), 'utf8'));
 
 function capabilities() {
   return {
@@ -127,13 +128,10 @@ test('operation skills enforce their own minimum CLI versions', () => {
   const value = capabilities();
   value.data.cli_version = '1.0.20';
   const taskOwners = operationManifests.filter((manifest) => manifest.role === 'manual-operation');
-  const routers = operationManifests.filter((manifest) => manifest.role === 'operation-router');
   assert.ok(taskOwners.length > 0);
-  assert.equal(routers.length, 1);
   for (const manifest of taskOwners) {
     assert.ok(evaluateCapabilities(manifest, value).includes('cli_version_too_old'));
   }
-  assert.deepEqual(evaluateCapabilities(routers[0], value), []);
 
   value.data.cli_version = '1.0.33';
   assert.ok(evaluateCapabilities(skillManifest('twitter-reply'), value).includes('cli_version_too_old'));
@@ -152,15 +150,15 @@ test('reply discovery defaults to five and accepts only five through ten targets
   assert.match(replySkill, /Default a missing discovery-task count to `5`/);
   assert.match(replySkill, /Accept only an integer from `5` through `10`/);
   assert.match(replySkill, /never auto-chunk/);
-  assert.match(replyEvals.evals.find((entry) => entry.id === 2).expected_output, /5 through 10/);
-  assert.match(replyEvals.evals.find((entry) => entry.id === 4).expectations.join(' '), /count 10/);
-  assert.match(replyEvals.evals.find((entry) => entry.id === 11).expectations.join(' '), /count 11/);
+  assert.match(replyEvals.evals.find((entry) => entry.id === 'reply-' + 2).expected_output, /5 through 10/);
+  assert.match(replyEvals.evals.find((entry) => entry.id === 'reply-' + 4).expectations.join(' '), /count 10/);
+  assert.match(replyEvals.evals.find((entry) => entry.id === 'reply-' + 11).expectations.join(' '), /count 11/);
 });
 
 test('reply workflow follows automatic drafts and reports bounded shortfalls', () => {
-  const partial = replyEvals.evals.find((entry) => entry.id === 23);
-  const generic = replyEvals.evals.find((entry) => entry.id === 24);
-  const childLineage = replyEvals.evals.find((entry) => entry.id === 26);
+  const partial = replyEvals.evals.find((entry) => entry.id === 'reply-' + 23);
+  const generic = replyEvals.evals.find((entry) => entry.id === 'reply-' + 24);
+  const childLineage = replyEvals.evals.find((entry) => entry.id === 'reply-' + 26);
   assert.ok(partial);
   assert.ok(generic);
   assert.ok(childLineage);
@@ -176,7 +174,7 @@ test('schema drift and required upgrades are blocking compatibility failures', (
   const value = capabilities();
   value.schema_version = 'tw-cli-v2';
   value.data.required_upgrades = ['upgrade_cli'];
-  const failures = evaluateCapabilities(operationManifests.find((manifest) => manifest.role === 'daily-operation'), value);
+  const failures = evaluateCapabilities(operationManifests[0], value);
   assert.ok(failures.includes('unsupported_cli_schema'));
   assert.ok(failures.includes('required_upgrade'));
 });

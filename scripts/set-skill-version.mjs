@@ -4,41 +4,30 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compareSemver } from './suite-policy.mjs';
 
-export function setSkillVersion(root, skillName, nextVersion, { minimumSupported = false } = {}) {
+export function setSkillVersion(root, skillName, nextVersion) {
   if (!/^\d+\.\d+\.\d+$/.test(String(nextVersion))) throw new Error('invalid_semver');
 
-  const manifestPath = path.join(root, 'skills', skillName, 'skill-manifest.json');
-  const indexPath = path.join(root, 'release-index.json');
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  const index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
-  const release = (index.required_skills ?? []).find((item) => item.name === skillName);
-  if (!release) throw new Error(`release_index_skill_missing:${skillName}`);
-  if (compareSemver(nextVersion, manifest.version) <= 0) throw new Error('version_must_increase');
+  if (skillName !== 'threadwave') throw new Error('only_threadwave_is_versioned');
+  const files = ['skills/threadwave/skill-manifest.json', 'suite-manifest.json', '.codex-plugin/plugin.json', 'package.json'];
+  const values = files.map((file) => JSON.parse(fs.readFileSync(path.join(root, file), 'utf8')));
+  if (compareSemver(nextVersion, values[0].version) <= 0) throw new Error('version_must_increase');
+  for (const [index, value] of values.entries()) {
+    value[index === 1 ? 'bundle_version' : 'version'] = nextVersion;
+    fs.writeFileSync(path.join(root, files[index]), `${JSON.stringify(value, null, 2)}\n`);
+  }
+  return { skill: skillName, version: nextVersion, updated: files,
+    next_step: 'Build and validate candidate artifacts; public release-index.json remains unchanged until authorized publication.' };
 
-  manifest.version = nextVersion;
-  release.latest_version = nextVersion;
-  if (minimumSupported) release.minimum_supported_version = nextVersion;
-
-  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-  fs.writeFileSync(indexPath, `${JSON.stringify(index, null, 2)}\n`);
-  return {
-    skill: skillName,
-    version: nextVersion,
-    minimum_supported_version: release.minimum_supported_version,
-    updated: ['skill-manifest.json', 'release-index.json'],
-    next_step: 'run npm run artifacts:index during release preparation, then commit the final candidate and obtain green CI before release authorization'
-  };
 }
 
 function main() {
   const [skillName, nextVersion, ...flags] = process.argv.slice(2);
   if (!skillName || !nextVersion) {
-    throw new Error('usage: npm run version:skill -- <skill-name> <version> [--minimum-supported]');
+    throw new Error('usage: npm run version:skill -- <skill-name> <version>');
   }
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-  const result = setSkillVersion(root, skillName, nextVersion, {
-    minimumSupported: flags.includes('--minimum-supported')
-  });
+  if (flags.length) throw new Error('unsupported_version_flag');
+  const result = setSkillVersion(root, skillName, nextVersion);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }
 
