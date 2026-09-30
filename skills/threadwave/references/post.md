@@ -1,12 +1,6 @@
----
-name: twitter-post
-license: MIT-0
-description: "Create and review one-to-five Twitter/X post tasks through ThreadWave, or publish one exact final user-supplied post through a strict dry-run and approval flow. Use for create tweets, write several posts, batch tweet tasks, post about a topic, manual tweet work, post this exact text, send a tweet, or publish on Twitter/X. Do not use for replies or the daily strategy/plan loop. 中文：用于创建并审核 1 到 5 条推文任务、批量发推任务，或在严格 dry-run 和批准后发布一条用户提供的准确原文；不用于回复或日常策略计划。"
----
-
 # Twitter Post
 
-Own ad-hoc tweet work as an independent flat peer. Never activate or depend on `twitter-automation`; that peer may route here, but this skill owns preflight and the complete post workflow.
+Internal post workflow. The entry owns the one CLI preflight handoff; retain its ready result and agent session.
 
 ## Select One Mode
 
@@ -22,7 +16,7 @@ Select **exact-action mode** only when the user supplies one complete final post
 
 ## Task Template
 
-When entering task mode — and whenever the request is too vague to form a direction — offer one localized fill-in template instead of open-ended questions:
+For a generic task shortcut or whenever the request is too vague to form a direction — offer one localized fill-in template instead of open-ended questions:
 
 ```text
 Post task template:
@@ -44,11 +38,9 @@ Reuse the same template at a shortfall or after a rejected proposal when the use
 
 Respond in English or Simplified Chinese from explicit preference, latest message, conversation language, then English. Never translate or normalize exact post text. Preserve task direction without adding requirements.
 
-## Mandatory Preflight
+## Selected Capabilities
 
-Activate `threadwave-preflight` by skill name at the start of each new post task. Pass this skill name, selected mode, unchanged request, and required capability families. It checks skill updates for this task, then uses regular CLI preflight, which reuses readiness until 12 hours of inactivity and runs the full check only when stale or invalidated. Do not rerun preflight for a review decision alone. Do not invoke `tw` without a current ready result.
-
-Require CLI `1.0.35` plus `task`, `draft`, `plan`, `scheduler`, and `action` command families. Missing skill, CLI, or extension state routes to `https://www.threadwave.xyz/cli/setup/agent.md` while preserving the request.
+Task mode requires the advertised task, draft, plan and scheduler commands used below; exact-action mode requires action. Reuse the entry capability observation and ready result; do not run another readiness or version check. Missing commands use the scoped setup guide while preserving the request.
 
 ## CLI Result Authority
 
@@ -56,10 +48,10 @@ The skill owns UX: choose the documented command for the user's situation, prese
 
 - Require one complete parseable `tw_cli_harness_v1` envelope. A process/session handle is transport state, not a result.
 - For `ok=true`, treat `data`, `refs`, status fields, warnings, and `next` as authoritative. Never compare parent and child task refs, rebuild lineage, repeat CLI invariant checks, or reinterpret the accepted result as contract drift.
-- Execute returned read-only `next` commands to continue the workflow. Present review, restart, cancel, or X-mutation commands as choices and run only the exact command the user authorizes.
-- For `ok=false`, report the returned `error.code`, `error.message`, and `error.retryable`; present only safe returned `next` choices. Do not replace a CLI error with a model-invented diagnosis.
+- Execute returned read-only `next` commands to continue the workflow. Diagnostic inspection may also use commands documented by the installed CLI help/capabilities. Review, cancel, and X-mutation commands retain their explicit approval gates; pre-mutation restart follows Recovery below.
+- For `ok=false`, report the returned `error.code`, `error.message`, and `error.retryable`; use Recovery to investigate before escalating. Keep diagnostic hypotheses separate from returned facts; do not replace a CLI error with a model-invented diagnosis.
 - Report a workflow failure stage only when the CLI returns `failure_stage`. Never infer a stage from `source_status`, `draft_status`, timing, or an error code; if the field is absent, report only the returned failure facts.
-- If the command exits without a complete envelope, stop with `task_dispatch_unconfirmed`. This transport failure is the only host-side result check and never authorizes a duplicate task.
+- If the command exits without a complete envelope, stop with `task_dispatch_unconfirmed`. This transport check never authorizes a duplicate task. Separately assess delivery completeness from the authoritative returned task state and artifacts; `ok=true` does not prove the requested deliverable was produced. Continue read-only diagnosis using retained refs or process state; do not blindly replay creation.
 
 ## Task Mode
 
@@ -85,11 +77,15 @@ Retain the complete command-execution result. If execution yields a `session_id`
 
 Follow the accepted envelope's exact `next` commands. Run read-only task and draft inspection commands directly. For a repeated task-show continuation, use one fixed 15-minute deadline, wait `min(15 seconds, remaining time)` between reads, and never substitute a global list or latest record.
 
-When the CLI returns drafts and review choices, present the returned content together and wait for per-item decisions. When it returns a shortfall, failure, stalled state, or fewer drafts than requested, render that state exactly and show only its returned choices. Never create replacement work automatically.
+When the CLI returns drafts and review choices, present the returned content together and wait for per-item decisions. When it returns a shortfall, failure, stalled state, or fewer drafts than requested, render that state exactly and inspect its returned artifact refs for existing drafts. Follow supported read-only continuations while work is progressing; a timeout or initial empty response alone is not a completed shortfall.
+
+At the end of the task, compare the distinct available drafts with the current user-authorized requested count, using the CLI's returned facts without rebuilding lineage. A completed delivery shortfall must read [support.md](support.md) and be reported under existing reporting authorization, even with `ok=true`, exit code zero, warning-only output, or no error code. An excess count also fails an exact-count request. A missing tweet draft or fewer than five drafts for a five-reply request is report-worthy; `no_valid_targets_found` does not fulfill a draft request. Record requested versus observed counts, retain null error fields when absent, attach JSONL through support, and present its actual receipt.
+
+Preserve available drafts and their reviews; never invent/duplicate drafts, lower safety requirements, or create replacement work automatically. Drafts awaiting publishing approval already fulfill a draft-only request. User cancellation, an approved count change, genuine user gates and still-progressing work retain their existing meaning. Use Recovery for eligible repairs/stalls; recovery does not suppress the factual report of an observed failed delivery.
 
 ### 3. Review Drafts And Scheduled Mutations
 
-Use only commands from the accepted CLI envelope's `next`. Run read-only inspection continuations directly. Present approve, reject, skip, restart, cancel, and X-mutation commands as choices; after an explicit decision, invoke the matching exact command once and leave omitted reviews pending.
+Use the accepted CLI envelope's `next` for review decisions and mutations; diagnosis also permits installed-CLI inspection commands. Run read-only inspection continuations directly. Present approve, reject, skip, cancel, and X-mutation commands as choices; after an explicit decision, invoke the matching exact command once and leave omitted reviews pending.
 
 Do not guess the next review, artifact, target, or scheduled task. Do not collapse multiple draft reviews into “approve all.” Each content approval can authorize only one exact scheduled X mutation.
 
@@ -97,9 +93,9 @@ Do not guess the next review, artifact, target, or scheduled task. Do not collap
 
 - Direction/source/angle change: use one explicit `tw task retask --task` or `--batch` request after showing the exact scope.
 - Same-lineage wording change: use `tw draft redraft` with exact feedback, then require a new content review.
-- Fewer valid outputs than requested: report actual valid count; never invent or duplicate items.
-- Task stalled past the fixed task-show deadline: present the exact `task_blueprint_ref` and offer one explicit user choice — restart via `tw task restart <task_blueprint_ref> --json` once (verify `ok=true` and the returned fresh execution state, then resume the fixed task-show deadline against the same ref; restart is a fresh pre-mutation execution, never a duplicate task or a claim that the old discovery was cancelled), or stop and report the exact blocker. A failed restart invocation or a ref that keeps stalling counts as one failed round; after two failed rounds in the same session, stop and report the blocker.
-- Unknown scheduler or mutation evidence: stop without retry. Present the exact ref and its durable classification and stop for one explicit user decision: keep monitoring, skip (acknowledge `outcome unknown` and end monitoring; authorizes no retry or replacement), cancel that exact user-named `scheduled_task_ref` via `tw scheduler cancel` once with returned-status verification, or request a sanitized issue report.
+- Fewer valid outputs than requested: present the actual count and activate support for a completed delivery shortfall as above; never invent or duplicate items.
+- Task reaches the task-show deadline: inspect progress and existing drafts. Continue a bounded read-only continuation if progressing; otherwise use Recovery to diagnose. A deadline alone never authorizes restarting an active task. Restart only under Recovery's current CLI eligibility and retry/cost authority checks.
+- Unknown scheduler or mutation evidence: stop without retry of the mutation, continue supported read-only diagnosis, then present the exact ref and its durable classification with any remaining need for an explicit user decision: keep monitoring, skip (acknowledge `outcome unknown` and end monitoring; authorizes no retry or replacement), cancel that exact user-named `scheduled_task_ref` via `tw scheduler cancel` once with returned-status verification, or request a sanitized issue report.
 
 ## Exact-Action Mode
 
@@ -132,9 +128,15 @@ Local media is supported only for one manual original post: exact non-empty text
 - Do not reply, quote, like, save, follow, or operate the browser UI directly.
 - Do not expose user content, raw payloads, private refs, or local paths in diagnostics.
 
+## Recovery
+
+For a failure or stalled task, read [support.md](support.md) in this conversation with the original intent and exact refs retained locally. It owns diagnosis and authorized runtime repair; do not require the user to say “debug this” or start another task. Inspect the exact task and returned drafts before reporting what was produced. Do not infer zero drafts or “nothing sent” from a generic error.
+
+After a verified repair, recheck readiness only if invalidated, inspect the same task, and continue within existing authorization. For generation restart, require a fresh task result with `execution_status=failed` and `restart_allowed=true`, no pending drafts/reviews or mutation/unknown outcome, unchanged direction/count, and user authority covering the retry and its credit cost. A generic `retryable=true` or repair success is insufficient. When all conditions hold, invoke the exact returned `tw task restart <task_blueprint_ref> --json` once, inspect its result, and continue from the same task. Otherwise ask only for missing authority or report the unavailable recovery. Do not repeat unchanged failed restarts without new evidence or create a replacement task to bypass ineligibility. CLI limits and sending approvals still apply.
+
 ## Issue Report
 
-For explicit report requests, a returned CLI error, repeated unresolved setup, or unknown evidence, activate `threadwave-preflight` in issue-report-only mode with sanitized metadata. Exclude post text and task direction. State that nothing was sent.
+For explicit reports or qualifying failures, read [support.md](support.md). Submit under existing reporting authorization and present the actual submitted/stored/unsubmitted/unconfirmed receipt. Keep source content private and report delivery separately from reporting status.
 
 ## Return Format
 
@@ -146,7 +148,7 @@ Reviews: <current content reviews with exact review_ref; none before drafts or f
 Waiting for you: <matching per-item content decisions; one exact-action approval; or setup action>
 你可以 / You can: <two to four verbatim-sayable options valid at the current gate>
 Next: <one returned ref/action or stop>
-Issue report: <copy/paste only; nothing sent>
+Issue report: <submitted | stored | unsubmitted | unconfirmed | not needed>
 ```
 
 The `你可以 / You can:` line lists only options that are real at the current gate — exact numbered decisions, displayed refs, or the task template — worded so the user can reply verbatim, localized to the selected language; it never offers an action beyond the current gate's authority.

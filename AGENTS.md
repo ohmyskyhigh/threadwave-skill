@@ -1,50 +1,22 @@
 # ThreadWave Skill Suite Workspace Guide
 
-## Objective
+## Approved development contract
 
-This repository contains independently versioned, flat-installable peer skills plus optional host plugin bundles. The public Twitter/X operation skills delegate readiness to the preflight skill named by `roles.preflight`; that skill delegates version checks to the update skill named by `roles.update` and routes sanitized failures to the support skill named by `roles.support`. Missing skill, CLI, and extension modules are handled by `https://www.threadwave.xyz/cli/setup/agent.md`. The public operation names stay generic and searchable; ThreadWave branding belongs in the infrastructure skills, plugin metadata, descriptions, and workflow content.
+The 2026-09-24 approved single-skill proposal is staged in `../threadwave-obsidian-vault/70-Staging/ThreadWave-Home-Screen.md`. Source exposes only `skills/threadwave/SKILL.md`, with internal post, reply, snapshot, notification and support resources. Daily planning is unavailable. Preserve existing review, recovery and reporting boundaries.
 
-## Required Suite
+CLI readiness and update discovery are authoritative. Notifications are advisory `{type, body}` entries. Load only the requested workflow or matching handler. No routine agent-side index fetch, peer roster check or update prompt. Actual authorized installation follows the canonical `https://www.threadwave.xyz/cli/setup/agent.md` guide. No installation backups; preserve local configuration, authentication and durable user work.
 
-The system is runnable when every skill in the `required_skills` roster of `release-index.json` is installed at a version from its `minimum_supported_version` through `latest_version`, and the latest-version check is confirmed. Never hardcode the roster in documentation, scripts, or tests — derive it from the release index (runtime) or `suite-manifest.json` (repository/CI) and keep the two in sync.
+`suite-manifest.json` declares the candidate roster and atomic package version. `skill-manifest.json` declares installed version plus common and selected-workflow capability requirements. `release-index.json` remains the public artifact authority and may stay legacy while the candidate develops. Never overwrite public metadata to make source validation pass. Build fresh candidate data explicitly and package it in the isolated candidate tree.
 
-The dependency flow is one-way: operation skill -> preflight role skill -> update role skill, with failed workflows routed from preflight to the support role skill. Do not create a circular dependency. The update skill never invokes preflight or `tw`; it only compares local manifests with the GitHub release index. The support skill never resumes workflows or invokes operation skills. Every operation skill invokes preflight before its workflow. A missing, incompatible, ahead-of-public, or update-unconfirmed peer blocks every operation before `tw` is invoked. A supported older peer is non-blocking: preflight offers one choice to continue with the installed versions or approve an automatic update through the canonical setup guide, and a skipped unchanged offer is not repeated until the next agent session.
+Keep English and Simplified Chinese UX, exact user-authored content, CLI-owned refs/continuations, scoped install authority and truthful support receipts. Installed resources contain no runtime scripts. Never modify active user skill/plugin installations as part of source development.
 
-## Authority
+## Authority and change rules
 
-1. Current user instructions and system/developer rules.
-2. This file for repository workflow.
-3. `release-index.json` as the single public authority: installation roster, suite roles (`roles.preflight` / `roles.update` / `roles.support`), each skill's latest version, and immutable artifact URLs with SHA-256 checksums.
-4. Each skill's local `skill-manifest.json` for its installed version, role, dependencies, and CLI capability requirements; user setup validates installs against these.
-5. `skills/threadwave-preflight/**` for the single preflight, setup, recovery, and sanitized failure-handoff contract.
-6. `skills/threadwave-update/**` for the single GitHub update-check contract.
-7. `skills/threadwave-error-support/**` for final report-worthiness, public solution search, and issue-report generation.
-8. Each operation skill's `SKILL.md` for its workflow and approval boundary.
-9. `suite-manifest.json` for repository validation and optional bundle packaging only; installed flat skills and user setup must not depend on it.
+Current user/system instructions precede repository rules. The Vault owns Product -> UX -> UI -> System -> Components -> Files intent; runtime code, manifests and public artifacts own executable facts. Read the owning CLI contract before changing commands. Track substantial approved work in staging and source/test paths in `06-Files/Skills/`.
 
-The active ThreadWave CLI implementation and its source-of-truth docs live in the sibling `threadwave-chrome-extension` repository. Do not silently invent commands, output fields, update endpoints, or approval paths. Update this suite only after checking the current CLI contract.
+Do not commit, push, publish, or change public release metadata without the required current authorization. Preserve unrelated changes. Use Node 22 and existing npm checks. Update registered Vault mirrors through its synchronization tool.
 
-Product positioning, pricing, credits, and public copy defaults live in the sibling Vault at `../threadwave-obsidian-vault/01-Product/Product-Definition.json` and `Product-Definition.md`.
-
-## Substantial Change Gate
-
-The Vault owns substantial skill workflow, public behavior, compatibility-policy, setup/preflight, and cross-repository contract decisions. Update or confirm its Product, System, or Skills component contract before implementing such a change, and update `04-Files/Skills/` when source/test ownership changes. `release-index.json`, manifests, and published artifacts remain authority for installed/runtime versions and checksums. Behavior-preserving refactors, tests-only changes, formatting, validation cleanup, and generated mirror refreshes are excluded unless compatibility or policy changes.
-
-## Change Rules
-
-- Keep every roster skill as a flat peer. Skill references use skill names, not relative paths into another skill.
-- Keep the preflight contract only in the preflight role skill, the update contract only in the update role skill, and the error-support contract only in the support role skill.
-- Keep individual skill versions independent. Do not require versions to be equal; compare each installed manifest with its own `minimum_supported_version` and `latest_version` in `release-index.json`.
-- Keep optional host plugin bundles atomic, but support flat installation of all roster skill folders.
-- Keep all user-facing flows available in English and Simplified Chinese.
-- Keep command names, JSON keys, refs, and stable error codes in English.
-- Never translate, rewrite, or normalize exact tweet/reply content.
-- Never add automatic issue submission without explicit user consent and a separately approved API contract.
-- Never retire the legacy `twitter-harness` skill from this repository.
-- Never hardcode the skill roster outside `suite-manifest.json` (repository/CI declaration) and `release-index.json` (public authority); scripts and tests must derive it.
-- Release-index checks must use process execution with `curl` on macOS/Linux or `Invoke-WebRequest` on Windows. Never use Web search, browser search, URL-read, Firecrawl, crawl, or scrape tools for the release index. Installed skill folders still must not bundle runtime scripts; root `scripts/**` are maintainer-only.
-- Treat every bundle or skill version bump as subject to the Release Synchronization Gate below. A commit or push is not a completed version release.
-- Do not commit or push unless the user's immediately preceding message explicitly requests it. Exact `THREADWAVE_RELEASE: skills` authorizes one source commit and candidate-branch push for its reviewed PR; the later same-task merge instruction authorizes merging that unchanged PR and one deterministic local release-metadata commit on `main`.
+The retained release procedure below does not authorize publication. The user clarified on 2026-09-24 that local administrator `threadwave-release` tooling is outside this update; leave it unchanged and do not make its source migration an implementation blocker.
 
 ## Release Synchronization Gate
 

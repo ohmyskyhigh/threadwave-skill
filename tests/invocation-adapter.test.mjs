@@ -5,30 +5,30 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const skillRoot = path.join(root, 'skills', 'threadwave-preflight');
+const skillRoot = path.join(root, 'skills', 'threadwave');
 const skill = fs.readFileSync(path.join(skillRoot, 'SKILL.md'), 'utf8');
-const contract = fs.readFileSync(path.join(skillRoot, 'references', 'preflight-contract.md'), 'utf8');
+const contract = fs.readFileSync(path.join(skillRoot, 'references', 'cli-invocation.md'), 'utf8');
 const manifest = JSON.parse(fs.readFileSync(path.join(skillRoot, 'skill-manifest.json'), 'utf8'));
 const suite = JSON.parse(fs.readFileSync(path.join(root, 'suite-manifest.json'), 'utf8'));
 const evals = JSON.parse(fs.readFileSync(path.join(skillRoot, 'evals', 'evals.json'), 'utf8'));
-const replySkill = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
-const replyEvals = JSON.parse(fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'evals', 'evals.json'), 'utf8'));
+const replySkill = fs.readFileSync(path.join(skillRoot, 'references/reply.md'), 'utf8');
+const replyEvals = JSON.parse(fs.readFileSync(path.join(skillRoot, 'evals/evals.json'), 'utf8'));
 
 test('Windows packaged readiness uses only the canonical fixed command adapter', () => {
-  assert.match(skill, /platform invocation adapter/i);
+  assert.match(skill, /cli-invocation\.md/);
   assert.match(contract, /`windows_managed_cmd`/);
   assert.match(contract, /%SystemRoot%\\System32\\cmd\.exe/);
   assert.match(contract, /%LOCALAPPDATA%\\ThreadWave\\bin\\tw\.cmd/);
   assert.match(contract, /Never use `ComSpec`, PATH discovery/);
   assert.match(contract, /never pass a raw returned `command` string into `\/c`/i);
   assert.match(contract, /never invoke a version-directory `tw\.exe`/i);
-  assert.match(contract, /data\.cli_version>=1\.0\.32/);
+  assert.match(contract, /data\.cli_version at least the manifest minimum/);
   assert.doesNotMatch(contract, /invoke the ThreadWave executable directly with these arguments/i);
   assert.doesNotMatch(contract, /Do not use .*PowerShell, CMD/i);
 });
 
 test('native Windows Codex readiness starts outside the sandbox without a user choice', () => {
-  assert.match(skill, /non-sandboxed local process capability from the first call/i);
+  assert.match(contract, /non-sandboxed local process capability from the first call/i);
   assert.match(contract, /every fixed `windows_managed_cmd` readiness operation.*non-sandboxed local process capability from the first call/i);
   assert.match(contract, /do not run a sandboxed probe first and do not ask the user to approve or choose/i);
   assert.match(contract, /not administrator or UAC elevation/i);
@@ -52,27 +52,11 @@ test('the cmd adapter has a closed readiness mapping and excludes dynamic operat
 });
 
 test('packaged Windows downstream operations preserve true argument boundaries', () => {
-  assert.match(skill, /`ProcessStartInfo\.ArgumentList`/);
+  assert.match(contract, /`ProcessStartInfo\.ArgumentList`/);
   assert.match(contract, /call `ArgumentList\.Add\(\.\.\.\)` once for each value/);
   assert.match(contract, /direction, post\/reply text, target, ref, or feedback must remain one `ArgumentList` entry/);
   assert.match(contract, /Do not invoke the managed launcher with the PowerShell call operator and splatting/);
   assert.match(contract, /Do not use `Start-Process -ArgumentList`, `ProcessStartInfo\.Arguments`, `Invoke-Expression`/);
   assert.match(contract, /stop with `twitter_automation_cli_unconfirmed`/);
-  assert.match(replySkill, /add each CLI token and the complete condensed direction separately through `ProcessStartInfo\.ArgumentList`/);
-
-  const windowsReplyEval = replyEvals.evals.find((entry) => entry.id === 25);
-  assert.ok(windowsReplyEval);
-  assert.match(windowsReplyEval.expectations.join(' '), /complete condensed direction exactly once as one argument/i);
-  assert.match(windowsReplyEval.expectations.join(' '), /call-operator splatting.*composed cmd\.exe \/c string/i);
-});
-
-test('preflight version and evaluation cover the Windows packaged boundary', () => {
-  assert.equal(manifest.cli.minimum_version, '1.0.32');
-  assert.equal(suite.cli.minimum_version, '1.0.32');
-  const windowsEval = evals.evals.find((entry) => entry.id === 7);
-  assert.ok(windowsEval);
-  assert.match(windowsEval.prompt, /Windows packaged/);
-  assert.match(windowsEval.expectations.join(' '), /metacharacters.*shell command/i);
-  assert.match(windowsEval.expectations.join(' '), /non-sandboxed local process capability.*first call/i);
-  assert.match(windowsEval.expectations.join(' '), /does not ask the user.*execution boundary/i);
+  assert.match(replySkill, /cli-invocation\.md/);
 });

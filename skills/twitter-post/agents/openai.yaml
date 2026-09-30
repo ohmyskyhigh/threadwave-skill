@@ -1,4 +1,0 @@
-interface:
-  display_name: "Twitter Post Tasks / 推文任务"
-  short_description: "Create 1–5 tweet tasks or one exact post"
-  default_prompt: "Use $twitter-post to create and review one-to-five tweet tasks, or safely publish one exact final post when I explicitly request it."

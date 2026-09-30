@@ -73,11 +73,11 @@ export function verifySuiteFiles(root, suite, releaseIndex) {
     if (!frontmatter) problems.push(`missing_frontmatter:${skill.name}`);
     if (frontmatter?.name !== skill.name) problems.push(`skill_name_mismatch:${skill.name}`);
     if (frontmatter?.license !== 'MIT-0') problems.push(`skill_license_mismatch:${skill.name}`);
-    if (manifest?.schema_version !== 'threadwave-skill-manifest-v1') problems.push(`skill_manifest_schema_mismatch:${skill.name}`);
+    if (manifest?.schema_version !== (suite.contracts?.skill_manifest ?? 'threadwave-skill-manifest-v1')) problems.push(`skill_manifest_schema_mismatch:${skill.name}`);
     if (manifest?.name !== skill.name) problems.push(`skill_manifest_name_mismatch:${skill.name}`);
     if (!isSemver(manifest?.version)) problems.push(`skill_version_invalid:${skill.name}`);
     if (release?.latest_version !== manifest?.version) problems.push(`release_skill_version_mismatch:${skill.name}`);
-    if (!isSemver(release?.minimum_supported_version)) problems.push(`release_minimum_version_invalid:${skill.name}`);
+    if (!isSemver(release?.minimum_supported_version) || compareSemver(release.minimum_supported_version, manifest?.version) > 0) problems.push(`release_minimum_version_invalid:${skill.name}`);
     if (manifest?.update?.release_index_url !== 'https://raw.githubusercontent.com/ohmyskyhigh/threadwave-skill/main/release-index.json') {
       problems.push(`release_index_url_mismatch:${skill.name}`);
     }

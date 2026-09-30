@@ -14,11 +14,10 @@ const manifests = new Map(suite.required_skills.map((skill) => [
 ]));
 
 test('post and reply peers support bounded tasks plus exact single-action safety', () => {
-  const manualOperationSkills = operationSkillNames(suite, releaseIndex)
-    .filter((skill) => manifests.get(skill)?.role === 'manual-operation');
+  const manualOperationSkills = ['twitter-post', 'twitter-reply'];
   assert.equal(manualOperationSkills.length, 2);
   for (const skill of manualOperationSkills) {
-    const content = fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8');
+    const content = fs.readFileSync(path.join(root, 'skills/threadwave/references', skill === 'twitter-reply' ? 'reply.md' : 'post.md'), 'utf8');
     assert.match(content, /## Task Mode/);
     assert.match(content, skill === 'twitter-reply' ? /--count <5\.\.10> --json/ : /--count <1\.\.5> --json/);
     assert.match(content, /Do not collapse|Never collapse/i);
@@ -33,7 +32,7 @@ test('post and reply peers support bounded tasks plus exact single-action safety
 });
 
 test('media review binds exact ordered bytes and unknown does not authorize another upload', () => {
-  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-post', 'SKILL.md'), 'utf8');
+  const content = fs.readFileSync(path.join(root, 'skills/threadwave/references/post.md'), 'utf8');
   assert.match(content, /Changes to text, bytes, image order, mode or count require a new dry-run and approval/);
   assert.match(content, /Use the CLI-returned hash unchanged/);
   assert.match(content, /Unknown proof or a missing terminal envelope never authorizes a second upload or send/);
@@ -41,9 +40,9 @@ test('media review binds exact ordered bytes and unknown does not authorize anot
 });
 
 test('reply peer condenses task directions without rewriting exact replies', () => {
-  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+  const content = fs.readFileSync(path.join(root, 'skills/threadwave/references/reply.md'), 'utf8');
   assert.match(content, /## Condense The Request First/);
-  assert.match(content, /Before preflight or any `tw` command/);
+  assert.match(content, /Before workflow dispatch/);
   assert.match(content, /one concise, corrected sentence/);
   assert.match(content, /preserving every explicit count, topic, literal search phrase, account or relationship filter, engagement threshold/i);
   assert.match(content, /Do not add a topic or requirement the user did not state/);
@@ -52,13 +51,13 @@ test('reply peer condenses task directions without rewriting exact replies', () 
 });
 
 test('reply peer follows automatic manual drafts and keeps content approval per item', () => {
-  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+  const content = fs.readFileSync(path.join(root, 'skills/threadwave/references/reply.md'), 'utf8');
   assert.match(content, /## Approval Authority/);
   assert.match(content, /creates no task-proposal or source-selection review/i);
   assert.match(content, /Deterministic source selection is not user approval and never authorizes an X mutation/i);
   assert.match(content, /Follow the accepted envelope's exact `next` commands/i);
   assert.match(content, /present the returned target\/content pairs together and wait for per-item decisions/i);
-  assert.match(content, /Present approve, reject, skip, restart, cancel, and X-mutation commands as choices/i);
+  assert.match(content, /Present approve, reject, skip, cancel, and X-mutation commands as choices/i);
   assert.match(content, /invoke the matching exact command once/i);
   assert.match(content, /leave omitted reviews pending/i);
   assert.match(content, /do not replay successful decisions/i);
@@ -69,8 +68,8 @@ test('reply peer follows automatic manual drafts and keeps content approval per 
 });
 
 test('reply peer replaces a wrong automatic batch only after skipping pending drafts', () => {
-  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
-  assert.match(content, /Every fresh task below runs the update check and regular preflight; a new task alone reuses fresh readiness/i);
+  const content = fs.readFileSync(path.join(root, 'skills/threadwave/references/reply.md'), 'utf8');
+  assert.match(content, /A fresh task returns through the entry’s single CLI preflight handoff/i);
   assert.match(content, /“these candidates are wrong,” or a direction, source, angle, or target change/i);
   assert.match(content, /show every current content review and ask the user to confirm skipping/i);
   assert.match(content, /tw plan review skip <review_ref> --json/);
@@ -80,7 +79,7 @@ test('reply peer replaces a wrong automatic batch only after skipping pending dr
 });
 
 test('reply peer recreates only conclusively undispatched replies as fresh exact actions', () => {
-  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+  const content = fs.readFileSync(path.join(root, 'skills/threadwave/references/reply.md'), 'utf8');
   assert.match(content, /relay_unavailable.*no dispatch `ActionRecord`/i);
   assert.match(content, /action_preparation_failed.*reply:blocked_before_dispatch.*no `dispatched_at`.*confirmation_state=not_required/i);
   assert.match(content, /ActionRecord.*EvidenceRecord.*audit evidence and does not prove dispatch/i);
@@ -94,7 +93,7 @@ test('reply peer recreates only conclusively undispatched replies as fresh exact
 });
 
 test('reply peer watches every scheduled mutation through a durable outcome', () => {
-  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+  const content = fs.readFileSync(path.join(root, 'skills/threadwave/references/reply.md'), 'utf8');
   assert.match(content, /Scheduling is not completion/i);
   assert.match(content, /poll that ref with `tw scheduler show <scheduled_task_ref> --json` at intervals no longer than 15 seconds/i);
   assert.match(content, /Do not invoke `tw scheduler execute` merely to accelerate/i);
@@ -112,20 +111,21 @@ test('reply peer watches every scheduled mutation through a durable outcome', ()
 
 test('post and reply peers defer workflow truth to the CLI', () => {
   for (const skill of ['twitter-post', 'twitter-reply']) {
-    const content = fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8');
+    const content = fs.readFileSync(path.join(root, 'skills/threadwave/references', skill === 'twitter-reply' ? 'reply.md' : 'post.md'), 'utf8');
     assert.match(content, /The skill owns UX.*The CLI owns workflow execution, task\/draft lineage, validation, recovery truth, and exact continuations/is);
     assert.match(content, /For `ok=true`, treat `data`, `refs`, status fields, warnings, and `next` as authoritative/i);
     assert.match(content, /Never compare parent and child task refs, rebuild lineage, repeat CLI invariant checks/i);
     assert.match(content, /For `ok=false`, report the returned `error\.code`, `error\.message`, and `error\.retryable`/i);
     assert.match(content, /Report a workflow failure stage only when the CLI returns `failure_stage`/i);
     assert.match(content, /Never infer a stage from `source_status`, `draft_status`, timing, or an error code/i);
-    assert.match(content, /This transport failure is the only host-side result check/i);
+    assert.match(content, /This transport check never authorizes a duplicate task/i);
+    assert.match(content, /`ok=true` does not prove the requested deliverable was produced/i);
     assert.doesNotMatch(content, /stop as CLI contract drift/i);
   }
 });
 
 test('reply peer exposes CLI-sanitized humanizer warnings and errors', () => {
-  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+  const content = fs.readFileSync(path.join(root, 'skills/threadwave/references/reply.md'), 'utf8');
   assert.match(content, /Show every non-empty top-level `warnings` entry/i);
   assert.match(content, /`generation_warnings`.*show every message beside the affected draft/i);
   assert.match(content, /show the customer-facing message before any safe returned `next` choices.*humanizer failure/i);
@@ -135,7 +135,7 @@ test('reply peer exposes CLI-sanitized humanizer warnings and errors', () => {
 });
 
 test('post task keeps long directions out of shell and requires an accepted envelope', () => {
-  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-post', 'SKILL.md'), 'utf8');
+  const content = fs.readFileSync(path.join(root, 'skills/threadwave/references/post.md'), 'utf8');
   assert.match(content, /host that exposes only a shell\/PTY command string must create one private temporary directory/i);
   assert.match(content, /write the unchanged direction as UTF-8 through a filesystem tool rather than shell interpolation/i);
   assert.match(content, /tw task create --surface tweet --direction-file <private_utf8_path>/i);
@@ -145,7 +145,7 @@ test('post task keeps long directions out of shell and requires an accepted enve
 });
 
 test('new manual reply task follows authoritative CLI continuations', () => {
-  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+  const content = fs.readFileSync(path.join(root, 'skills/threadwave/references/reply.md'), 'utf8');
   assert.match(content, /Follow the accepted envelope's exact `next` commands/i);
   assert.match(content, /tw task wait <task_blueprint_ref> --timeout 900 --include-drafts --json/);
   assert.match(content, /do not model-poll task show or invoke separate draft-show commands/i);
@@ -155,7 +155,7 @@ test('new manual reply task follows authoritative CLI continuations', () => {
 });
 
 test('reply peer preserves yielded task-create sessions and follows only the returned blueprint', () => {
-  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
+  const content = fs.readFileSync(path.join(root, 'skills/threadwave/references/reply.md'), 'utf8');
   assert.match(content, /If execution yields a `session_id`, poll that same session to terminal completion/i);
   assert.match(content, /never project only `output` while discarding the continuation handle/i);
   assert.match(content, /one complete parseable `tw_cli_harness_v1` envelope/i);
@@ -164,8 +164,8 @@ test('reply peer preserves yielded task-create sessions and follows only the ret
 });
 
 test('reply peer keeps outcome, continuation, stage, and return contracts coherent', () => {
-  const content = fs.readFileSync(path.join(root, 'skills', 'twitter-reply', 'SKILL.md'), 'utf8');
-  assert.match(content, /Present approve, reject, skip, restart, cancel, and X-mutation commands as choices/i);
+  const content = fs.readFileSync(path.join(root, 'skills/threadwave/references/reply.md'), 'utf8');
+  assert.match(content, /Present approve, reject, skip, cancel, and X-mutation commands as choices/i);
   assert.match(content, /fewer drafts than requested.*render that state exactly/i);
   assert.match(content, /Issue-report generation sends no reply/i);
   assert.match(content, /report each affected reply as `sent`, `not sent`, or `outcome unknown` exactly as its durable evidence supports/i);
@@ -182,100 +182,11 @@ test('reply peer keeps outcome, continuation, stage, and return contracts cohere
   assert.match(content, /Outcome: <sent \| not sent \| not sent yet \| outcome unknown, per reply>/);
 });
 
-test('automation is a pure router to independent peers', () => {
-  const operationSkills = operationSkillNames(suite, releaseIndex);
-  const routerName = operationSkills.find((skill) => manifests.get(skill)?.role === 'operation-router');
-  assert.ok(routerName);
-  const content = fs.readFileSync(path.join(root, 'skills', routerName, 'SKILL.md'), 'utf8');
-  assert.match(content, /independent installed siblings/);
-  for (const peer of operationSkills.filter((skill) => skill !== routerName)) {
-    assert.match(content, new RegExp(`routes to ${peer}`));
-  }
-  assert.match(content, /Never invoke `tw task`, `tw draft`, `tw plan`, `tw scheduler`, or `tw action`/);
-  assert.match(content, /destination peer owns its mandatory preflight/);
-});
-
-test('daily agent checks existing work before creating a plan', () => {
-  const dailyAgent = operationSkillNames(suite, releaseIndex)
-    .find((skill) => manifests.get(skill)?.role === 'daily-operation');
-  assert.ok(dailyAgent);
-  const content = fs.readFileSync(path.join(root, 'skills', dailyAgent, 'SKILL.md'), 'utf8');
-  const procedure = fs.readFileSync(path.join(root, 'skills', dailyAgent, 'references', 'daily-run.md'), 'utf8');
-  assert.ok(procedure.indexOf('tw plan review list --json') < procedure.indexOf('tw plan create --json'));
-  assert.match(procedure, /Never create a second plan/);
-  assert.match(procedure, /exact `scheduled_task_ref`/);
-  assert.match(content, /tw scheduler skip <scheduled_task_ref> --json/);
-  assert.match(content, /require `data\.outcome_acknowledged=true`/i);
-  assert.match(procedure, /successful durable scheduler skip does not/i);
-});
-
-test('every operation peer uses preflight and its error-support compatibility handoff', () => {
-  for (const skill of operationSkillNames(suite, releaseIndex)) {
-    const content = fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8');
-    assert.match(content, /threadwave-preflight/);
-    assert.match(content, /issue-report-only mode/);
-  }
-  const preflight = fs.readFileSync(path.join(root, 'skills', releaseIndex.roles.preflight, 'SKILL.md'), 'utf8');
-  assert.match(preflight, /threadwave-error-support/);
-  assert.match(preflight, /separate .*task/i);
-  assert.match(preflight, /pasteable handoff/i);
-});
-
-test('new tasks reuse one rolling 12-hour readiness receipt while still checking updates', () => {
-  const preflight = fs.readFileSync(path.join(root, 'skills', 'threadwave-preflight', 'SKILL.md'), 'utf8');
-  const contract = fs.readFileSync(path.join(root, 'skills', 'threadwave-preflight', 'references', 'preflight-contract.md'), 'utf8');
-  assert.match(preflight, /start of each new ThreadWave task, run its skill update check and regular CLI preflight/i);
-  assert.match(preflight, /rolling inactivity is under 12 hours/i);
-  assert.match(contract, /conversation working memory only/i);
-  assert.match(contract, /CLI owns one mode-`0600` readiness receipt/i);
-  assert.match(contract, /exactly 12 hours is stale/i);
-  assert.match(contract, /rolling inactivity timeout, not a calendar-day cache/i);
-  assert.match(contract, /A new task always runs section 3's update check, but it does not force a full readiness or capability probe/i);
-  assert.match(contract, /Do not invoke `tw capabilities` separately when preflight returns `data\.capabilities`/i);
-  assert.match(contract, /tw preflight --force --format json/);
-  assert.match(contract, /supported CLI may omit both fields; treat that invocation as legacy full-check mode/i);
-  assert.match(contract, /Never invoke `--force` in legacy full-check mode/i);
-  assert.match(contract, /same confirmed receipt-aware CLI/i);
-  assert.match(contract, /setup, login, subscription\/payment, Chrome extension\/relay, X sign-in\/session/i);
-
-  for (const skill of ['twitter-agent', 'twitter-post', 'twitter-reply']) {
-    const content = fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8');
-    assert.match(content, /start of each new .* task/i);
-    assert.match(content, /reuses readiness until 12 hours of inactivity/i);
-    assert.match(content, /do not rerun preflight for a review decision alone/i);
-    assert.doesNotMatch(content, /After approval, rerun preflight/i);
-  }
-});
-
-test('preflight gives one update choice and scopes skill and CLI changes independently', () => {
-  const preflight = fs.readFileSync(path.join(root, 'skills', 'threadwave-preflight', 'SKILL.md'), 'utf8');
-  const contract = fs.readFileSync(path.join(root, 'skills', 'threadwave-preflight', 'references', 'preflight-contract.md'), 'utf8');
-  assert.match(preflight, /supported older skill or CLI is non-blocking/i);
-  assert.match(contract, /Keep one user decision while executing each affected component separately/);
-  assert.match(contract, /Continue with installed versions/);
-  assert.match(contract, /Update now/);
-  assert.match(contract, /`skills_only` when `skills_pending` is true and `cli_pending` is false/);
-  assert.match(contract, /`cli_only` when `cli_pending` is true and `skills_pending` is false/);
-  assert.match(contract, /`skills_and_cli` when both are true/);
-  assert.match(contract, /`skills_only` must not run a CLI installer, `tw update`, `tw setup`, daemon repair, extension repair, or native-host registration/);
-  assert.match(contract, /`cli_only` must not fetch the skill release index or invoke the Agent Skills installer/);
-  assert.match(contract, /Version-only updates never use `full_setup`/);
-  assert.match(contract, /curl -fsSL --max-time 30 .*https:\/\/www\.threadwave\.xyz\/cli\/setup\/agent\.md/);
-  assert.match(contract, /Invoke-WebRequest -UseBasicParsing -Uri 'https:\/\/www\.threadwave\.xyz\/cli\/setup\/agent\.md'/);
-  assert.match(contract, /run one post-update preflight selected by section 2 and resume the exact preserved originating request/);
-  assert.match(contract, /applies across ThreadWave tasks for the rest of the same agent session only while the exact offered skill and CLI local\/latest version map is unchanged/);
-  assert.match(contract, /Remind again in the next agent session or immediately if the offered version map changes/);
-  assert.match(contract, /new task always runs section 3's update check, but it does not force a full readiness or capability probe/i);
-});
-
-test('legacy preflight falls back to the ordinary full check after updates', () => {
-  const preflightEvals = JSON.parse(fs.readFileSync(path.join(root, 'skills', 'threadwave-preflight', 'evals', 'evals.json'), 'utf8'));
-  const agentEvals = JSON.parse(fs.readFileSync(path.join(root, 'skills', 'twitter-agent', 'evals', 'evals.json'), 'utf8'));
-  const preflightRegression = preflightEvals.evals.find((entry) => entry.id === 10);
-  const dailyPlanRegression = agentEvals.evals.find((entry) => entry.id === 7);
-
-  assert.match(preflightRegression.expected_output, /legacy full-check mode/i);
-  assert.match(preflightRegression.expected_output, /never calls --force/i);
-  assert.match(dailyPlanRegression.expected_output, /ordinary full preflight without --force/i);
-  assert.match(dailyPlanRegression.expected_output, /resumes daily recovery and review checks/i);
+test('one entry owns readiness and daily planning is unavailable', () => {
+  const entry = fs.readFileSync(path.join(root, 'skills/threadwave/SKILL.md'), 'utf8');
+  assert.match(entry, /CLI preflight once/);
+  assert.match(entry, /Review continuations reuse the ready result/);
+  assert.match(entry, /Daily planning, strategy and daily-growth automation are unavailable/);
+  assert.match(entry, /No routine agent-side release-index fetching/);
+  assert.match(entry, /Read-only diagnosis and report-only requests need no workflow preflight/);
 });

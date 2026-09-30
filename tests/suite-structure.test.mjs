@@ -5,131 +5,34 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { validateSuite } from '../scripts/validate-suite.mjs';
-import { operationSkillNames, rosterNames, verifySuiteFiles } from '../scripts/suite-policy.mjs';
+import { buildReleaseArtifacts } from '../scripts/build-release-artifacts.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const suite = JSON.parse(fs.readFileSync(path.join(root, 'suite-manifest.json'), 'utf8'));
-const releaseIndex = JSON.parse(fs.readFileSync(path.join(root, 'release-index.json'), 'utf8'));
+const entry = fs.readFileSync(path.join(root, 'skills/threadwave/SKILL.md'), 'utf8');
 
-test('the repository is one valid flat-peer skill release', () => {
+test('source has one discoverable entry with complete local resources', () => {
   assert.deepEqual(validateSuite(root), []);
+  assert.deepEqual(fs.readdirSync(path.join(root, 'skills')), ['threadwave']);
+  assert.match(entry, /Daily planning, strategy and daily-growth automation are unavailable/);
+  assert.match(entry, /one `tw credits --format json` greeting lookup/);
+  assert.match(entry, /No preflight, capability probe, setup, login, browser navigation or task creation merely to show home/);
+  assert.equal((entry.match(/^█████/gm) ?? []).length, 1);
+  assert.match(entry, /Choose 1–3 or A–G/);
+  assert.match(entry, /D asks only for the missing account; F only for missing product\/audience\/benefit/);
 });
 
-test('a partial flat installation blocks every operation', () => {
-  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'threadwave-skill-test-'));
-  for (const skill of suite.required_skills.filter((item) => item.name !== releaseIndex.roles.update)) {
-    for (const relative of [skill.path, skill.manifest_path]) {
-      const destination = path.join(temporaryRoot, relative);
-      fs.mkdirSync(path.dirname(destination), { recursive: true });
-      fs.copyFileSync(path.join(root, relative), destination);
-    }
-  }
-  const problems = verifySuiteFiles(temporaryRoot, suite, releaseIndex);
-  assert.ok(problems.includes(`missing_skill:${releaseIndex.roles.update}`));
-});
-
-test('a missing support peer blocks every operation', () => {
-  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'threadwave-skill-test-'));
-  for (const skill of suite.required_skills.filter((item) => item.name !== releaseIndex.roles.support)) {
-    for (const relative of [skill.path, skill.manifest_path]) {
-      const destination = path.join(temporaryRoot, relative);
-      fs.mkdirSync(path.dirname(destination), { recursive: true });
-      fs.copyFileSync(path.join(root, relative), destination);
-    }
-  }
-  const problems = verifySuiteFiles(temporaryRoot, suite, releaseIndex);
-  assert.ok(problems.includes(`missing_skill:${releaseIndex.roles.support}`));
-});
-
-test('every roster skill is a flat peer with its own version matching the release index', () => {
-  assert.deepEqual(rosterNames(suite), releaseIndex.required_skills.map((skill) => skill.name));
-  for (const skill of suite.required_skills) {
-    const manifest = JSON.parse(fs.readFileSync(path.join(root, skill.manifest_path), 'utf8'));
-    assert.equal(manifest.version, releaseIndex.required_skills.find((entry) => entry.name === skill.name).latest_version);
-    assert.equal(fs.existsSync(path.join(root, skill.manifest_path)), true);
-    assert.equal(skill.path, `skills/${skill.name}/SKILL.md`);
-    assert.equal(skill.manifest_path, `skills/${skill.name}/skill-manifest.json`);
-    assert.equal(fs.existsSync(path.join(root, 'skills', skill.name, 'scripts')), false);
-    const content = fs.readFileSync(path.join(root, skill.path), 'utf8');
-    assert.doesNotMatch(content, /\.\.\//);
-  }
-});
-
-test('automation routes to external operation peers without owning or containing them', () => {
-  const manifests = new Map(suite.required_skills.map((skill) => [
-    skill.name,
-    JSON.parse(fs.readFileSync(path.join(root, skill.manifest_path), 'utf8'))
-  ]));
-  const operationSkills = operationSkillNames(suite, releaseIndex);
-  const routers = operationSkills
-    .map((skill) => manifests.get(skill))
-    .filter((manifest) => manifest.role === 'operation-router');
-  assert.equal(routers.length, 1);
-  const router = routers[0];
-  assert.deepEqual(router.cli.required_commands, []);
-  assert.ok(router.cli.required_command_families.every((family) => !['task', 'draft', 'plan', 'scheduler', 'action'].includes(family)));
-  assert.equal(fs.existsSync(path.join(root, 'skills', router.name, 'skills')), false);
-
-  for (const peer of operationSkills.filter((skill) => skill !== router.name)) {
-    assert.equal(manifests.get(peer).dependencies.required_skills.some((dependency) => dependency.name === router.name), false);
-  }
-});
-
-test('automation starter menu uses the canonical panda and waits before routing', () => {
-  const skillRoot = path.join(root, 'skills', 'twitter-automation');
-  const content = fs.readFileSync(path.join(skillRoot, 'SKILL.md'), 'utf8');
-  assert.match(content, /For a request such as `start ThreadWave`/);
-  assert.match(content, /entire trimmed request is exactly `threadwave` or `tw`/);
-  assert.match(content, /Do not treat `tw` followed by a CLI subcommand or other text as a starter alias/);
-  assert.match(content, /        ▄█████▄    ▄█████▄/);
-  assert.match(content, /         ▀██████████████▀/);
-  assert.doesNotMatch(content, /assets\/threadwave-mascot\.png/);
-  assert.match(content, /Draft a tweet.*`twitter-post`/);
-  assert.match(content, /Generate replies.*`twitter-reply`/);
-  assert.match(content, /Run daily growth.*`twitter-agent`/);
-  assert.match(content, /`threadwave-preflight` once in `greeting-balance` mode/);
-  assert.match(content, /Credits: <number> remaining/);
-  assert.match(content, /Apart from the one greeting-balance lookup, do not run regular preflight/);
-});
-
-test('tweet and reply task surfaces each have one independent owner', () => {
-  const operationSkills = operationSkillNames(suite, releaseIndex);
-  const contentBySkill = new Map(operationSkills.map((skill) => [
-    skill,
-    fs.readFileSync(path.join(root, 'skills', skill, 'SKILL.md'), 'utf8')
-  ]));
-  const tweetOwners = operationSkills.filter((skill) => /tw task create --surface tweet/.test(contentBySkill.get(skill)));
-  const replyOwners = operationSkills.filter((skill) => /tw task create --surface reply/.test(contentBySkill.get(skill)));
-  assert.equal(tweetOwners.length, 1);
-  assert.equal(replyOwners.length, 1);
-  assert.notEqual(tweetOwners[0], replyOwners[0]);
-});
-
-test('preflight, update, and support each have one non-overlapping authority', () => {
-  const preflight = fs.readFileSync(path.join(root, 'skills', releaseIndex.roles.preflight, 'SKILL.md'), 'utf8');
-  const update = fs.readFileSync(path.join(root, 'skills', releaseIndex.roles.update, 'SKILL.md'), 'utf8');
-  const support = fs.readFileSync(path.join(root, 'skills', releaseIndex.roles.support, 'SKILL.md'), 'utf8');
-  assert.match(preflight, /threadwave-preflight -> threadwave-update/);
-  assert.match(preflight, /threadwave-preflight -> threadwave-error-support/);
-  assert.match(preflight, /references\/preflight-contract\.md/);
-  assert.doesNotMatch(preflight, /references\/issue-report-contract\.md/);
-  assert.match(update, /release-index\.json/);
-  assert.match(update, /Never invoke `tw`/);
-  assert.match(support, /references\/error-support-contract\.md/);
-  assert.match(support, /Never .*mutate GitHub/);
-  assert.equal(fs.existsSync(path.join(root, 'skills', releaseIndex.roles.preflight, 'scripts')), false);
-  assert.equal(fs.existsSync(path.join(root, 'skills', releaseIndex.roles.update, 'scripts')), false);
-  assert.equal(fs.existsSync(path.join(root, 'skills', releaseIndex.roles.support, 'scripts')), false);
-  assert.equal(fs.existsSync(path.join(root, 'skills', releaseIndex.roles.preflight, 'references', 'issue-report-contract.md')), false);
-  assert.equal(fs.existsSync(path.join(root, 'references', 'preflight-contract.md')), false);
-});
-
-test('missing skill, CLI, or extension routes to the canonical setup guide', () => {
-  assert.equal(suite.setup_route.agent_guide_url, 'https://www.threadwave.xyz/cli/setup/agent.md');
-  assert.deepEqual(suite.setup_route.handles_missing, ['skill_suite', 'cli', 'extension']);
-  for (const skill of suite.required_skills) {
-    const content = fs.readFileSync(path.join(root, skill.path), 'utf8');
-    assert.match(content, /https:\/\/www\.threadwave\.xyz\/cli\/setup\/agent\.md/);
-  }
-  assert.equal(fs.existsSync(path.join(root, 'skills', 'twitter-cli-setup', 'SKILL.md')), false);
+test('validation rejects extra entries, missing resources and stale candidate identity', (t) => {
+  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'tw-single-validation-'));
+  t.after(() => fs.rmSync(fixture, { recursive: true, force: true }));
+  for (const name of ['skills', '.codex-plugin', 'package.json', 'suite-manifest.json', 'schemas', 'scripts', 'release-index.json']) fs.cpSync(path.join(root, name), path.join(fixture, name), { recursive: true });
+  const candidate = buildReleaseArtifacts(fixture).index;
+  assert.deepEqual(validateSuite(fixture, candidate), []);
+  candidate.bundle_version = '999.0.0';
+  assert.ok(validateSuite(fixture, candidate).includes('candidate_identity'));
+  fs.mkdirSync(path.join(fixture, 'skills/extra'));
+  fs.writeFileSync(path.join(fixture, 'skills/extra/SKILL.md'), '# extra');
+  fs.rmSync(path.join(fixture, 'skills/threadwave/references/snapshot.md'));
+  const errors = validateSuite(fixture);
+  assert.ok(errors.includes('discoverable_entry_count'));
+  assert.ok(errors.includes('missing_resource:snapshot.md'));
 });

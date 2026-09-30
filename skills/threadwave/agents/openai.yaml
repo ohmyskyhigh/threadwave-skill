@@ -1,0 +1,4 @@
+interface:
+  display_name: "ThreadWave"
+  short_description: "Tweet and reply drafts, X snapshots · 推文、回复与快照"
+  default_prompt: "Use $threadwave to show the ThreadWave home screen."
