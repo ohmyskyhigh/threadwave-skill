@@ -1,7 +1,7 @@
 {
   "schema_version": "threadwave-skill-manifest-v2",
   "name": "threadwave",
-  "version": "0.7.14",
+  "version": "0.7.15",
   "role": "entry",
   "dependencies": {
     "required_skills": []
