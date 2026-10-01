@@ -1,7 +1,7 @@
 {
   "schema_version": "threadwave-skill-release-index-v3",
   "repository": "ohmyskyhigh/threadwave-skill",
-  "bundle_version": "0.7.15",
+  "bundle_version": "0.7.16",
   "agent_skills_installer": {
     "package": "skills",
     "version": "1.5.18",
@@ -11,10 +11,10 @@
   "required_skills": [
     {
       "name": "threadwave",
-      "latest_version": "0.7.15",
+      "latest_version": "0.7.16",
       "minimum_supported_version": "0.7.15",
-      "artifact_url": "https://github.com/ohmyskyhigh/threadwave-skill/releases/download/suite-v0.7.15/threadwave-0.7.15.tgz",
-      "sha256": "7b4000975f5ed01391fe028dfe446e5fc768f2360a6ec52cbc07602eec4996da"
+      "artifact_url": "https://github.com/ohmyskyhigh/threadwave-skill/releases/download/suite-v0.7.16/threadwave-0.7.16.tgz",
+      "sha256": "0cbaa2e325b0b3907e41f707b6f0c0500cb8619e5db5e5e1dbd057a360aa0856"
     }
   ]
 }
