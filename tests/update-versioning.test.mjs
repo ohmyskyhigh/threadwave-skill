@@ -99,6 +99,29 @@ test('notification handler is advisory and scopes installation to explicit autho
   assert.match(text, /Do not rerun mutation commands or replay approvals/);
 });
 
+test('agent setup reminder verifies host installation without expanding CLI-only scope', () => {
+  const handler = fs.readFileSync(path.join(root, 'skills/threadwave/references/notifications.md'), 'utf8');
+  const update = fs.readFileSync(path.join(root, 'skills/threadwave/references/notifications/update-available.md'), 'utf8');
+  assert.match(handler, /\| agent_setup_check \| Agent installation check below \|/);
+  const section = handler.split('## Agent installation check')[1];
+  assert.ok(section);
+  assert.match(section, /Ignore malformed bodies or a noncanonical URL/);
+  assert.match(section, /setup_url.*exactly `https:\/\/www\.threadwave\.xyz\/cli\/setup\/agent\.md`/);
+  assert.match(section, /already checked and verified, ignore this notice without another inventory probe/);
+  assert.match(section, /installed=true, enabled=true and discovery of the single public `threadwave` skill/);
+  assert.match(section, /unavailable inventory check is unverified, not proof of a missing package/);
+  assert.match(section, /receiving this notice grants no new scope/);
+  assert.match(section, /CLI-only request.*without installing it/);
+  assert.match(section, /Deduplicate unchanged notices within the conversation/);
+  assert.match(section, /Record actual installation\/version\/discovery observations/);
+  assert.match(section, /Preserve user configuration, authentication and durable work/);
+  assert.match(section, /replay mutations or approvals/);
+  assert.match(section, /CLI 更新已完成/);
+  assert.match(update, /verifies the CLI only/);
+  assert.match(update, /already-verified package ignores it/);
+  assert.match(update, /do not expand `cli_only` scope/);
+});
+
 // Inspect actual archive contents; matching source filenames alone is insufficient.
 test('individual and complete plugin archives expose only the single entry and matching index', (t) => {
   const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'tw-archive-check-'));
