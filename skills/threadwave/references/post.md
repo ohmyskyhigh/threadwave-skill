@@ -91,6 +91,7 @@ Do not guess the next review, artifact, target, or scheduled task. Do not collap
 
 ### 4. Handle Changes And Shortfalls
 
+- For an explicit fresh request with expired unapproved drafts, first follow [Expired drafts and an explicit fresh request](cli-invocation.md#expired-drafts-and-an-explicit-fresh-request). Retain safe expired work as history and create the new requested tweet task without an expired-review cleanup or generic plan-create prerequisite. Active or unresolved publication keeps its existing recovery gate.
 - Direction/source/angle change: use one explicit `tw task retask --task` or `--batch` request after showing the exact scope.
 - Same-lineage wording change: use `tw draft redraft` with exact feedback, then require a new content review.
 - Fewer valid outputs than requested: present the actual count and activate support for a completed delivery shortfall as above; never invent or duplicate items.
