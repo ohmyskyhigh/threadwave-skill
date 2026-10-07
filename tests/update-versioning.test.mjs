@@ -131,12 +131,14 @@ test('individual and complete plugin archives expose only the single entry and m
   const archive = path.join(fixture, result.artifacts[0]);
   const hash = createHash('sha256').update(fs.readFileSync(archive)).digest('hex');
   assert.equal(hash, result.index.required_skills[0].sha256);
-  const individual = execFileSync('tar', ['-tzf', archive], { encoding: 'utf8' }).trim().split('\n');
+  const individual = execFileSync('tar', ['-tzf', archive], { encoding: 'utf8' }).trim().split(/\r?\n/);
   assert.deepEqual(individual.filter((name) => name.endsWith('/SKILL.md')), ['threadwave/SKILL.md']);
   assert.equal(individual.some((name) => name.includes('daily-run') || name.includes('twitter-agent')), false);
-  const packed = JSON.parse(execFileSync('npm', ['pack', './dist/plugin-candidate', '--pack-destination', 'dist', '--json', '--ignore-scripts'], { cwd: fixture, encoding: 'utf8' }))[0];
+  const npmExecutable = process.env.npm_execpath ? process.execPath : 'npm';
+  const npmPrefix = process.env.npm_execpath ? [process.env.npm_execpath] : [];
+  const packed = JSON.parse(execFileSync(npmExecutable, [...npmPrefix, 'pack', './dist/plugin-candidate', '--pack-destination', 'dist', '--json', '--ignore-scripts'], { cwd: fixture, encoding: 'utf8' }))[0];
   const bundle = path.join(fixture, 'dist', packed.filename);
-  const complete = execFileSync('tar', ['-tzf', bundle], { encoding: 'utf8' }).trim().split('\n');
+  const complete = execFileSync('tar', ['-tzf', bundle], { encoding: 'utf8' }).trim().split(/\r?\n/);
   assert.deepEqual(complete.filter((name) => name.endsWith('/SKILL.md')), ['package/skills/threadwave/SKILL.md']);
   const index = JSON.parse(execFileSync('tar', ['-xOzf', bundle, 'package/release-index.json'], { encoding: 'utf8' }));
   assert.deepEqual(index, result.index);

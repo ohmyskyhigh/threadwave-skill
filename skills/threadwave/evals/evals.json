@@ -293,11 +293,11 @@
     },
     {
       "id": "reply-8",
-      "prompt": "These five candidates are wrong. Redo it and search for the exact phrase let's connect instead.",
-      "expected_output": "Shows every pending content review from the old automatic batch and asks the user to confirm skipping them. After confirmation it skips those reviews, runs the entry CLI preflight, reuses fresh readiness when available, and creates one fresh five-reply task with the new exact direction.",
+      "prompt": "These five candidates are wrong. Redo it and search for the exact phrase let's connect instead. The old content reviews have valid future expires_at values and no publication is active or unresolved.",
+      "expected_output": "Shows every still-valid pending content review from the old automatic batch and asks the user to confirm skipping them. After confirmation it skips those reviews, runs the entry CLI preflight, reuses fresh readiness when available, and creates one fresh five-reply task with the new exact direction.",
       "expectations": [
         "Does not use task review or source review commands",
-        "Skips every confirmed still-pending content review and verifies status skipped",
+        "Skips every confirmed still-valid pending content review and verifies status skipped",
         "Keeps the historical task and drafts recorded",
         "Runs the entry CLI preflight without forcing a full check merely because this is a fresh task",
         "Creates one fresh task with the latest direction and the original count",
@@ -656,6 +656,78 @@
       ],
       "source_id": 37,
       "flow": "reply"
+    },
+    {
+      "id": "reply-38",
+      "flow": "reply",
+      "prompt": "Hermes on Windows: find 10 new tweets about developer tools and draft replies. The identified old task is complete; four old draft reviews still display pending, but their scope.expires_at is before the current time. None was approved and the complete linked scheduler inspection shows no active or unresolved publication. Native preflight returns agent_session_fresh. The installed workflow tool accepts task create with separate argv, direction and agent_session fields.",
+      "expected_output": "Retains the old task and expired drafts as history, creates one new ten-reply task through the existing native task-create operation using agent_session_fresh and the current direction, then follows its draft continuation and stops for fresh content approval.",
+      "expectations": [
+        "Does not require skip/reject/expire of the four expired reviews",
+        "Does not invoke plan create, retask, scheduler cancellation or old review approval",
+        "Keeps direction and session outside argv in Hermes native fields",
+        "Preserves count 10 and requires fresh per-item content approval"
+      ]
+    },
+    {
+      "id": "reply-39",
+      "flow": "reply",
+      "prompt": "Start over with 10 replies. One old pending draft has expired; another old draft was approved and its exact scheduled publication is running. The CLI returned review_expired for an attempted skip and next suggests tw plan create --json.",
+      "expected_output": "Surfaces review_expired, monitors the exact running publication under its existing evidence contract, and blocks replacement despite the expired review and fresh request.",
+      "expectations": [
+        "No new task, old review decision, generic plan or automatic cancellation",
+        "Does not claim expiry cancelled the running publication"
+      ]
+    },
+    {
+      "id": "reply-40",
+      "flow": "reply",
+      "prompt": "These drafts are from yesterday. Create 10 new ones. The exact old task shows pending reviews but their expires_at values are missing or invalid. No scheduler publication is visible.",
+      "expected_output": "Inspects supported exact refs for authoritative expiry evidence or states that safe expired-draft replacement cannot yet be established. It does not infer expiry from yesterday or silently create duplicate work.",
+      "expectations": [
+        "No task creation based only on age or pending status",
+        "Preserves history and asks only for evidence needed to resolve the blocker"
+      ]
+    },
+    {
+      "id": "reply-41",
+      "flow": "reply",
+      "prompt": "Start over with five replies about developer tools. The old complete batch has two expired unapproved reviews and two pending reviews with future expiry. There is no active or unresolved publication. No cleanup decision has been given for the still-valid reviews.",
+      "expected_output": "Retains the two expired drafts as history and presents only the two still-valid pending reviews for explicit cleanup. After that cleanup succeeds it creates one five-reply task for the latest direction.",
+      "expectations": [
+        "Never attempts a decision on expired reviews",
+        "Does not bypass current-review cleanup or transfer publishing approval"
+      ]
+    },
+    {
+      "id": "reply-42",
+      "flow": "reply",
+      "prompt": "Skip draft 2. The CLI returns review_expired and a generic tw plan create next command. I have not requested new drafts or authorized another generation.",
+      "expected_output": "Surfaces the expiry error, leaves the expired review recorded and offers the user an explicit fresh-task choice. It does not create or retask work, repeat the skip, or execute the generic plan command.",
+      "expectations": [
+        "An expiry error alone grants no new generation or credit authority",
+        "No repeated expired decision or plan-create detour"
+      ]
+    },
+    {
+      "id": "reply-43",
+      "flow": "reply",
+      "prompt": "Create 10 fresh replies. The remaining old unapproved draft reviews have expired, but a previously approved publication has recovery_required with inconclusive evidence. I chose scheduler skip and it returned outcome_acknowledged=true.",
+      "expected_output": "Keeps the skipped publication's outcome unknown and does not use its acknowledgment or draft expiry as permission to create replacement work. Reports the existing recovery limitation.",
+      "expectations": [
+        "No new task, mutation retry or cancellation",
+        "Acknowledging an unknown outcome does not prove undispatched state"
+      ]
+    },
+    {
+      "id": "post-expired-fresh",
+      "flow": "post",
+      "prompt": "Create three fresh tweet drafts about my product. The identified old tweet task has completed, all its unapproved content reviews have expired, and exact scheduler inspection confirms no active or unresolved publication.",
+      "expected_output": "Preserves the old tweet drafts as history, runs the entry fresh-task preflight and creates one tweet task with count three and the current requested direction. Stops at new content review.",
+      "expectations": [
+        "No expired-review cleanup, generic plan-create detour or expired retask",
+        "Keeps surface tweet and count three; no publication"
+      ]
     },
     {
       "id": "support-1",

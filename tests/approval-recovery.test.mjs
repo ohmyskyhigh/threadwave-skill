@@ -67,7 +67,7 @@ test('reply peer follows automatic manual drafts and keeps content approval per 
   assert.doesNotMatch(content, /invoke `tw task review approve/i);
 });
 
-test('reply peer replaces a wrong automatic batch only after skipping pending drafts', () => {
+test('reply peer keeps explicit cleanup for still-valid drafts when replacing a wrong batch', () => {
   const content = fs.readFileSync(path.join(root, 'skills/threadwave/references/reply.md'), 'utf8');
   assert.match(content, /A fresh task returns through the entry’s single CLI preflight handoff/i);
   assert.match(content, /“these candidates are wrong,” or a direction, source, angle, or target change/i);

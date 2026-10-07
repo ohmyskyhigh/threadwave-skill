@@ -28,6 +28,8 @@ After every CLI result, preserve its outcome/refs/next continuation, then inspec
 
 Support handles qualifying errors and terminal delivery shortfalls, including ok=true with missing drafts, using the existing reporting authorization and actual receipt. Pending work, normal user gates and valid empty snapshots are not delivery failures. Keep review and X-mutation approvals specific to exact content/targets; never infer publication approval from drafting or installation.
 
+At a tweet/reply gate with `review_expired` or an explicit fresh request involving old drafts, read [the expired-draft rule](references/cli-invocation.md#expired-drafts-and-an-explicit-fresh-request) before selecting cleanup or recovery. Safe expired unapproved drafts may remain history; a generic plan-create continuation is unavailable in this skill.
+
 ## Home
 
 Open this home for standalone `tw`, `threadwave`, “open ThreadWave,” or the equivalent Chinese request. Do not intercept actual CLI subcommands. Use the host's displayed skill entry or `$threadwave`; do not promise native `/tw` registration.
