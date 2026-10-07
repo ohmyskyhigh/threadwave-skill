@@ -1,7 +1,7 @@
 {
   "schema_version": "threadwave-skill-suite-v3",
   "suite_name": "threadwave-skill",
-  "bundle_version": "0.7.16",
+  "bundle_version": "0.7.17",
   "install_modes": [
     "single_skill",
     "host_plugin_bundle"
